@@ -1,0 +1,33 @@
+
+--- # Core Services Configuration
+System:
+  Version: 3.0
+  Libraries: [Dummy, CoreServices]
+  NServiceNodes: 6 # excluding gateway; this is actually the number of threads
+  ServiceNodes:
+    ctrl: [ 1, [CoreServices.BEGIN] ]
+    ctrl: [ 1, [CoreServices.SEQ ] ]
+    reg: [ 1, [CoreServices.REG ] ]
+    io: [ 1, [CoreServices.IO] ]
+    a: [ 1, [CoreServices.ALU] ]
+
+  Aliases:
+  # Alias Name (case sensitive): FQN
+    begin: ctrl.CoreServices.BEGIN.begin
+    par: ctrl.CoreServices.BEGIN.begin
+    seq: ctrl.CoreServices.SEQ.seq
+    display: io.CoreServices.IO.display
+    'reg.write': reg.CoreServices.REG.write
+    'reg.read': reg.CoreServices.REG.read
+    'reg.inc': reg.CoreServices.REG.inc
+#    lambda: 
+# These used to be "ALU_names"  
+    '+': a.CoreServices.ALU.plus
+#    '-': a.CoreServices.ALU.minus
+    '*': a.CoreServices.ALU.times
+#    '/': d.CoreServices.ALU.over
+#    '<': a.CoreServices.ALU.lt
+#    '>': a.CoreServices.ALU.gt
+#    '==': a.CoreServices.ALU.eq
+#    '!': a.CoreServices.ALU.not
+

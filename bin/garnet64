@@ -1,0 +1,182 @@
+#!/usr/bin/env ruby 
+
+#/** \file garnet.rb
+#   
+# \brief Service-based SoC project 
+#
+#*/
+#
+# (c) 2004-2009 Wim Vanderbauwhede <wim@dcs.gla.ac.uk>
+#
+#//==============================================================================
+#//
+#// Service-based SoC project - Garnet, the Ruby Gannet
+#//
+#//==============================================================================
+
+# $Id: garnet.rb 2513 2009-04-15 13:47:03Z socgroup $
+
+if ENV.has_key?('GANNET_DIR')
+    $LOAD_PATH.push("#{ENV['GANNET_DIR']}/Garnet/")
+    gannet_dir="#{ENV['GANNET_DIR']}"
+else    
+    raise "Please set GANNET_DIR=[path to your Gannet directory]"
+end
+
+help= <<EOH
+
+    Usage: garnet [-hnSsqEQDBNCifRA] task description file
+    -v, --verbose: Verbose :-)
+    -n, --ncycles: Run for this number of clock cycles
+    -D, --datafile: input data (typically an image file)
+    -q, --quit: Exit after parsing task description in Gateway
+    -d, --debug: turn on debugging
+    -m, --mem: turn on memory reporting
+    -i, --int-only: Integer arithmetic only (default)
+    -f, --float-only: Floating-point (deprecated)
+    -t, --threads: use Ruby threads
+    -Y, --yaml: YAML configuration file
+    -N, --new: flag to enable new features for testing    
+    -C, --cwd: current working directory
+EOH
+
+DISTR=0
+NEW=1
+NEWER=1
+require 'optparse'
+opts=OptionParser.new
+#NEW=0
+#opts.on("-N","--new") {NEW=1;}
+
+ncycles=500
+opts.on("-n VAL","--ncycles=VAL",Integer) {|val| ncycles=val }
+WORDSZ=64
+show_tasks=0
+opts.on("-S","--showtasks") {show_tasks=1 }
+VERBOSE=0
+opts.on("-v","--verbose") {VERBOSE=1;}
+USE_THREADS=0
+opts.on("-t","--threads") {USE_THREADS=1;}
+SEQVM=0
+VM=1 # The actual HW model does not work in Ruby, only in SystemC
+SYM=1 # if 1, store all symbols/words as arrays of symbol/word
+FP=0 # FP or integer arithmetic 
+QUIT=0
+DEBUG_ALL=0
+MEM=0
+TO_YAML=0
+opts.on("-m","--mem") {MEM=1;}
+opts.on("-d","--debug") {DEBUG_ALL=1;}
+opts.on("-i","--int-only") {FP=0}
+opts.on("-f","--float-only") {FP=2}
+opts.on("-q","--quit") {QUIT=1;VERBOSE=1}
+opts.on("-y","--yaml") {TO_YAML=1}
+tSBA_YML='SBA.yml'
+opts.on("-Y yml-file","--yml=yml-file",String) {|yml_file| tSBA_YML=yml_file }
+task_data=""
+opts.on("-D datafile","--data-file",String) {|data_file| task_data = data_file }
+@@sba_dir='.'
+opts.on("-C cwd","--cwd=cwd",String) {|cwd| @@sba_dir=cwd }
+opts.on("-h","--help") {
+puts help
+exit
+}
+SBA_WD=@@sba_dir
+# TODO: this allows only a single task description. 
+td_file=opts.parse(ARGV).join('')
+
+require "SBA/ServiceConfiguration.rb"
+def find_configpath(tdc_file) 
+    tdch=File.open(tdc_file,"r") 
+    # first read all bytes into a list of Words
+    bytewords=[] 
+    byteword=0 
+    hwb=0 
+    tdch.each_byte {|byte| 
+        byteword+=(byte<<(8*(NBYTES-1-hwb)))
+        hwb=hwb+1
+        if hwb==NBYTES
+            hwb=0
+            bytewords.push(byteword)
+            byteword=0
+        end            
+    } 
+    # Then make sense of the list of words:
+    # Find number of packets
+    npackets = bytewords.shift
+    npackets = npackets >> (NBYTES*8-16)
+    # For each packet
+    for np in 0..npackets-1 
+    # get the length from the header
+        header_word =bytewords.shift
+        for phw in 1..2 
+            bytewords.shift
+         end                         
+         length=(header_word & F_Length) >> FS_Length    
+         # read the payload
+         for j in 0..length-1 
+            bytewords.shift 
+         end                                                     
+    end 
+    # If the bytecode contains the path to the YAML file, it should be in the remaining Words
+    ymlfile=""
+    w=[] 
+    for word in bytewords 
+        for i in 0..NBYTES-1
+            w[i]=word>>((NBYTES-1-i)*8)&0xFF
+            if w[i]!=0
+                ymlfile+=w[i].chr()
+            end
+        end            
+    end        
+    return ymlfile               
+end
+if td_file != 'NONE'
+    maybe_yml_file=find_configpath(td_file)
+    if File.exist?(maybe_yml_file)
+        if VERBOSE==1
+        print "Found YAML-file #{maybe_yml_file}\n"
+        end
+        ymlfile=maybe_yml_file
+        if tSBA_YML=='SBA.yml'
+            SBA_YML=ymlfile
+        end                    
+    else
+        maybe_yml_file.sub!(/^.*\//,'')
+        if File.exist?( "#{gannet_dir}/SystemConfigurations/#{maybe_yml_file}") 
+            if VERBOSE==1
+            print "Found YAML-file #{maybe_yml_file}\n"
+            end
+            ymlfile="#{gannet_dir}/SystemConfigurations/#{maybe_yml_file}"
+            if tSBA_YML=='SBA.yml'
+                SBA_YML=ymlfile
+            end                    
+        end
+    end
+
+    task_descriptions=[]
+    task_description=td_file
+	task_pair= [task_description]
+	if task_data!=""
+        task_pair.push(task_data)
+	end
+	task_descriptions.push(task_pair)
+#	puts task_descriptions.inspect
+    #Run
+    require "SBA/Runtime.rb"    
+    garnet = SBA_Runtime.new(task_descriptions)	
+    if show_tasks==1
+        garnet.show()
+        exit
+    end
+    res=garnet.run(ncycles)
+
+else 
+    if TO_YAML==1
+        require "SBA/Runtime.rb"
+    else
+        puts "Please specify a task description file"
+    end    
+end
+
+

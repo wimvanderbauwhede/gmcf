@@ -1,0 +1,4 @@
+ build.pl -Y src/GPRM/Task/GPRM.yml -v -w -T
+ FIXME: even if there is no local kernel, Services.h etc still need to be generated for the global services. 
+ Instead of generating them, we could copy them from the global source ...
+

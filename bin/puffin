@@ -1,0 +1,21 @@
+#!/usr/bin/perl
+@ARGV or die "Please provide the input file name (.td)\n";
+my $GANNET_DIR=$ENV{'GANNET_DIR'} or $ENV{'HOME'}.'/SoC_Research/Code/';
+my $infile=shift @ARGV;
+my $rest="";
+my $p=0;
+if (@ARGV>0) {
+if ($ARGV[0]=~/-p/) {
+	$p=1;
+	shift @ARGV;
+}
+	$rest=join(' ',@ARGV);
+}
+my $outfile=$infile;
+$outfile=~s/\.td/.p6/ or die "Input file must have extension .td";
+system("$GANNET_DIR/Gannet-Haskell/src/dist/build/gannet/gannet --puffin $infile > $outfile");
+if ($p) {
+system("cat $outfile");
+} else {
+system("~/pugs -I$GANNET_DIR/Puffin $outfile $rest");
+}

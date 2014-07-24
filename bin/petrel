@@ -1,0 +1,34 @@
+#!/usr/bin/perl
+use warnings;
+use strict;
+
+use Getopt::Std;
+
+my $GANNET_DIR = $ENV{GANNET_DIR};
+    
+my %opts;
+getopts( 'hvpM:', \%opts );
+
+if ( $opts{'h'} or not scalar %opts) {
+	die "
+	Gannnet build script for SystemC
+	$0 [opts] 
+	-M [module.pm]: Perl module containing service definitions
+	-v: verbose (for debugging)
+	-p: Print only
+	\n";
+}
+
+my $p= $opts{'p'};
+my $servicelib=$opts{'M'}?'-M'.$opts{'M'}:'';
+@ARGV or die "Please provide the input file name (.td)\n";
+my $infile=shift @ARGV;
+my $rest=join(' ',@ARGV);
+my $outfile=$infile;
+$outfile=~s/\.td/.pl/ or die "Input file must have extension .td";
+system("$GANNET_DIR/Gannet-Haskell/src/dist/build/gannet/gannet --petrel $infile > $outfile");
+if ($p) {
+	system("cat $outfile");
+} else {
+	system("perl -I$GANNET_DIR $servicelib $outfile $rest");
+}

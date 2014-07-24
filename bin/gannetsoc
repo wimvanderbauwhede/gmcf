@@ -1,0 +1,1 @@
+SC_SIGNAL_WRITE_CHECK=DISABLE $GANNET_DIR/bin/gannet_sc $*

@@ -1,0 +1,70 @@
+#!/usr/bin/perl -w
+use strict;
+use Getopt::Std;
+@ARGV or die "Please provide the input file name (.td)\n";
+
+my %opts;
+getopts( 'chpv', \%opts );
+
+if ( $opts{'h'} ) {
+die "
+Skua runtime for Gannet code.
+$0 [opts] [file.td]
+-p: print generated Scheme code and exit
+-v: verbose (for debugging)
+\n";
+}
+my $p = $opts{'p'} ? 1 : 0;
+my $v= $opts{'v'}?1:0;
+my $c= $opts{'c'}?1:0;
+use Cwd;
+my $wd=cwd();
+$ENV{'GANNET_DIR'} or die "Please set the following environment variables:
+	GANNET_DIR=[path to your Gannet directory]
+	GAMBIT_PATH=[path to your Gambit distribution]\n";
+my $skuadir=$ENV{'GANNET_DIR'}.'/Runtimes/Skua';
+my $infile=shift @ARGV;
+my $rest="";
+if (@ARGV>0) {
+	$rest=join(' ',@ARGV);
+}
+my $outfile=$infile;
+$outfile=~s/\.td/.scm/ or die "Input file must have extension .td";
+$infile="$wd/$infile";
+$outfile="$wd/$outfile";
+print "Compiling $infile:\n" if $v;
+print("gannetc --skua $infile > $outfile\n") if $v;
+system("gannetc --skua $infile > $outfile");
+chdir $skuadir;
+print "pwd: $skuadir\n" if $v;
+if ($p) {
+	system("cat $outfile");
+} else {
+#system("gambit $outfile $rest");
+
+	print "Creating Scheme wrapper...\n" if $v;
+	my $path=$ENV{'GAMBIT_PATH'};
+	my $scm=$outfile;
+	my $tdpath='';
+	if ($scm=~/\//) {
+		$tdpath=$scm;
+		$tdpath=~s/\/\w+\.scm$//;
+		$tdpath.='/' unless $tdpath eq '';
+		$scm=~s/^.*\///;
+	} 
+	open(GSI, ">$wd/wrapper_$scm");
+	print GSI "(load \"$path/syntax-case.scm\")\n";
+	print GSI "(load \"$skuadir/SkuaSyntax.scm\")\n";
+	print GSI "(load \"$skuadir/SkuaDefs.scm\")\n";
+	print GSI "(load \"$skuadir/Services.scm\")\n";
+	print GSI "(load \"$tdpath$scm\")\n";
+	close GSI;
+	chdir $wd;
+	if (not $c) {
+    	print "Running Skua\n$path/bin/gsi $wd/wrapper_$scm\n" if $v;
+		system("$path/bin/gsi $wd/wrapper_$scm");
+	} else {
+		print("Comping to C\n$path/bin/gsc -link -verbose -warnings $wd/wrapper_$scm\n") if $v;
+		system("$path/bin/gsc -link -verbose -warnings  $wd/wrapper_$scm");
+	}
+}

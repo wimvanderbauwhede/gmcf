@@ -1,0 +1,3 @@
+# Glasgow Model Coupling Framework
+
+In time, this will become a radically new way to couple simulation models ...

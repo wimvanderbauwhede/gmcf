@@ -1,0 +1,118 @@
+### PREREQUISITES:
+
+#### Essential:
+
+Compilers
+
+- [g++ >= 4.0](http://gcc.gnu.org) for compiling the Virtual Machine and the SystemC model
+- [ghc >= 6.10.3](http://www.haskell.org) to compile the Gannet compiler
+
+Dynamic languages
+
+- [perl >= 5.8](http://www.perl.org) for various toolchains scripts
+- [ruby >= 1.8.6](http://www.ruby-lang.org) for Garnet, the Gannet reference model 
+- [python >= 2.5.1](http://www.python.org) for SCons
+
+Build tools
+
+- [scons >= 1.2.0](http://www.scons.org) for building the Virtual Machine and the SystemC model
+
+[SystemC Libraries](http://www.systemc.org) 
+
+- systemc >= 2.2
+- systemc-tlm >= 2.0
+
+[Haskell Platform](http://hackage.haskell.org/platform/)
+
+#### Optional:
+
+For the Gannet assembler:
+
+- YAML::Syck from [CPAN](http://search.cpan.org/dist/YAML-Syck/)
+
+For the Scheme back-end Skua:
+
+- [Gambit-C Scheme >= 4.4](http://gambit.iro.umontreal.ca/)
+
+For the Perl6 back-end Puffin:
+
+- Pugs >= 6.2.13.14 (from [Hackage](http://hackage.haskell.org/) or [SVN](http://svn.pugscode.org) )
+
+For cross-compilation to linux-ppc:
+
+- Crosstool with /gcc-3.4.4-glibc-2.3.3/powerpc-405-linux-gnu/bin 
+
+### INSTALLATION:<a name="setup"></a>
+
+    # get the archive (Gannet-alpha.tgz)
+     wget www.gannetcode.org/downloads/Gannet-alpha.tgz	
+    # create a directory Gannet:
+     mkdir Gannet
+    # go there
+     cd Gannet
+    # unpack the archive 
+     tar -zxvf ../Gannet-alpha.tgz
+
+The environment variable `GANNET_DIR` must be set to the above directory.
+The file etc/gannetrc contains the environment settings for Gannet.
+Edit this file for your system; 
+
+    $ vim etc/gannetrc
+
+then source it:
+
+    $ . etc/gannetrc
+
+That's it, you can start using Gannet -- although you'll most likely want to build
+the compiler, Virtual Machine and/or SystemC hardware model. But without building
+anything, you can write Gannet assembly, generate bytecode with the Gannet Assembler
+and run it on Garnet, the Ruby version of the Gannet machine.
+
+### BUILDING:
+
+#### Assembler:
+
+The Gannet assembler is written in Perl but you need to install YAML::Syck from CPAN:
+
+    $ cpan install YAML::Syck
+
+#### Compiler:
+
+Unless you're happy writing Gannet assembly, you'll need to build the Gannet compiler. 
+First you need to build the HsSyck dependency (currently the compiler needs an older version of HsSyck, the Cabal version will not work).
+
+    $ cd third-party/HsSyck
+    $ cabal configure
+    $ cabal build
+    $ cabal install
+
+(Or if you don't have the `cabal` command:
+
+    $ run-haskell Setup.hs configure --user
+    $ run-haskell Setup.hs build
+    $ run-haskell Setup.hs install
+
+Then build the compiler:
+
+    $ cd Compiler
+    $ ./build.pl
+
+#### Virtual Machine:
+
+    $ cd VirtualMachine/build
+    $ ./build.pl 
+
+#### SystemC Hardware Model:
+
+    $ cd HardwareModels/SystemC/build
+    $ ./build.pl
+
+
+
+
+
+
+
+
+
+
