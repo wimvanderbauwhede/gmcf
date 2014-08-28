@@ -1,4 +1,4 @@
-subroutine main_routine(sys, tile, model) ! This replaces 'program main'
+subroutine main_routine(sys, tile, model_id) ! This replaces 'program main'
 ! Lines marked with ! gprm-coupler / ! end gprm-coupler are additions for coupling
 
 ! gprm-coupler

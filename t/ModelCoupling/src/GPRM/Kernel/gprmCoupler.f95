@@ -2,10 +2,13 @@
 ! Needs refining, esp. the way we block on calls
 ! Also, maybe I want to use pragmas to insert the coupling code
 ! Also, we don't need model_id and per-model arrays because if my reasoning is correct, the module memory space will be per-thread
+
 ! To try this out I need to create a small C++ program that spawns two threads and in each thread we access the variables from a module
+
 ! According to http://stackoverflow.com/questions/23743716/simultaneous-calls-of-a-method-in-a-fortran-dll-with-module-variables-in-c-shar
 ! The variables in the module will be shared after all, so I need to keep the current approach.
 ! Seems to me that we could actually use this to make sharing easy ...
+
     module GPRMCoupler
 
         implicit none
