@@ -36,32 +36,22 @@ require 'optparse'
 
 opts=OptionParser.new()
 
-@@sysc=0
-@@prefix_SC=''
-@@dirpath="./"
-@@sba_dir="./"
+$dirpath="./"
+$sba_dir="./"
 
-SBA_YML='SBA.yml'
-TO_YAML=0
-USE_THREADS=0
-
-VERBOSE=0
-opts.on("-v","--verbose") {VERBOSE=1;}
-DISTR=0
-opts.on("-P","--procs") {DISTR=1}
+$sba_yml='SBA.yml'
 
 WORDSZ=64
-opts.on("-W wordsz","--wordsz=wordsz",Integer) { |wordsz| WORDSZ=wordsz }
-opts.on("-Y yml-file","--yml=yml-file",String) {|yml_file| SBA_YML=yml_file }
-opts.on("-D dirpath","--dir=dirpath",String) {|dir_path| @@dirpath=dir_path }
-opts.on("-C cwd","--cwd=cwd",String) {|cwd| @@sba_dir=cwd }
+opts.on("-Y yml-file","--yml=yml-file",String) {|yml_file| $sba_yml=yml_file }
+opts.on("-D dirpath","--dir=dirpath",String) {|dir_path| $dirpath=dir_path }
+opts.on("-C cwd","--cwd=cwd",String) {|cwd| $sba_dir=cwd }
 opts.on("-h","--help") {
 puts help
 exit
 }
 opts.parse(ARGV)
 
-SBA_WD=@@sba_dir
+SBA_WD=$sba_dir
 
 require 'yaml'
 #require "SBA/ServiceConfiguration.rb"
@@ -89,7 +79,7 @@ end
 =end
 
     puts "GENERATING SystemConfiguration"
-    appcfg =  YAML.load( File.open("#{SBA_YML}") )
+    appcfg =  YAML.load( File.open("#{$sba_yml}") )
     libs = appcfg['System']['Libraries']
     n_cfg=appcfg['System']['NServiceNodes'].to_i
     n_actual=appcfg['System']['ServiceNodes'].keys.length
@@ -115,15 +105,6 @@ end
     end
     
     def cxx_serviceclasses(appcfg,libcfgs) # OK
-        nthreads=1
-        if @@sysc==1
-            t_setup=0
-            t_proc=0
-            timing_str=",#{t_setup},#{t_proc}"
-        else
-            timing_str=""
-        end
-
         cxx_service_tuples=[]
 		prev_sclid_scid=0;
         for k in appcfg['System']['ServiceNodes'].keys
@@ -283,7 +264,7 @@ end
 
 # ====================================================================  
 
-cxxh_file="#{@@dirpath}/SystemConfiguration.h"
+cxxh_file="#{$dirpath}/SystemConfiguration.h"
 
 cxxh=File.open(cxxh_file,"w")
     
@@ -309,8 +290,8 @@ cxxh.puts '
 // 
 '
 cxxh.puts "
-#ifndef _#{@@prefix_SC}SBA_SYSTEM_CONFIGURATION_H_
-#define _#{@@prefix_SC}SBA_SYSTEM_CONFIGURATION_H_
+#ifndef _SBA_SYSTEM_CONFIGURATION_H_
+#define _SBA_SYSTEM_CONFIGURATION_H_
 "
 cxxh.puts '
 //#include <map>
@@ -324,7 +305,7 @@ using namespace std;
 
 typedef unsigned int UINT;
 
-namespace #{@@prefix_SC}SBA {
+namespace SBA {
 
 "
 cxxh.puts cxx_method_constants(libcfgs)
@@ -365,7 +346,7 @@ cxxh.puts "
 cxxh.close           
 
 
-cxx_file="#{@@dirpath}/SelectWrapper.cc"
+cxx_file="#{$dirpath}/SelectWrapper.cc"
 
 cxx=File.open(cxx_file,"w")
     

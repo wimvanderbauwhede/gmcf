@@ -15,6 +15,7 @@
 //#include <dlfcn.h>
 //#include <fstream>
 //#include <sstream>
+#define  NO_SERVICES
 #include "Types.h" 
 #include "Packet.h" 
 #include "Base/ServiceCoreControl.h"
@@ -29,7 +30,7 @@
 	CoreServices() {};
 	CoreServices(Base::System* sba_s_, Base::Tile* sba_t_, Service& s_, ServiceAddress& addr_, uint tid_) : Base::ServiceCoreControl(sba_s_,sba_t_,s_,addr_,tid_) {};
 void select_wrapper(unsigned int code);
-	
+#ifndef NO_SERVICES
 	double word2dbl(Word);
  Word dbl2word(double);
 
@@ -47,15 +48,9 @@ void select_wrapper(unsigned int code);
  void ls_CTRL();
  void ls_ALU();
  void ls_Math();
+#endif
  
  void ls_BEGIN();
- void ls_SEQ();
- void ls_IF();
- void ls_LET();
- void ls_APPLY();
- void ls_IO();
- void ls_REG();
-
  void none();
  }; // class
  

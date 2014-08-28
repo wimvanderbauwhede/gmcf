@@ -16,6 +16,9 @@ wd=ARGUMENTS.get('wd','.')
 def isLocal(libname):
     return os.path.exists(wd+'/src/GPRM/Kernel/'+libname+'.cc')
 
+def isLocalFLib(libname):
+    return os.path.exists(wd+'/src/GPRM/Kernel/'+libname)    
+
 libnames=ARGUMENTS.get('sclib','')
 sclibnames=libnames.split(',')
 sclibs=[]
@@ -29,13 +32,24 @@ for libname in sclibnames:
 #       print libsrc
         sclibs+=[wrappersrc,selectsrc,libsrc]
 
+flibnames=ARGUMENTS.get('flibs','')
+flibsnames=flibnames.split(',')
+
+flibs=[]
+for libname in flibsnames:
+    libsrc=''
+    if isLocal(libname):     
+        libsrc=wd+'/src/GPRM/Kernel/'+libname
+    else:
+        libsrc=libname
+    flibs.append(libsrc)
+
 sbasources=Split("""
 Bytecode.cc
 ServiceConfiguration.cc
 Packet.cc
 Base/ServiceCoreControl.cc
 Base/CoreServices.cc
-Base/Let.cc
 Memory.cc
 LookupTable.cc
 TaskDescription.cc
@@ -50,7 +64,7 @@ Runtime.cc
 Timings.cc
 """)
 
-sbasources = [GANNET_DIR+'/GannetVM/src/SBA/'+s for s in sbasources]
+sbasources = [GANNET_DIR+'/GPRM/src/SBA/'+s for s in sbasources]
 
-build(wd,(sclibs+sbasources))
+build(wd,sclibs+sbasources,flibs)
 

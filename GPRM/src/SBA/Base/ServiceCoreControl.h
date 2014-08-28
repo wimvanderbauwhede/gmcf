@@ -111,6 +111,9 @@ class ServiceCoreControl {
  void reset_current_subtask();
  SBA::ServiceManager& service_manager();
  SBA::System& system();
+ SBA::System* system_ptr();
+// SBA::Tile* tile_ptr();
+
 // SBA::GatewayTile& gatewaytile();
  Subtask current_subtask();
  Word_List& get_code(Word);

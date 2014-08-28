@@ -1,0 +1,19 @@
+
+--- # Core Services Configuration
+System:
+  Version: 3.0
+  Libraries: [GMCF, CoreServices]
+  NServiceNodes: 3 # excluding gateway; this is actually the number of threads
+  ServiceNodes:
+    ctrl: [ 1, [CoreServices.BEGIN] ]
+    mn1: [ 2, [GMCF.GMCF] ] 
+    mn2: [ 3, [GMCF.GMCF] ] 
+
+  Aliases:
+  # Alias Name (case sensitive): FQN
+    begin: ctrl.CoreServices.BEGIN.begin
+    model1: mn1.GMCF.GMCF.run_model1
+    model2: mn2.GMCF.GMCF.run_model2
+
+  ModelLibPaths: ['libmodel1.a', 'libmodel2.a'] # if just a filename, should be in Kernel, else must be a full path
+

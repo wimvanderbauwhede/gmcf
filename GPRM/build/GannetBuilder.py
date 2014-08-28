@@ -26,7 +26,7 @@ from SCons.Environment import Environment
 #from cxxtestgenlib import createRunner
 
 
-def build(wd,sources):
+def build(wd,sources,flibs):
 
     destdir='../SBA/'
     global opts
@@ -66,7 +66,7 @@ def build(wd,sources):
     # Flags
     #Smash= '-fstack-protector '# Ashkan
     WARN='' #'-Wall '
-    CXX0X = '-std=c++0x'
+    CXX11 = '-std=c++11'
     OPTSPEED    = '-O3 -fno-exceptions -fno-rtti '
     OPTSIZE = '-Os -fno-exceptions -fno-rtti '
     OPTTHREADS = '-O3 '
@@ -215,7 +215,7 @@ def build(wd,sources):
 
     FLAGS=''
     SWITCHES=''
-    flags+=[CXX0X,WARN,DEBUG,ARCH,PIC,OPT]
+    flags+=[CXX11,WARN,DEBUG,ARCH,PIC,OPT]
     # Ashkan added USE_TILERA
     switches+=[SYSC,SC_IDP,SYSC_FIXME,VERBOSE,NEW,VM,SEQVM,WORDSZ,CYCLES,TIMINGS,STATIC_ALLOC,NO_SOCKET,USE_THREADS,THREADED_CORE,DISTR, USE_TILERA]+MACROS
     for flag in flags:
@@ -232,19 +232,20 @@ def build(wd,sources):
     GANNET_DIR=os.environ["GANNET_DIR"]
     print "GANNET_DIR:"+GANNET_DIR
  			
-    bin='gannetvm'+str(wordsz)
+    bin='gmcfCoupler'
     if LIB:
-       sources.append(GANNET_DIR+'/GPRM/src/gannet.cc')
+       sources.append(GANNET_DIR+'/GPRM/src/gmcf.cc')
     else:
-       sources.append(GANNET_DIR+'/GPRM/src/gannetvm.cc')
+       sources.append(GANNET_DIR+'/GPRM/src/gmcfCoupler.cc')
     #------------------------------------------------------------------------------
-    gcc_version = os.popen('g++ -dumpversion').read().rstrip("\n\r")
+    CXX = os.environ['CXX']
+    gcc_version = os.popen(CXX+' -dumpversion').read().rstrip("\n\r")
     gcc_version_tuple = [int(x) for x in gcc_version.split('.')]
 # WV: HACK! TOO SPECIFIC!
     if (gcc_version_tuple[1]<6):
-        cxx='/opt/local/bin/g++-mp-4.8'
+        raise Exception('You need at least g++ 4.6 for this!')
     else:
-        cxx='g++'
+        cxx=CXX
     if XC==1:
        # B ashkan
        # cxx='powerpc-405-linux-gnu-g++'
@@ -271,31 +272,18 @@ def build(wd,sources):
  
 #FIXME: dl only needed for dynamic loading!
 #libs=['m','dl'] 
-    libs=['m'] 
+# In order to link a fortran library compiled with gfortran, we must include the gfortran library. Wonder what the equivalent is for ifort, pgfortran?
+    libs=flibs+['gfortran','m'] 
     if use_pthreads or threaded_core:
         libs+=['pthread']
-    # ashkan added tmc    
-    if use_tilera:
-        libs+=['tmc']
-#libs+=['pthread','boost_thread-mt']
 
-    # SBA classes should not use boost shared libraries, only header files
-    if boost==1:
-        libs+=['boost_program_options']
 
     INCpaths=['.','../',GANNET_DIR+'/GPRM/src/SBA/'] # ,GANNET_DIR+'/GPRM/SBA/ServiceCoreLibraries/']
-    LIBpaths=[]
-
-    if boost==1:
-        INCpaths+=[os.environ['BOOST_INC']]
+    LIBpaths=[wd+'/src/GPRM/Kernel/']
 
     if OSX==1:
         INCpaths=[wd+'/gensrc/',wd+'/src/GPRM/Kernel/',wd+'/src/','.','../',GANNET_DIR+'/GPRM/src/SBA/',GANNET_DIR+'/GPRM/src/']
-        LIBpaths=['/opt/local/lib/gcc48/','/opt/local/lib/','/usr/local/lib/']
-        libs=['m']
-        if boost==1:
-            INCpaths+=[os.environ['BOOST_INC']]
-            libs+=[os.environ['BOOST_LIB']] 
+        LIBpaths=[wd+'/src/GPRM/Kernel/','/opt/local/lib/gcc49/','/opt/local/lib/','/usr/local/lib/']
 
     #WV: to have multiple targets, we just need to set bin : bin is short for
     #env.Program(target=bin,...)

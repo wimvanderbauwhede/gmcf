@@ -14,12 +14,8 @@ import sys
 ymlpath=ARGUMENTS.get('Y','.')
 lib_path=ARGUMENTS.get('D','.')
 sba_dir=ARGUMENTS.get('WD','.')
-wordsz=ARGUMENTS.get('wordsz',64)
-distr=ARGUMENTS.get('distr',0)
 
 flags=''
-if distr==1:
-    flags='-P'
 
 #src_file='SBA/SystemConfiguration.rb'
 target_file = lib_path+'/'+'SystemConfiguration.h'
@@ -28,7 +24,7 @@ src_file=ymlpath # HACK!
 
 env = Environment()
 
-cmd='GANNET_DIR='+os.environ['GANNET_DIR'] +' ruby '+script+' '+flags+' -Y '+ymlpath+' -D '+lib_path+' --cwd='+sba_dir+' -W '+str(wordsz)
+cmd='GANNET_DIR='+os.environ['GANNET_DIR'] +' ruby '+script+' '+flags+' -Y '+ymlpath+' -D '+lib_path+' --cwd='+sba_dir
 print cmd
 gen=env.Command(target_file, src_file, cmd)
 env.Alias('gen',target_file)

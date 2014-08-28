@@ -1,7 +1,9 @@
 #include "SBA/Types.h"
+#include "SBA/System.h"
+#include "SBA/Tile.h"
 
 class GMCF {
     public:
-        int run_model1(const SBA::System* sba_sysptr, const SBA::Tile* sba_tileptr);
-        int run_model2(const SBA::System* sba_sysptr, const SBA::Tile* sba_tileptr);
+		int64_t run_model1(SBA::System* sba_sysptr, SBA::Tile* sba_tileptr, uint64_t);
+		int64_t run_model2(SBA::System* sba_sysptr, SBA::Tile* sba_tileptr, uint64_t);
 };

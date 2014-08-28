@@ -26,7 +26,7 @@ namespace SBA {
             Services() {};
             Services(Base::System* sba_s_, Base::Tile* sba_t_, Service& s_, ServiceAddress& addr_, uint tid_) : Base::CoreServices(sba_s_,sba_t_,s_,addr_,tid_) {};
 //     using Base::CoreServices::CoreServices; // C++11 constructor inheritance   
-            void kernel_Dummy();
+            void kernel_GMCF();
             void select_wrapper(unsigned int code); 
     }; // class
 } // namespaces       

@@ -35,7 +35,6 @@ if ( $opts{'h'} or ((scalar( keys %opts)==0)&&(scalar @ARGV==0))) {
     -S: use POSIX sockets (no longer supported) 
     -T: DO NOT use POSIX threads
     -P: use communicating processes -- almost certainly BROKEN
-    -W 32|64: specify WORDSZ (either 32 or 64) (defaults to the host width!) -- ONLY 64-bit!
     -X: cross-compile for Linux on PPC -- OBSOLETE
     -g: generate SystemConfiguration.h from YAML-file, don't build
     -b: build only, don't generate
@@ -45,7 +44,6 @@ if ( $opts{'h'} or ((scalar( keys %opts)==0)&&(scalar @ARGV==0))) {
     -L: compile as library
     \n";
 }
-
 
 my $warn= $opts{'w'}?1:0;
 my $verbose= $opts{'v'}?1:0;
@@ -74,8 +72,8 @@ my $scons_pthreads=$opts{'T'}?'':'pthreads=1';
 my $scons_distr=$opts{'P'}?'distr=1':'';
 my $scons_xc=$opts{'X'}?'xc=1':'';
 my $scons_cycles=$opts{'C'}?'cycles=1':'';
-my $wordsz = (exists $opts{'W'})?1*$opts{'W'}: (exists $opts{'H'}?32:$Config{longsize}*8);
-my $scons_wordsz=($wordsz ==32)?'':'wordsz='.$wordsz;
+my $wordsz = 64;
+my $scons_wordsz='wordsz='.$wordsz;
 my $scons_lib = $opts{'L'}?'lib=1':'';
 my $wd=cwd();
 my $scons_wd='wd='.$wd;
@@ -98,6 +96,10 @@ my @sclibs=@{ $config{'System'}{'Libraries'} };
 $sclib=join(',',@sclibs);
 $scons_sclib='sclib='.$sclib;
 
+my @flibs = @{ $config{'System'}{'ModelLibPaths'} };
+my $flibstr = join(',',@flibs);
+my $scons_flibs='flibs='.$flibstr;
+
 my $cxx_gen_source_path="$wd/gensrc";
 my $cxx_source_path="$gannet_dir/GPRM/SBA";
 #my $cxx_build_path="$gannet_dir/GPRM/build";
@@ -105,7 +107,7 @@ my $cxx_build_path="$wd";
 my $gprm_lib_path="$wd/lib";
 
 my $run_scons_str="GANNET_YML_CONFIG=$ymlpath scons $scons_c $scons_new $scons_sclib $scons_v $scons_w $scons_d $scons_cycles $scons_dyn $scons_vm $scons_sock
-$scons_pthreads $scons_wordsz $scons_nogen $scons_wd $scons_lib
+$scons_pthreads $scons_wordsz $scons_nogen $scons_wd $scons_lib $scons_flibs
 -f $gannet_dir/GPRM/build/SConstruct$scons_ext";
 $run_scons_str=~s/\s+/ /g;
 
@@ -130,13 +132,13 @@ if ($clean) {
 			unlink "./gensrc/$file.yml";
 		}
 	}
-	if (-e './bin/gannetvm64') {
-		print 'rm ./bin/gannetvm64',"\n";
-		unlink  './bin/gannetvm64';
+	if (-e './bin/gmcfCoupler') {
+		print 'rm ./bin/gmcfCoupler',"\n";
+		unlink  './bin/gmcfCoupler';
 	}
-	if (-e './lib/libgannet.a') {
-		print 'rm ./lib/libgannet.a',"\n";
-		unlink  './lib/libgannet.a';
+	if (-e './lib/libgmcf.a') {
+		print 'rm ./lib/libgmcf.a',"\n";
+		unlink  './lib/libgmcf.a';
 	}
 
 } else {
@@ -154,7 +156,7 @@ if ($clean) {
 			if ($changed eq '1' or (not -e "$cxx_gen_source_path/$class.yml" and $class ne 'CoreServices') ) {	
 #                            die "$cxx_gen_source_path/$class" if $class eq 'CoreServices';
 
-				print "build.pl: generating library configuration $class.yml and wrappers\n";
+				print "build.pl: generating library configuration $class.yml and wrappers\n"; 
 				WrapperGenerator::generate($class,$nclasses,$is_core);
 			} elsif ( $class eq 'CoreServices' and $nclasses==1 )  {
 				print "build.pl: generating library configuration $class.yml and wrappers\n";

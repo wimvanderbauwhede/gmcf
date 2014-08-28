@@ -23,11 +23,11 @@ using namespace SBA;
 int main(int ac, char* av[]) {
 
 
-	    Runtime gprm_coupler; // need version without args, easy
+	    Runtime gmcf_coupler("gmcf.tdc"); // need version without args, easy
 #ifdef TOP_CYCLES
      ticks t0=getticks();
 #endif
-     gprm_coupler.run();
+     gmcf_coupler.run();
 #ifdef TOP_CYCLES
      ticks t1=getticks();
 cout << "TOP CYCLES: "<<  elapsed(t1,t0) <<"\n";

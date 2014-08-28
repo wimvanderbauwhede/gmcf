@@ -38,7 +38,7 @@ void Base::ServiceCoreControl::run()  {
             ack_ok=sba_tile.service_manager.ack_ok;
             opcode=sba_tile.service_manager.opcode;
 #ifdef VERBOSE
-            cout << "CALL TO CORE (" <<sclid<< ") " <<scid<< " "<<endl;
+            cout << "CALL TO CORE (lib:" <<sclid<< ") " <<scid<< " => "<< (sclid<<8)+scid <<endl;
 #endif // VERBOSE
 
 //            FuncPointer fp=sba_system.cfg.services[(sclid<<8)+scid].core;
@@ -482,7 +482,15 @@ SBA::System& Base::ServiceCoreControl::system() {
 		 return sba_system;
  };
 
+SBA::System* Base::ServiceCoreControl::system_ptr() {
+	SBA::System* sba_system_ptr_=(SBA::System*)sba_system_ptr;
+		  return sba_system_ptr_;
+ };
 
+//SBA::Tile* Base::ServiceCoreControl::tile_ptr() {
+//	SBA::System& sba_system=*((SBA::System*)sba_system_ptr);
+//	return sba_system.nodes[address];
+// };
 
 // SBA::GatewayTile& Base::ServiceCoreControl::gatewaytile() {
 //     System& sba_system=*((System*)sba_system_ptr);

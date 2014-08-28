@@ -3,7 +3,7 @@ package WrapperGenerator;
 use warnings;
 use strict;
 
-our $V=0;
+our $V=1;
 our $gen_src_path='gensrc';
 our $src_path='src/GPRM/Kernel';
 our $templ_path=$ENV{GANNET_DIR}.'/GPRM/build';
@@ -90,7 +90,7 @@ sub generate {
 							pop @chunks;
 						}
 					}
-				}
+				}                
 				$arg_type=join(' ',@chunks);
 				if ($arg_type=~/__TEMPLATE_TYPE_(\d+)__/) {
 					my $ct=$1;
@@ -206,6 +206,9 @@ $comment#include \"$libname.h\"
 using namespace SBA;
 
 void Services::kernel_${class}() {
+#ifdef VERBOSE
+    std::cout << \"CALLING kernel_${class}()\" << std::endl ; 
+#endif    
     ${class}* inst;
     if (init_state(SC_${libname}_${class})) {
         inst = new ${class}($ctor_args);
@@ -216,6 +219,9 @@ void Services::kernel_${class}() {
 
     void* res;
 	Symbol_t res_symbol = NIHIL;
+#ifdef VERBOSE
+    std::cout << \"CALLING method \"<< method() << std::endl; 
+#endif     
     switch ( method() ) {
 ";
 #print $sig_preamble_line;
@@ -227,8 +233,14 @@ for my $method (sort keys%{$classes{$class}} ) {
 	my @args=();
 	my $i=0;
 	for my $arg_type (@arg_types) {
-		push @args,"($arg_type)arg($i)";
-		$i++;
+        if ($arg_type=~/SBA::(System|Tile)\*/) {
+            my $ptr_t=lc($1);
+            push @args,"($arg_type)sba_${ptr_t}_ptr";
+
+        } else {
+            push @args,"($arg_type)arg($i)";
+            $i++;
+        }
 	}
 	my $all_args=join(', ',@args);
 	my $line = 

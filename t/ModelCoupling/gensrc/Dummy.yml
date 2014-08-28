@@ -1,9 +1,0 @@
---- # SBA Core Library Configuration
-System:
-  Version: 3.0
-  Library: Dummy
-
-  Services: # last value is control bit (1=control, 0=computational) 
-    Dummy: [ 32, kernel_Dummy, 0 ]
-  ServiceClasses:
-    Dummy: [ none ]
