@@ -10,8 +10,8 @@
 #ifndef _GMCF_F_H_
 #define _GMCF_F_H_
 
-typedef int64_t* Tile;
-typedef int64_t* System;
+#include <stdint.h>
+#include <sys/types.h>
 
 template<typename TPtr> TPtr fromWord(int64_t ivp) {
 	int64_t* ip=(int64_t*)ivp;

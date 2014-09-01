@@ -9,15 +9,15 @@
 ! The variables in the module will be shared after all, so I need to keep the current approach.
 ! Seems to me that we could actually use this to make sharing easy ...
 
-module GMCF
+module gmcfAPI
 
     implicit none
 
-    integer(8) :: sba_sys
-    integer(8) :: sba_tile
+    integer(8) :: sba_sys ! There is only one System
+    integer(8), dimension(NMODELS) :: sba_tile ! I think this needs to be an array
 
     integer, parameter :: PRE = 0,POST = 1, BLOCKING=1, NON_BLOCKING=0
-    integer, parameter :: REQDATA=0, REQTIME=1, RESPDATA=2, RESPTIME=3
+    integer, parameter :: REQDATA=4, REQTIME=6, RESPDATA=5, RESPTIME=7
 !    integer, parameter :: NMODELS = 2 ! FIXME: use MACRO. In GPRM NSERVICES is a const UINT but I can easily change that.
 
     type gmcfPacket
@@ -39,32 +39,33 @@ module GMCF
 
 contains
 
-    subroutine gmcfInitCoupler(sysptr,tileptr)
+    subroutine gmcfInitCoupler(sysptr,tileptr,model_id)
         integer(8), intent(In) :: sysptr
         integer(8), intent(In) :: tileptr
-        sba_sys = sysptr
-        sba_tile = tileptr
+        integer, intent(In) :: model_id
+        sba_sys= sysptr
+        sba_tile(model_id)  = tileptr
     end subroutine gmcfInitCoupler
 
     subroutine gmcfSync(model_id,time,sync_done)
         integer, intent(In) :: time, model_id
         integer, intent(InOut) :: sync_done
         ! Start by sending N-1 requests for the simulation time (all except yourself)
-        integer :: dest,recvfrom, recvtime, fifo_empty, sync_irq
+        integer :: dest,requester, recvfrom, recvtime, fifo_empty, sync_irq
 
         type(gmcfPacket) :: packet
         sync_counter = NMODELS-1
-
+        ! Send requests for timestamps to all others
         do dest=1,NMODELS
             if (dest /= model_id) then
-                call gmcfSendTimeRequest(dest)
+                call gmcfSendTimeRequest(model_id,dest,time)
             end if
         end do
         ! Read from the FIFO, block if there is nothing there.
         sync_done = 0
         sync_irq = 0
         do while (sync_done == 0 .and. sync_irq == 0)
-            call gmcfReadFromFifo(packet,fifo_empty) ! this is a blocking call
+            call gmcfReadFromFifo(model_id,packet,fifo_empty) ! this is a blocking call
             ! You'll get requests and/or data.
             select case (packet%type)
                 ! For every request, send data;
@@ -78,9 +79,9 @@ contains
                     ! If we store the control variables in an array in the module, that could work
                     sync_irq = 1
                 case (REQTIME)
-                    ! send time. This should not happen!
-                    dest = packet%destination
-                    call gmcfSendTimeRequest(dest)
+! I received a request for timestamp, send a RESPTIME to the sender
+                    requester = packet%destination
+                    call gmcfSendTimestamp(model_id,requester,time)
                 case (RESPTIME)
                     ! If the data is a timestamp, check the sender address and value
                     ! receive time, check
@@ -107,14 +108,35 @@ contains
     end subroutine gmcfSync
 
     ! This is a blocking call on the main FIFO, no muxing
-    subroutine gmcfReadFromFifo(packet,fifo_empty)
+    subroutine gmcfReadFromFifo(model_id,packet,fifo_empty)
+        integer, intent(In) :: model_id
         type(gmcfPacket), intent(Out) :: packet
         integer, intent(Out) :: fifo_empty
+        integer :: source, destination, packet_type, timestamp, pre_post, data_id
+        integer(8) :: data_ptr
+
         ! So here we need to call into GPRM
-        call gmcfreadfromfifoc(sba_sys, sba_tile, packet, fifo_empty)
+        call gmcfreadfromfifoc(sba_sys, sba_tile(model_id), source, destination, packet_type, timestamp, pre_post, data_id, data_ptr, fifo_empty)
+        packet%type=packet_type
+        packet%source=source
+        packet%destination=destination
+        packet%timestamp=timestamp
+        packet%pre_post=pre_post
+        packet%data_id=data_id
+        packet%data_ptr=data_ptr
+
     end subroutine gmcfReadFromFifo
 
+    subroutine gmcfSendTimeRequest(model_id,dest, timestamp)
+        integer, intent(In) :: model_id,dest, timestamp
+        call gmcfsendrequestpacketc(sba_sys, sba_tile(model_id), model_id, dest, REQTIME, timestamp)
+    end subroutine gmcfSendTimeRequest
 
+    subroutine gmcfSendTimestamp(model_id,requester, timestamp)
+        integer, intent(In) :: model_id,requester, timestamp
+        call gmcfsendrequestpacketc(sba_sys, sba_tile(model_id), model_id, requester, RESPTIME, timestamp)
+    end subroutine gmcfSendTimestamp
+#if 0
     ! This is a call that can either block or not block. if it's non-blocking, the variables will not be used
     !        subroutine gmcfRequest1DFloatArray(var_code, array, array_size, destination, pre_post, time, blocking)
     !           ! STUB!
@@ -217,10 +239,10 @@ contains
         call gmcfreadpacketc(sba_sys, sba_tile, packet_type, packet, fifo_empty)
     end subroutine gmcfReadPacket
 
-
+#endif
 !        subroutine gmcfHas(packet_type, has_packet)
 !            integer, intent(In) :: packet_type
 !            integer, intent(Out) :: has_packet
 !            has_packet = 0 ! STUB!
 !        end subroutine
-end module GMCF
+end module gmcfAPI

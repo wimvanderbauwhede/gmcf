@@ -24,7 +24,7 @@ subroutine main_routine1(sys, tile, model_id) ! This replaces 'program main'
 
     ! gmcf-coupler
     ! Init amongst other things gathers info about the time loops, maybe from a config file, need to work this out in detail:
-    call gmcfInitCoupler(sys,tile)
+    call gmcfInitCoupler(sys,tile, model_id)
     ! end gmcf-coupler
 
     print *, "FORTRAN MODEL1", model_id,"main routine called with pointers",sys,tile

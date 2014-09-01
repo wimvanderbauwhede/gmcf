@@ -35,24 +35,14 @@ class Transceiver {
 	ServiceAddress address ;
 	RX_Packet_Fifo rx_fifo;
 	TX_Packet_Fifo tx_fifo ;
-#if DISTR==1
-    UDPSocket rx_socket, tx_socket;
-#endif
 
     Transceiver(Base::System* sba_s_,Base::Tile* sba_t_,Service& s_, ServiceAddress addr_) :
     sba_system_ptr(sba_s_), sba_tile_ptr(sba_t_),
     service(s_), address(addr_)
     {
-    #if DISTR==1
-        rx_socket.bind(INADDR_ANY, GWPORT + service);
-    #endif
     };
 
  void run();
-
-#if DISTR==1
- void receive_packets();
-#endif // DISTR
 
 #if USE_THREADS==1
  void receive_packets();

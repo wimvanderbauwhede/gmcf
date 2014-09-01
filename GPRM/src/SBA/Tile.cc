@@ -28,7 +28,7 @@ using namespace SBA;
 
 void Tile::run() {
 #if USE_THREADS==1
-	transceiver->rx_fifo.wait_for_packets(address);
+	transceiver->rx_fifo.wait_for_packets();
 #endif    
 #ifdef VERBOSE
                 		cout << "Tile::run() start for tile "<< address <<","<<service<<"\n";
@@ -40,10 +40,8 @@ void Tile::run() {
 		 if (service_manager.core_status==CS_busy) {
 		   service_core.run();
 		 }
-    	 //transceiver.run();
 		 transceiver->run();
-    	 //status= service_manager.status || (transceiver.tx_fifo.length()>0) || transceiver.rx_fifo.has_packets();
-    	 status= service_manager.status || (transceiver->tx_fifo.length()>0) || transceiver->rx_fifo.has_packets();
+    	 status = service_manager.status || (transceiver->tx_fifo.length()>0) || transceiver->rx_fifo.has_packets();
 	}
 #ifdef VERBOSE
                 		cout << "Tile::run() done\n";

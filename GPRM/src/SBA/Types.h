@@ -292,44 +292,6 @@ template <typename LType> class Fifo  {
 		Fifo() : _status(0) {};
 }; // of Fifo template
 
-template <typename LType, Word depth> class Fifo_OLD : public deque<LType> {
-	public:
-		unsigned int status;
-		LType shift() {
-			LType t_elt=deque<LType>::front();
-			deque<LType>::pop_front();
-			if (deque<LType>::size()==0) status=0;
-			return t_elt;
-		}
-		void unshift(LType& elt) {
-			push_front(elt);
-			status=1;
-		}
-
-		void push(LType& elt) {
-            push_back(elt);
-			status=1;
-		}
-
-		LType pop() {
-			LType t_elt=deque<LType>::back();
-			deque<LType>::pop_back();
-			if (deque<LType>::size()==0) status=0;
-			return t_elt;
-		}
-
-		unsigned int length() {
-            return deque<LType>::size();
-		}
-
-		void clear() {
-			deque<LType>::clear();
-			status=0;
-		}
-
-		Fifo_OLD() : status(0) {};
-}; // of Fifo_OLD template
-
 
 #else // STATIC_ALLOC
 template <typename LType, Word depth> class Fifo {
@@ -812,62 +774,6 @@ public:
 	typedef Packet_Fifo RX_Packet_Fifo;
 #else // USE_THREADS==1
 
-/*
-// length|clear|
-// Code borrowed from by Anthony Williams (11 December 2008)
-// http://www.justsoftwaresolutions.co.uk/threading/implementing-a-thread-safe-queue-using-condition-variables.html
-class RX_Packet_Fifo
-{
-private:
-    std::deque<Packet_t> packets;
-    mutable boost::mutex _RXlock;
-    boost::condition_variable _RXcond;
-public:
- 	unsigned int _status;
-	TRX_Packet_Fifo () :  _status(0) {};
-
-    void push(Packet_t const& data)
-    {
-        boost::mutex::scoped_lock lock(_RXlock);
-        packets.push_back(data);
-        _status=1;
-        lock.unlock();
-        _RXcond.notify_one();
-    }
-
-    bool empty() const
-    {
-        boost::mutex::scoped_lock lock(_RXlock);
-        return packets.empty();
-    }
-
-    unsigned int size() const
-    {
-        boost::mutex::scoped_lock lock(_RXlock);
-        return packets.size();
-    }
-
-    Packet_t shift()
-    {
-        boost::mutex::scoped_lock lock(_RXlock);
-        while(packets.empty())
-        {
-            _RXcond.wait(lock);
-        }
-
-        Packet_t t_elt=packets.front();
-        packets.pop_front();
-		if (empty()) _status=0;
-		return t_elt;
-    }
-	void clear() {
-		packets.clear();
-	}
-};
-*/
-// without boost
-
-
 //template <typename Packet_t, Word depth>
 class RX_Packet_Fifo {
 	private:
@@ -906,7 +812,7 @@ class RX_Packet_Fifo {
  	  return(has);
     }
 
-    void wait_for_packets(int address) {
+    void wait_for_packets() {
     // we want to block until the status is true
       // so status() will block until it can return true
         pthread_mutex_lock(&_RXlock);
