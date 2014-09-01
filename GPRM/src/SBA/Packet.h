@@ -31,24 +31,6 @@ namespace SBA {
 //==============================================================================
 
 
-#ifdef WV_SYSTEMC // but in the current SystemC model we don't use these
-typedef sc_uint<FB_Kind> Kind_t;
-typedef sc_uint<FB_Datatype> Datatype_t;
-typedef sc_uint<FB_Ext> Ext_t;
-typedef sc_uint<FB_Quoted> Quoted_t;
-typedef sc_uint<FB_Task> Task_t;
-typedef sc_uint<FB_Subtask> Subtask_t;
-typedef sc_uint<FB_Name> Name_t;
-typedef sc_uint<FB_Count> Count_t;
-
-typedef sc_uint<FB_Packet_type> Packet_type_t;
-typedef sc_uint<FB_Ctrl> Ctrl_t;
-typedef sc_uint<FB_Redir> Redir_t;
-typedef sc_uint<FB_Length> Length_t;
-typedef sc_uint<FB_To> To_t;
-typedef sc_uint<FB_Return_to> Return_to_t;
-
-#else
 typedef uint8 Kind_t; //3
 typedef uint8 Datatype_t; //1
 typedef uint8 Ext_t; //1
@@ -61,7 +43,7 @@ typedef uint8 Packet_type_t; //3
 typedef uint8 Ctrl_t; //2
 typedef uint8 Redir_t; //3
 
-#if WORDSZ==64
+
 typedef Word ExtValue_t; //54
 typedef uint32 Name_t; //32
 typedef uint32 Value_t; //32
@@ -71,18 +53,6 @@ typedef uint16 Count_t; //16
 typedef uint16 Length_t; //16
 typedef uint16 Return_to_t; //16
 typedef uint16 To_t; //16
-#elif WORDSZ==32
-typedef uint32 ExtValue_t; //32
-typedef uint16 Value_t; //16
-typedef uint8 NSymbols_t; //16
-typedef uint8 Name_t; //8
-typedef uint8 Count_t; //0
-
-typedef uint16 Length_t; //8
-typedef uint8 Return_to_t; //8
-typedef uint8 To_t; //8
-#endif // WORDSZ
-#endif // WV_SYSTEMC
 
 typedef Task_t DS_t; //2
 typedef Word Symbol_t;
@@ -135,12 +105,6 @@ Word getUInt(Word_List);
 Word getWord(Word_List);
 double getFloat(Word);
 double getFloat(Word_List);
-#if WORDSZ==64
-#else // WORDSZ==32
-#endif // WORDSZ
-#if WORDSZ==64
-#else // WORDSZ==32
-#endif // WORDSZ
 
 char getChar(Word_List);
 

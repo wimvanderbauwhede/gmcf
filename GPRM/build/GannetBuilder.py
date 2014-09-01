@@ -279,11 +279,11 @@ def build(wd,sources,flibs):
 
 
     INCpaths=['.','../',GANNET_DIR+'/GPRM/src/SBA/'] # ,GANNET_DIR+'/GPRM/SBA/ServiceCoreLibraries/']
-    LIBpaths=[wd+'/src/GPRM/Kernel/']
+    LIBpaths=[wd+'/src/GMCF/Models/']
 
     if OSX==1:
-        INCpaths=[wd+'/gensrc/',wd+'/src/GPRM/Kernel/',wd+'/src/','.','../',GANNET_DIR+'/GPRM/src/SBA/',GANNET_DIR+'/GPRM/src/']
-        LIBpaths=[wd+'/src/GPRM/Kernel/','/opt/local/lib/gcc49/','/opt/local/lib/','/usr/local/lib/']
+        INCpaths=[wd+'/gensrc/',wd+'/src/GMCF/Models/',wd+'/src/','.','../',GANNET_DIR+'/GPRM/src/SBA/',GANNET_DIR+'/GPRM/src/']
+        LIBpaths=[wd+'/src/GMCF/Models/','/opt/local/lib/gcc49/','/opt/local/lib/','/usr/local/lib/']
 
     #WV: to have multiple targets, we just need to set bin : bin is short for
     #env.Program(target=bin,...)

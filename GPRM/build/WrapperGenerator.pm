@@ -5,7 +5,7 @@ use strict;
 
 our $V=1;
 our $gen_src_path='gensrc';
-our $src_path='src/GPRM/Kernel';
+our $src_path='src/GMCF/Models';
 our $templ_path=$ENV{GANNET_DIR}.'/GPRM/build';
 
 our $libname;
@@ -38,7 +38,7 @@ sub generate {
     
         $line=~/^namespace\s+(\w+)\s*\{/ && do {
 			my $ns=$1;
-            push @namespaces, $ns unless $ns=~/(:?Gannet|SBA|Base|GPRM|Kernel)/;
+            push @namespaces, $ns unless $ns=~/(:?Gannet|SBA|Base|GPRM|GMCF|Kernel)/;
             next;
         };
 

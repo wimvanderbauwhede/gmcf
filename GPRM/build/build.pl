@@ -23,7 +23,7 @@ getopts( 'hvwNnsHLSTPW:XdbgcCY:', \%opts );
 
 if ( $opts{'h'} or ((scalar( keys %opts)==0)&&(scalar @ARGV==0))) {
 	die "
-    Gannet build script for GPRM
+    Gannet build script for GMCF
     $0 [opts] 
     -Y YAML-file.yml: SBA config file to use
     -w: warnings (for debugging)
@@ -100,6 +100,9 @@ my @flibs = @{ $config{'System'}{'ModelLibPaths'} };
 my $flibstr = join(',',@flibs);
 my $scons_flibs='flibs='.$flibstr;
 
+my $nmodels =  $config{'System'}{'NServiceNodes'}; # This is actually NModels+1, 1 for the Ctrl node.
+my $scons_nmodels ="nmodels=$nmodels"; 
+
 my $cxx_gen_source_path="$wd/gensrc";
 my $cxx_source_path="$gannet_dir/GPRM/SBA";
 #my $cxx_build_path="$gannet_dir/GPRM/build";
@@ -107,7 +110,7 @@ my $cxx_build_path="$wd";
 my $gprm_lib_path="$wd/lib";
 
 my $run_scons_str="GANNET_YML_CONFIG=$ymlpath scons $scons_c $scons_new $scons_sclib $scons_v $scons_w $scons_d $scons_cycles $scons_dyn $scons_vm $scons_sock
-$scons_pthreads $scons_wordsz $scons_nogen $scons_wd $scons_lib $scons_flibs
+$scons_pthreads $scons_wordsz $scons_nogen $scons_wd $scons_lib $scons_flibs $scons_nmodels
 -f $gannet_dir/GPRM/build/SConstruct$scons_ext";
 $run_scons_str=~s/\s+/ /g;
 

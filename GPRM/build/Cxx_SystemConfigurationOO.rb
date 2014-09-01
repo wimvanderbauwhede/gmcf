@@ -58,8 +58,8 @@ require 'yaml'
 
 def loadLibraryConfig(lib)
     puts "WD:#{SBA_WD}"
-    if File.exists?("#{SBA_WD}/src/GPRM/Kernel/#{lib}.yml")
-        libcfg=  YAML.load(File.open("#{SBA_WD}/src/GPRM/Kernel/#{lib}.yml"))
+    if File.exists?("#{SBA_WD}/src/GMCF/Models/#{lib}.yml")
+        libcfg=  YAML.load(File.open("#{SBA_WD}/src/GMCF/Models/#{lib}.yml"))
     elsif File.exists?("#{SBA_WD}/gensrc/#{lib}.yml")
         libcfg=  YAML.load(File.open("#{SBA_WD}/gensrc/#{lib}.yml"))
     elsif File.exists?("#{ENV['GANNET_DIR']}/GPRM/src/SBA/Base/#{lib}.yml")
@@ -91,13 +91,11 @@ end
     for lib in libs
         libcfgs[i] =  loadLibraryConfig(lib)
                 
-        if File.exists?("#{SBA_WD}/src/GPRM/Kernel/#{lib}.h")
-            sclibs[i]='#include "'+SBA_WD+'/src/GPRM/Kernel/'+lib+'.h"'
+        if File.exists?("#{SBA_WD}/src/GMCF/Models/#{lib}.h")
+            sclibs[i]='#include "'+SBA_WD+'/src/GMCF/Models/'+lib+'.h"'
         elsif File.exists?("#{ENV['GANNET_DIR']}/GPRM/src/SBA/Base/#{lib}.h") 
-#or 
-#            File.exists?("#{ENV['GANNET_DIR']}/Garnet/SBA/ServiceCoreLibraries/#{lib}.h")
-#            sclibs[i]='#include "SBA/ServiceCoreLibraries/'+lib+'.h"'
-			sclibs[i]='#include "'+ENV['GANNET_DIR']+'/GanneVM/src/SBA/Base/'+lib+'.h' 
+# WV: seems this is never used? 
+			sclibs[i]='#include "'+ENV['GANNET_DIR']+'/GPRM/src/SBA/Base/'+lib+'.h' 
         else
             puts "WARNING: Can't find Library File #{lib}.h"
         end                            

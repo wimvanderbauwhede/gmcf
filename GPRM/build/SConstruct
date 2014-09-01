@@ -5,19 +5,23 @@
 
 ##  (c) 2004-2009 Wim Vanderbauwhede <wim@dcs.gla.ac.uk>
 
+# WV: TODO: This will need to be modified to build the Fortran code, or at least to generate some configuration used to build the Fortran code
+# WV: I should build gprmCoupler as a library, to be linked with the models.
+# So I'll need an envF here to do this. 
 
 #SetOption('implicit_cache', 1)
 import os
 from GannetBuilder import build
 
 GANNET_DIR=os.environ["GANNET_DIR"]
+
 wd=ARGUMENTS.get('wd','.')
 
 def isLocal(libname):
-    return os.path.exists(wd+'/src/GPRM/Kernel/'+libname+'.cc')
+    return os.path.exists(wd+'/src/GMCF/Models/'+libname+'.cc')
 
 def isLocalFLib(libname):
-    return os.path.exists(wd+'/src/GPRM/Kernel/'+libname)    
+    return os.path.exists(wd+'/src/GMCF/Models/'+libname)    
 
 libnames=ARGUMENTS.get('sclib','')
 sclibnames=libnames.split(',')
@@ -26,7 +30,7 @@ for libname in sclibnames:
     libsrc=''
     if isLocal(libname):     
         if libname!= 'CoreServices':
-            libsrc=wd+'/src/GPRM/Kernel/'+libname+'.cc'
+            libsrc=wd+'/src/GMCF/Models/'+libname+'.cc'
         wrappersrc=wd+'/gensrc/Services.cc'
         selectsrc=wd+'/gensrc/SelectWrapper.cc'
 #       print libsrc
@@ -39,10 +43,20 @@ flibs=[]
 for libname in flibsnames:
     libsrc=''
     if isLocal(libname):     
-        libsrc=wd+'/src/GPRM/Kernel/'+libname
+        libsrc=wd+'/src/GMCF/Models/'+libname
     else:
         libsrc=libname
     flibs.append(libsrc)
+
+
+nmodels=ARGUMENTS.get('nmodels','')
+NMODELS_FLAG = '-DNMODELS='+nmodels
+FC=os.environ["FC"]
+gmcflibsources=['./src/GMCF/Models/gmcf.f95']
+LDFLAGS=[]
+FFLAGS=[NMODELS_FLAG]
+envF=Environment(F95=FC,LINK=FC,LINKFLAGS=LDFLAGS,F95FLAGS=FFLAGS,F95PATH=['./src/GMCF/Models'])
+envF.Library('gmcf',gmcflibsources) # ,LIBS=['m','netcdff'],LIBPATH=['.','/opt/local/lib','/usr/local/lib'])
 
 sbasources=Split("""
 Bytecode.cc

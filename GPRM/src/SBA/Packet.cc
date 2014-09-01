@@ -204,23 +204,13 @@ double SBA::getFloat(Word word) {
      double result;
     if (getExt(word)==1){
         Word word=0; // FIXME: get the pointer and dereference!
-#if WORDSZ==64
             double *dbl_p=(double*)word;
             result= *dbl_p;
-#else // WORDSZ==32
-            float *flt_p=(float*)word;
-            float flt_result= *flt_p;
-            result=(double)flt_result;
-#endif // WORDSZ
     } else {
-#if WORDSZ==64
         Word val=getValue(word);
         float *flt_p=(float*)val;
         float flt_result= *flt_p;
         result=(double)flt_result;
-#else // WORDSZ==32
-           cerr << "Floats must be extended for 32-bit FPU\n"; exit(-1);
-#endif // WORDSZ
     }
 
     return result;
@@ -231,23 +221,13 @@ double SBA::getFloat(Word_List words) {
      double result;
     if (getExt(words[0])==1){
         Word word=words[1];
-#if WORDSZ==64
             double *dbl_p=(double*)word;
             result= *dbl_p;
-#else // WORDSZ==32
-            float *flt_p=(float*)word;
-            float flt_result= *flt_p;
-            result=(double)flt_result;
-#endif // WORDSZ
     } else {
-#if WORDSZ==64
         Word        word=getValue(words[0]);
         float *flt_p=(float*)word;
         float flt_result= *flt_p;
         result=(double)flt_result;
-#else // WORDSZ==32
-           cerr << "Floats must be extended for 32-bit FPU\n"; exit(-1);
-#endif // WORDSZ
     }
 
     return result;
