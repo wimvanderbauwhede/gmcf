@@ -1,15 +1,19 @@
 import os
-from GannetBuilder import build
 
-wd=ARGUMENTS.get('wd','.')
+# g++-mp-4.9 -Wall -c -std=c++11  -DWORDSZ=64 -DUSE_THREADS=1 gmcfF.cc
+# gfortran-mp-4.9 -cpp -ffree-form -ffree-line-length-0  -Wall -DNMODELS=2 -c gmcfAPI.f95
 
-
-nmodels=ARGUMENTS.get('nmodels','')
+nmodels=ARGUMENTS.get('nmodels','2')
 NMODELS_FLAG = '-DNMODELS='+nmodels
 FC=os.environ["FC"]
-gmcflibsources=['./gmcf.f95']
+CXX=os.environ["CXX"]
+GANNET_DIR=os.environ["GANNET_DIR"]
+
+gmcflibsources=['./gmcfAPI.f95','./gmcfF.cc']
 LDFLAGS=[]
-FFLAGS=['-Wall','-cpp',NMODELS_FLAG]
-envF=Environment(F95=FC,LINK=FC,LINKFLAGS=LDFLAGS,F95FLAGS=FFLAGS,F95PATH=['.'])
-envF.Library('gmcf',gmcflibsources) # ,LIBS=['m','netcdff'],LIBPATH=['.','/opt/local/lib','/usr/local/lib'])
+FFLAGS=['-Wall','-cpp','-ffree-form','-ffree-line-length-0',NMODELS_FLAG]
+CXXFLAGS=[ '-Wall',  '-std=c++11' ,  '-DWORDSZ=64', '-DUSE_THREADS=1']
+INCPATH=[ GANNET_DIR+'/GPRM/src', GANNET_DIR+'/GPRM/src/SBA',  '../../../gensrc']
+envF=Environment(F95=FC,LINK=FC,LINKFLAGS=LDFLAGS,F95FLAGS=FFLAGS,F95PATH=['.'],CXX=CXX,CXXFLAGS=CXXFLAGS,CPPPATH=INCPATH)
+envF.Library('gmcf',gmcflibsources) 
 
