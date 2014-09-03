@@ -4,11 +4,11 @@
 void Services::select_wrapper(unsigned int code) {
 
 	switch (code) {
-		case 513:
-			ls_BEGIN();
-			break;
 		case 288:
 			kernel_GMCF();
+			break;
+		case 513:
+			ls_BEGIN();
 			break;
 		default:
 			none();

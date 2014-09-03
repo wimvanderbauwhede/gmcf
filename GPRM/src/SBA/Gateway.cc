@@ -45,7 +45,7 @@ using namespace SBA;
                         exit(1);
 #endif // QUIT
 //                        cout << "NPACKETS: "<<task_description_packet_list.size()<<"\n";
-                    for(Packet_List::iterator iter_=task_description_packet_list.begin();iter_!=task_description_packet_list.end();iter_++) {
+                    for(auto iter_=task_description_packet_list.begin();iter_!=task_description_packet_list.end();iter_++) {
                     	Packet_t task_description_packet=*iter_;
                     	if ((getType(getHeader(task_description_packet))) == P_reference) {
 #if VERBOSE==1
@@ -62,44 +62,7 @@ using namespace SBA;
 	gw_tile.init = false;
 					
     } // of parse_task_description
- /*
- void Gateway::parse_task_description_OLD()  {
-    GatewayTile& gw_tile=*((GatewayTile*)sba_gwtile_ptr);
-#if VERBOSE==1
-    cout << "Gateway: Interface receive()"<<endl;
-#endif // VERBOSE
-					uint ntdcs=vmif.receive(core_status);
-                if (ntdcs!=0 and tasks_stack.size()>0 ){
-                    core_status = CS_busy;
-                    uint task_id=tasks_stack.pop();
-                    vmif.iodescs[task_id]=ntdcs;
-                    Bytecode tdc= vmif.tdcs.front();vmif.tdcs.pop_front();
-                    TaskDescription task_description(tdc,task_id);
-                    Packet_List task_description_packet_list=task_description.Packets;
-                     Word nullw = (Word)0;
-                     gw_tile.result_store.mputWord(task_id,nullw);
-#if QUIT==1
-                        exit(1);
-#endif // QUIT
-                        cout << "NPACKETS: "<<task_description_packet_list.size()<<"\n";
-                    for(Packet_List::iterator iter_=task_description_packet_list.begin();iter_!=task_description_packet_list.end();iter_++) {
-                    	Packet_t task_description_packet=*iter_;
-                    	if ((getType(getHeader(task_description_packet))) == P_reference) {
-#if VERBOSE==1
-                        cout << "GATEWAY SENDS PACKET:"<<endl;
-                        cout << ppPacket(task_description_packet)<<endl;
-#endif // VERBOSE
-                        transmit_packet(task_description_packet);
-                    	} else if ((getType(getHeader(task_description_packet))) == P_code) {
-                    		// It must be a code packet, store it
-                    		store_code(task_description_packet);
-                    		} // if
 
-                    } // for
-                }
-
-    } // of parse_task_description_OLD
-*/
  void Gateway::store_code(Packet_t subtask_code_packet)  {
 	    GatewayTile& gw_tile=*((GatewayTile*)sba_gwtile_ptr);
 #if VERBOSE==1
@@ -127,7 +90,7 @@ The simplest way seems to be that we malloc some space and return that pointer.
 	uint nwords =0;
 	Word* extsym;
 	bool removed_extsyms=false;
-	for (Word_List::iterator _iter=subtask_code.begin(); _iter!=subtask_code.end();_iter++) {
+	for (auto _iter=subtask_code.begin(); _iter!=subtask_code.end();_iter++) {
 		Word symbol = *_iter;
 		if (extidx==0 && getExt(symbol)>0) { // OK, extended symbol
 			removed_extsyms=true;
@@ -181,7 +144,7 @@ The simplest way seems to be that we malloc some space and return that pointer.
 //#endif // VERBOSE
 
 #if USE_THREADS==1
-         if (!gw_tile.transceiver.rx_fifo.has_packets()) gw_tile.transceiver.rx_fifo.wait_for_packets(address);
+         if (!gw_tile.transceiver.rx_fifo.has_packets()) gw_tile.transceiver.rx_fifo.wait_for_packets();
 #endif
          while (gw_tile.transceiver.rx_fifo.has_packets() ) {
         	  Packet_t  rx_packet=  gw_tile.transceiver.rx_fifo.pop_front();

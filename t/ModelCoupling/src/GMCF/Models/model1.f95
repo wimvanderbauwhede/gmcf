@@ -3,7 +3,7 @@ subroutine main_routine1(sys, tile, model_id) ! This replaces 'program main'
     ! Lines marked with ! gmcf-coupler / ! end gmcf-coupler are additions for coupling
 
     ! gmcf-coupler
-    use GMCF
+    use gmcfAPI
 
     integer(8) , intent(In) :: sys
     integer(8) , intent(In) :: tile

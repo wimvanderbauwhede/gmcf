@@ -5,9 +5,9 @@ System:
   Libraries: [GMCF, CoreServices]
   NServiceNodes: 3 # excluding gateway; this is actually the number of threads
   ServiceNodes:
-    ctrl: [ 1, [CoreServices.BEGIN] ]
-    mn1: [ 2, [GMCF.GMCF] ] 
-    mn2: [ 3, [GMCF.GMCF] ] 
+    mn1: [ 1, [GMCF.GMCF] ] 
+    mn2: [ 2, [GMCF.GMCF] ] 
+    ctrl: [ 3, [CoreServices.BEGIN] ]
 
   Aliases:
   # Alias Name (case sensitive): FQN

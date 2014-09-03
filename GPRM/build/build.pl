@@ -77,6 +77,8 @@ my $scons_wordsz='wordsz='.$wordsz;
 my $scons_lib = $opts{'L'}?'lib=1':'';
 my $wd=cwd();
 my $scons_wd='wd='.$wd;
+
+# Reading the configuration from the YML file
 my $ymlfile = $opts{'Y'}||"$gannet_dir/SystemConfigurations/SBA.yml";
 if ((not $opts{'Y'}) and @ARGV==1) {
     $ymlfile=$ARGV[0];
@@ -87,14 +89,13 @@ my $ymlpath=$ymlfile;
 if ($ymlfile!~/^\//) {
 	$ymlpath="$wd/$ymlfile";
 }
-my $scons_sclib='';
-my $sclib='';
-
 my $config_href = YAML::Syck::LoadFile($ymlpath);
 my %config = %{$config_href};
+
+# Passing config info om to Scons
 my @sclibs=@{ $config{'System'}{'Libraries'} };
-$sclib=join(',',@sclibs);
-$scons_sclib='sclib='.$sclib;
+my $sclib=join(',',@sclibs);
+my $scons_sclib='sclib='.$sclib;
 
 my @flibs = @{ $config{'System'}{'ModelLibPaths'} };
 my $flibstr = join(',',@flibs);
@@ -105,7 +106,6 @@ my $scons_nmodels ="nmodels=$nmodels";
 
 my $cxx_gen_source_path="$wd/gensrc";
 my $cxx_source_path="$gannet_dir/GPRM/SBA";
-#my $cxx_build_path="$gannet_dir/GPRM/build";
 my $cxx_build_path="$wd";
 my $gprm_lib_path="$wd/lib";
 
@@ -117,8 +117,6 @@ $run_scons_str=~s/\s+/ /g;
 $wd="$gannet_dir/GPRM/build";
 if ($clean) {
 # Clean GPRM build 
-#	print "chdir $cxx_build_path\n";
-#	chdir "$cxx_build_path";
 	print "$run_scons_str\n";
 	system("$run_scons_str");
 	print "build.pl: Cleaning gensrc...\n";
@@ -152,20 +150,20 @@ if ($clean) {
 		chomp $changed;
         my $is_core=0;
         my $nclasses=@sclibs;
+        
 		for my $class (@sclibs) {
             if ($class eq 'CoreServices') {$is_core=1};
 # FIXME: If there are several classes, this will generate a Services.h for each, so it will overwrite!
-
-			if ($changed eq '1' or (not -e "$cxx_gen_source_path/$class.yml" and $class ne 'CoreServices') ) {	
-#                            die "$cxx_gen_source_path/$class" if $class eq 'CoreServices';
-
+			if ( 
+			($changed eq '1' or (not -e "$cxx_gen_source_path/$class.yml" and $class ne 'CoreServices') ) 
+			or ( $class eq 'CoreServices' and $nclasses==1 ) 
+			) {	
 				print "build.pl: generating library configuration $class.yml and wrappers\n"; 
 				WrapperGenerator::generate($class,$nclasses,$is_core);
-			} elsif ( $class eq 'CoreServices' and $nclasses==1 )  {
-				print "build.pl: generating library configuration $class.yml and wrappers\n";
-				WrapperGenerator::generate($class,$nclasses,$is_core);                
             }
 		}
+		print "build.pl: generating GMCF wrapper\n"; 
+        WrapperGenerator::generateGMCF($nmodels);
 		my $c=($clean)?'-c':'';
 		chdir "$gannet_dir/GPRM/build";
 		print "build.pl:  generating SystemConfiguration.h from YML files\n";

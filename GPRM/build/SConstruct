@@ -18,7 +18,7 @@ GANNET_DIR=os.environ["GANNET_DIR"]
 wd=ARGUMENTS.get('wd','.')
 
 def isLocal(libname):
-    return os.path.exists(wd+'/src/GMCF/Models/'+libname+'.cc')
+    return os.path.exists(wd+'/gensrc/GMCF/Models/'+libname+'.cc')
 
 def isLocalFLib(libname):
     return os.path.exists(wd+'/src/GMCF/Models/'+libname)    
@@ -30,7 +30,7 @@ for libname in sclibnames:
     libsrc=''
     if isLocal(libname):     
         if libname!= 'CoreServices':
-            libsrc=wd+'/src/GMCF/Models/'+libname+'.cc'
+            libsrc=wd+'/gensrc/GMCF/Models/'+libname+'.cc'
         wrappersrc=wd+'/gensrc/Services.cc'
         selectsrc=wd+'/gensrc/SelectWrapper.cc'
 #       print libsrc
@@ -49,14 +49,14 @@ for libname in flibsnames:
     flibs.append(libsrc)
 
 
-nmodels=ARGUMENTS.get('nmodels','')
-NMODELS_FLAG = '-DNMODELS='+nmodels
-FC=os.environ["FC"]
-gmcflibsources=['./src/GMCF/Models/gmcf.f95']
-LDFLAGS=[]
-FFLAGS=[NMODELS_FLAG]
-envF=Environment(F95=FC,LINK=FC,LINKFLAGS=LDFLAGS,F95FLAGS=FFLAGS,F95PATH=['./src/GMCF/Models'])
-envF.Library('gmcf',gmcflibsources) # ,LIBS=['m','netcdff'],LIBPATH=['.','/opt/local/lib','/usr/local/lib'])
+#nmodels=ARGUMENTS.get('nmodels','')
+#NMODELS_FLAG = '-DNMODELS='+nmodels
+#FC=os.environ["FC"]
+#gmcflibsources=[wd+'/src/GMCF/Models/gmcfAPI.f95']
+#LDFLAGS=[]
+#FFLAGS=[NMODELS_FLAG]
+#envF=Environment(F95=FC,LINK=FC,LINKFLAGS=LDFLAGS,F95FLAGS=FFLAGS,F95PATH=['./src/GMCF/Models'])
+#envF.Library('gmcfAPI',gmcflibsources) # ,LIBS=['m','netcdff'],LIBPATH=['.','/opt/local/lib','/usr/local/lib'])
 
 sbasources=Split("""
 Bytecode.cc

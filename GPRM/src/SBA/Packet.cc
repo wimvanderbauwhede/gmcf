@@ -574,7 +574,7 @@ Word SBA::getSubtaskArgpos(const Header_t& header) {
         for(uint i=0;i<=HEADER_SZ-1 ;i++) {
             packet.push_back(header[i]);
         }
-        for(Word_List::iterator iter_=payload.begin();iter_!=payload.end();iter_++) {
+        for(auto iter_=payload.begin();iter_!=payload.end();iter_++) {
         	Word w=*iter_;
             packet.push_back(w);
         }
@@ -602,12 +602,12 @@ Word SBA::getSubtaskArgpos(const Header_t& header) {
 
  Word_List SBA::setHeader(Packet_t& packet,Header_t& header) {
          Word_List npacket;
-        for(Word_List::iterator iter_=header.begin();iter_!=header.end();iter_++) {
+        for(auto iter_=header.begin();iter_!=header.end();iter_++) {
         	Word w=*iter_;
             npacket.push_back(w);
         }
         Word_List payload=getPayload(packet);
-        for(Word_List::iterator iter_=payload.begin();iter_!=payload.end();iter_++) {
+        for(auto iter_=payload.begin();iter_!=payload.end();iter_++) {
         	Word w=*iter_;
             npacket.push_back(w);
         }
@@ -618,7 +618,7 @@ Word SBA::getSubtaskArgpos(const Header_t& header) {
  Word_List SBA::getPayload(Word_List packet) {
          Word_List pl;
         uint i=0;
-        for(Word_List::iterator iter_=packet.begin();iter_!=packet.end();iter_++) {
+        for(auto iter_=packet.begin();iter_!=packet.end();iter_++) {
         	Word w=*iter_;
              if (i>=3) {pl.push_back(w);}
             i+=1;
@@ -629,7 +629,7 @@ Word SBA::getSubtaskArgpos(const Header_t& header) {
 Word SBA::getPayload_Word(Word_List packet) {
          Word pl = NIHIL;
          uint i=0;
-         for(Word_List::iterator iter_=packet.begin();iter_!=packet.end();iter_++) {
+         for(auto iter_=packet.begin();iter_!=packet.end();iter_++) {
         	 Word w=*iter_;
              if (i==3) {
             	 pl = w;
@@ -648,7 +648,7 @@ Word SBA::getPayload_Word(Word_List packet) {
                 size=result.size();
             }
         }
-        for(Word_List::iterator iter_=result.begin();iter_!=result.end();iter_++) {
+        for(auto iter_=result.begin();iter_!=result.end();iter_++) {
         	Word w=*iter_;
              if (i>=offset) {field.push_back(w);}
             i+=1;
@@ -693,7 +693,7 @@ Symbol_t SBA::mkIntSymbol(Word val) {
 
  deque<Int> SBA::to_signed_int_list( Word_List wl) {
            deque<Int> numlist;
-        for(Word_List::iterator iter_=wl.begin();iter_!=wl.end();iter_++) {
+        for(auto iter_=wl.begin();iter_!=wl.end();iter_++) {
         	Word w=*iter_;
          Int sw=(Int)w;
             numlist.push_back(sw);

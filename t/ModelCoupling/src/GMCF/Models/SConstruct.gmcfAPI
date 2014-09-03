@@ -15,5 +15,5 @@ FFLAGS=['-Wall','-cpp','-ffree-form','-ffree-line-length-0',NMODELS_FLAG]
 CXXFLAGS=[ '-Wall',  '-std=c++11' ,  '-DWORDSZ=64', '-DUSE_THREADS=1']
 INCPATH=[ GANNET_DIR+'/GPRM/src', GANNET_DIR+'/GPRM/src/SBA',  '../../../gensrc']
 envF=Environment(F95=FC,LINK=FC,LINKFLAGS=LDFLAGS,F95FLAGS=FFLAGS,F95PATH=['.'],CXX=CXX,CXXFLAGS=CXXFLAGS,CPPPATH=INCPATH)
-envF.Library('gmcf',gmcflibsources) 
+envF.Library('gmcfAPI',gmcflibsources) 
 

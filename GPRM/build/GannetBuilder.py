@@ -1,6 +1,6 @@
-'''\file SConstruct.test.py
+'''\file GannetBuilder.py
 
-    \brief Gannet SBA - SCons script for building Gannet
+    \brief Gannet SBA - SCons script for building Gannet/GPRM/GMCF
 
 '''
 
@@ -273,26 +273,28 @@ def build(wd,sources,flibs):
 #FIXME: dl only needed for dynamic loading!
 #libs=['m','dl'] 
 # In order to link a fortran library compiled with gfortran, we must include the gfortran library. Wonder what the equivalent is for ifort, pgfortran?
-    libs=flibs+['gfortran','m'] 
+#FIXME!    libs=flibs+['gfortran','m'] 
+    libs = ['m']    
     if use_pthreads or threaded_core:
         libs+=['pthread']
 
 
     INCpaths=['.','../',GANNET_DIR+'/GPRM/src/SBA/'] # ,GANNET_DIR+'/GPRM/SBA/ServiceCoreLibraries/']
-    LIBpaths=[wd+'/src/GMCF/Models/']
+    LIBpaths=[wd+'/gensrc/GMCF/Models/']
 
     if OSX==1:
-        INCpaths=[wd+'/gensrc/',wd+'/src/GMCF/Models/',wd+'/src/','.','../',GANNET_DIR+'/GPRM/src/SBA/',GANNET_DIR+'/GPRM/src/']
-        LIBpaths=[wd+'/src/GMCF/Models/','/opt/local/lib/gcc49/','/opt/local/lib/','/usr/local/lib/']
+        INCpaths=[wd+'/gensrc/',wd+'/gensrc/GMCF/Models/',wd+'/src/','.','../',GANNET_DIR+'/GPRM/src/SBA/',GANNET_DIR+'/GPRM/src/']
+        LIBpaths=[wd+'/gensrc/GMCF/Models/','/opt/local/lib/gcc49/','/opt/local/lib/','/usr/local/lib/']
 
     #WV: to have multiple targets, we just need to set bin : bin is short for
     #env.Program(target=bin,...)
 
     if LIB:
-            glib=env.Library('gannet',sources,LIBS=libs,LIBPATH=LIBpaths,CPPPATH=INCpaths)
+            glib=env.Library('gmcf',sources,LIBS=libs,LIBPATH=LIBpaths,CPPPATH=INCpaths)
+            env.Install(wd+'/lib',glib)
+            env.Alias('install',wd+'/bib') 
     else:
             prog=env.Program(bin,sources,LIBS=libs,LIBPATH=LIBpaths,CPPPATH=INCpaths)
             env.Install(wd+'/bin',prog)
-            env.Alias('install',wd+'/bin') # make this wd+'/bin' ?
-
+            env.Alias('install',wd+'/bin') 
 

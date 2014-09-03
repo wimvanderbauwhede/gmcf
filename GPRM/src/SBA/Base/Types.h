@@ -1,4 +1,4 @@
-#ifndef _SBA_BASE_TYPES_H_
+#ifndef _SBA__BASE_TYPES_H_
 #define _SBA__BASE_TYPES_H_
 
 #include <sys/types.h>

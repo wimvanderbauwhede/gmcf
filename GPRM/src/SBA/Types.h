@@ -86,7 +86,7 @@ template <typename LType> class List {
         unsigned int wordsz;
 	public:
 //    	typedef LType* iterator;
-    	typedef std::_Deque_iterator<LType, LType&, LType*> iterator;
+    	typedef typename std::deque<LType>::iterator iterator_;
 		LType shift() {
 			LType t_elt=lst.front();
 			lst.pop_front();
@@ -178,7 +178,7 @@ template <typename LType> class List {
 
     		char* charbuf=(char*)malloc(wordsz*lst.size());
     		int idx=0;
-    		for (iterator iter_=lst.begin();iter_!=lst.end();iter_++) {
+    		for (auto iter_=lst.begin();iter_!=lst.end();iter_++) {
     		    LType elt = *iter_;
     		    void* elt_v=(void*)elt;
     		    char* wordbytes=(char*)elt_v;
@@ -194,12 +194,12 @@ template <typename LType> class List {
 		    return wordsz*lst.size();
 		}
 
-		iterator begin() {
-		    return (iterator)lst.begin();
+		iterator_ begin() {
+		    return (iterator_)lst.begin();
 		}
 
-		iterator end() {
-		    return  (iterator)lst.end();
+		iterator_ end() {
+		    return (iterator_)lst.end();
 		    }
 
 }; // of List template
@@ -1044,7 +1044,7 @@ template <uint size> class Store {
 
    	// * List Append operation
 	void mpush(unsigned int address,Word_List data) {
-		for (Word_List::iterator iter_=data.begin();iter_!=data.end();iter_++) {
+		for (auto iter_=data.begin();iter_!=data.end();iter_++) {
 			Word w=*iter_;
 			//storage[address].push_back(w);
 			storage[address].push_back(w);

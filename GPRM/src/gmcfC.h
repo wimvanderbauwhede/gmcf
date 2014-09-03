@@ -14,4 +14,9 @@ void gmcfreadfromfifoc_(
 		int* source, int* destination, int* packet_type, int* timestamp, int* pre_post, int* data_id, int64_t* data_ptr,
 		int *fifo_empty);
 
+void gmcfsendrequestpacketc_(
+		int64_t* ivp_sysptr, int64_t* ivp_tileptr,
+		int* source, int* destination, int* packet_type, int* timestamp
+		);
+
 #endif // _GMCF_C_H_

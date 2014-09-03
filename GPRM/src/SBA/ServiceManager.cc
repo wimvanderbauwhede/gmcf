@@ -287,7 +287,7 @@ The simplest way seems to be that we malloc some space and return that pointer.
 	int extidx = 0;
 	uint nwords =0;
 	Word* extsym;
-	for (Word_List::iterator _iter=subtask_code.begin(); _iter!=subtask_code.end();_iter++) {
+	for (auto _iter=subtask_code.begin(); _iter!=subtask_code.end();_iter++) {
 		Word symbol = *_iter;
 		if (extidx==0 && getExt(symbol)>0) { // OK, extended symbol
 			nwords = getNSymbols(symbol); // number of extension words

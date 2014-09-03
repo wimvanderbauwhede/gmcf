@@ -9,7 +9,6 @@
 #include "../SBA/Types.h"
 #include "../SBA/Runtime.h"
 
-void gannetvm(std::string ,  const std::vector< void* >&, unsigned int );
-void gannetvm(std::string , unsigned int );
+void gmcfCoupler(std::string , unsigned int );
 
 #endif // _GANNET_H_

@@ -274,4 +274,100 @@ for my $method (sort keys%{$classes{$class}} ) {
 }
 }
 } # END of gen_kernel_wrapper()
+
+sub generateGMCF {
+   (my $nmodels) =@_;
+   if (not -e "$gen_src_path/GMCF/Models") {
+     mkdir "$gen_src_path/GMCF";
+     mkdir "$gen_src_path/GMCF/Models";
+   }
+    print "GENERATING $gen_src_path/GMCF/Models/GMCF.h\n";	
+	open my $GWH,'>',"$gen_src_path/GMCF/Models/GMCF.h";
+	print $GWH '// Generated wrapper for GMCF. Only parameter is $nmodels
+#include "SBA/Types.h"
+#include "SBA/System.h"
+#include "SBA/Tile.h"
+
+class GMCF {
+    public:
+';    
+for my $i (1..$nmodels) {
+print $GWH "\t\t".'int64_t run_model'.$i.'(SBA::System* sba_sysptr, SBA::Tile* sba_tileptr, uint64_t);'."\n";
+}
+print $GWH '
+};
+';	
+    close $GWH;
+    print "GENERATING $gen_src_path/GMCF/Models/GMCFmodelF.h\n";	
+	open my $GWFH,'>',"$gen_src_path/GMCF/Models/GMCFmodelF.h";
+	print $GWFH '// Generated wrapper for GMCF. Only parameter is $nmodels
+// GMCFmodelF.h
+#ifndef _GMCFMODELF_H_
+#define _GMCFMODELF_H_
+';
+for my $i (1..$nmodels) {
+ print $GWFH 'extern "C" void main_routine'.$i.'_(int64_t*,int64_t*, const int*);'."\n";
+}
+print $GWFH "#endif // _GMCFMODELF_H_\n";
+close $GWFH;
+
+    print "GENERATING $gen_src_path/GMCF/Models/GMCF.cc\n";	
+	open my $GWCC,'>',"$gen_src_path/GMCF/Models/GMCF.cc";
+	print $GWCC '// Generated wrapper for GMCF. Only parameter is $nmodels
+#include "GMCF.h"
+#include "CastPointers.h"
+#include "GMCFmodelF.h"
+
+';
+for my $i (1 .. $nmodels) {
+print $GWCC ' 
+int64_t GMCF::run_model1(SBA::System* sba_sysptr, SBA::Tile* sba_tileptr, uint64_t model_id) {
+#ifdef VERBOSE
+	std::cout << "INSIDE run_model1" << std::endl;
+#endif
+';
+print $GWCC "	const int model = $i;\n";
+print $GWCC '
+    // Cast void* to int64_t
+    // We need to cast to int64_t and then pass the address rather than casting to uint64_t* I think
+#ifdef VERBOSE
+	std::cout << "CHECKING pointers: .tdc file name:" << sba_sysptr->task_description << "; Tile address: "<< sba_tileptr->address << std::endl;
+#endif
+
+#ifdef VERBOSE
+';
+print $GWCC '	std::cout << "\n CASTING System pointer in model '.$i.'\n";'."\n";
+print $GWCC '
+#endif
+
+	void* sys_vp = reinterpret_cast<void*>(sba_sysptr);
+	int64_t sys_iv = (int64_t)sys_vp;
+	int64_t* sba_sys_ivp = &sys_iv;
+#ifdef VERBOSE
+	std::cout << "\n CASTING Tile pointer\n";
+#endif
+	void* tile_vp = reinterpret_cast<void*>(sba_tileptr);
+	int64_t tile_iv = (int64_t)tile_vp;
+    int64_t* sba_tile_ivp = &tile_iv;
+#ifdef VERBOSE
+	std::cout << "CALLING Fortran main_routine1_" << std::endl;
+#endif
+
+    // Here we call the actual Fortran function
+';    
+print $GWCC "    main_routine${i}_(sba_sys_ivp,sba_tile_ivp,&model);\n";
+print $GWCC '
+#ifdef VERBOSE
+	std::cout << "LEAVING run_model'.$i.'" << std::endl;
+#endif
+
+    return '.$i.'; // purely for GPRM compatibility!
+}		
+';
+}
+    close $GWCC;
+
+ 
+} # END of generate_gmcf_wrapper()
+
 1;

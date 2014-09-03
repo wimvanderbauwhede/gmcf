@@ -1,3 +1,13 @@
+
+/* Clearly, this is entirely generic and should be generated and put in gensrc
+ * Also, as this is a wrapper class, maybe a better name is GMCFWrapper or GmcfWrapper
+The generator should be trivial as well:
+for my $i (1..$n_models) {
+print "\t\t".'int64_t run_model'.$i.'(SBA::System* sba_sysptr, SBA::Tile* sba_tileptr, uint64_t);'."\n";
+}
+
+*/
+
 #include "GMCF.h"
 #include "CastPointers.h"
 #include "GMCFmodelF.h"
@@ -21,15 +31,12 @@ int64_t GMCF::run_model1(SBA::System* sba_sysptr, SBA::Tile* sba_tileptr, uint64
 	void* sys_vp = reinterpret_cast<void*>(sba_sysptr);
 	int64_t sys_iv = (int64_t)sys_vp;
 	int64_t* sba_sys_ivp = &sys_iv;
-//	 int64_t* sba_sys_ivp;
-  //   *sba_sys_ivp=toWord<SBA::System*>(sba_sysptr);
 #ifdef VERBOSE
 	std::cout << "\n CASTING Tile pointer\n";
 #endif
 	void* tile_vp = reinterpret_cast<void*>(sba_tileptr);
 	int64_t tile_iv = (int64_t)tile_vp;
-     int64_t* sba_tile_ivp = &tile_iv;
-//     *sba_tile_ivp=toWord<SBA::Tile*>(sba_tileptr);
+    int64_t* sba_tile_ivp = &tile_iv;
 #ifdef VERBOSE
 	std::cout << "CALLING Fortran main_routine1_" << std::endl;
 #endif
@@ -61,15 +68,12 @@ int64_t GMCF::run_model2(SBA::System* sba_sysptr, SBA::Tile* sba_tileptr, uint64
 	void* sys_vp = reinterpret_cast<void*>(sba_sysptr);
 	int64_t sys_iv = (int64_t)sys_vp;
 	int64_t* sba_sys_ivp = &sys_iv;
-//	 int64_t* sba_sys_ivp;
-  //   *sba_sys_ivp=toWord<SBA::System*>(sba_sysptr);
 #ifdef VERBOSE
 	std::cout << "\n CASTING Tile pointer\n";
 #endif
 	void* tile_vp = reinterpret_cast<void*>(sba_tileptr);
 	int64_t tile_iv = (int64_t)tile_vp;
-     int64_t* sba_tile_ivp = &tile_iv;
-//     *sba_tile_ivp=toWord<SBA::Tile*>(sba_tileptr);
+    int64_t* sba_tile_ivp = &tile_iv;
 
 #ifdef VERBOSE
 	std::cout << "CALLING Fortran main_routine2_" << std::endl;
