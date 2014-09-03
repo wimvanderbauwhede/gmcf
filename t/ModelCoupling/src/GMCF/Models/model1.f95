@@ -12,7 +12,7 @@ subroutine main_routine1(sys, tile, model_id) ! This replaces 'program main'
 
     ! gmcf-coupler
     integer :: sync_done, pre_post, destination, request_id
-    integer, parameter :: GPRM_VAR_NAME_1=1,GPRM_VAR_NAME_2=2, DEST_1=1, DEST_2=2
+    integer, parameter :: GMCF_VAR_NAME_1=1,GMCF_VAR_NAME_2=2, DEST_1=1, DEST_2=2
     type(gmcfPacket) :: packet
     ! end gmcf-coupler
 
@@ -45,17 +45,35 @@ subroutine main_routine1(sys, tile, model_id) ! This replaces 'program main'
         do while(sync_done == 0)
             call gmcfSync(model_id,t,sync_done)
             print *, "FORTRAN MODEL1 AFTER gmcfSync()"
-!            sync_done=1
             ! if sync is not done, means we had to break out to send data for some request
             !    if (sync_done == 0) then
             !      select case (gmcfRequests(model_id)%data_id) ! <code for the variable var_name, GPRM-style>
-            !        case (GPRM_VAR_NAME_1)
+            !        case (GMCF_VAR_NAME_1)
             !            call gmcfSend1DFloatArray(var_name_1, size(var_name_1), gmcfRequests(model)%destination,t)
             !      end select
             !    end if
             print *, "FORTRAN MODEL1", model_id," sync loop ",t,"..."
         end do
         print *, "FORTRAN MODEL1", model_id," syncing DONE for time step ",t
+        ! So now we can do some work. Let's suppose model1 is the LES, and it requests data from model2, WRF.
+        ! The data requested consists of 1-D and a 3-D array of floats
+        ! could also be called gmcfSendDataRequest
+        call gmcfRequestData(GMCF_VAR_NAME_1, DEST_2, PRE, t) ! check if PRE/POST makes some sense here
+        call gmcfRequestData(GMCF_VAR_NAME_2, DEST_2, POST, t)
+        call gmcfWaitFor(RESPDATA, 2)
+        ! and then we read them
+        do while (hasPackets(RESPDATA))
+            call gprmShiftPending(RESPDATA,packet)
+            ! read a packet
+            select case (packet%data_id) ! <code for the variable var_name, GPRM-style>
+                case (GPRM_VAR_NAME_1)
+                    call gprmRead1DFloatArray(var_name_1,size(var_name_1), packet)
+                case (GPRM_VAR_NAME_2)
+                    call gprmRead3DFloatArray(var_name_2,size(var_name_2), packet)
+            end select
+        end do
+        ! And now we can do work on this data
+
 
     end do
 

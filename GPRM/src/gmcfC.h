@@ -19,4 +19,13 @@ void gmcfsendrequestpacketc_(
 		int* source, int* destination, int* packet_type, int* timestamp
 		);
 
+void gmcfwaitforpacketsc_(
+		int64_t* ivp_sysptr, int64_t* ivp_tileptr,
+		int* packet_type, int* npackets
+		);
+void gmcfshiftpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
+		int* packet_type,
+		int* source, int* destination, int* timestamp, int* pre_post, int* data_id, int64_t* data_ptr,
+		int *fifo_empty
+		);
 #endif // _GMCF_C_H_

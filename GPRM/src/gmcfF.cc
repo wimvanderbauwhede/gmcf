@@ -70,3 +70,83 @@ void gmcfsendrequestpacketc_(
 	std::cout << "gmcfsendrequestpacketc_: running TRX\n";
 	tileptr->transceiver->run();
 }
+
+void gmcfwaitforpacketsc_(
+		int64_t* ivp_sysptr, int64_t* ivp_tileptr,
+		int* packet_type, int* npackets
+		) {
+/*
+call gprmWaitFor(RESPDATA, 2)
+
+is implemented as:
+- block on RX FIFO
+- demux
+- stop when we have put n packets in queue x
+*/
+
+	int64_t ivp = *ivp_tileptr;
+	void* vp=(void*)ivp;
+	SBA::Tile* tileptr = (SBA::Tile*)vp;
+	std::cout << "gmcfwaitforpacketsc_: Tile address (sanity): <" << tileptr->address <<">\n";
+	int pending_packets=*npackets;
+	while(pending_packets!=0) {
+		tileptr->transceiver->rx_fifo.wait_for_packets();
+		SBA::Packet_t  p = tileptr->transceiver->rx_fifo.pop_front();
+		if (SBA::getPacket_type(p) == *packet_type) {
+			--pending_packets;
+		}
+		tileptr->service_manager.demux_packets_by_type(p);
+	}
+
+}
+
+void gmcfshiftpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
+		int* packet_type,
+		int* source, int* destination, int* timestamp, int* pre_post, int* data_id, int64_t* data_ptr,
+		int *fifo_empty
+		) {
+	int64_t ivp = *ivp_tileptr;
+	void* vp=(void*)ivp;
+	SBA::Tile* tileptr = (SBA::Tile*)vp;
+	std::cout << "gmcfshiftpendingc_: Tile address (sanity): <" << tileptr->address <<">\n";
+	// this is defensive, so it's slow. And I don't know what to do if there is not packet ...
+	// TODO: I should add a status in all calls to evaluate success!
+	SBA::Packet_t  p;
+	switch (*packet_type) {
+	case P_DREQ:
+		if (tileptr->service_manager.dreq_fifo.size()>0) {
+		p = tileptr->service_manager.dreq_fifo.shift();
+		*fifo_empty = 1 - tileptr->service_manager.dreq_fifo.size();
+		}
+		break;
+	case P_TREQ:
+		if (tileptr->service_manager.treq_fifo.size()>0) {
+		p = tileptr->service_manager.treq_fifo.shift();
+		*fifo_empty = 1 - tileptr->service_manager.treq_fifo.size();
+		}
+		break;
+	case P_DRESP:
+		if (tileptr->service_manager.dresp_fifo.size()>0) {
+		p = tileptr->service_manager.dresp_fifo.shift();
+		*fifo_empty = 1 - tileptr->service_manager.dresp_fifo.size();
+		}
+		break;
+	case P_TRESP:
+		if (tileptr->service_manager.tresp_fifo.size()>0) {
+		p = tileptr->service_manager.tresp_fifo.shift();
+		*fifo_empty = 1 - tileptr->service_manager.tresp_fifo.size();
+		}
+		break;
+	default:
+		cerr << "Only Data/Time Req/Resp supported\n";
+	};
+	SBA::Header_t ph= SBA::getHeader(p);
+	 *source = (int)SBA::getTo(ph);
+	 *destination = (int)SBA::getReturn_to(ph);
+	 *timestamp = (int)getAck_to(ph);
+	 *pre_post = (int)getCtrl(ph);
+	 *data_id = (int)SBA::getReturn_as(ph);
+	 *data_ptr = (int64_t)SBA::getPayload_Word(p);
+
+}
+

@@ -30,39 +30,4 @@ using namespace SBA;
          }
         return bytewords;
     }
-/*
- Bytecode Interface::read_bytecode(uint status){ //H
-     Bytecode bytewords;
-     return bytewords;
-  }
 
- uint Interface::receive(uint core_status) {
-	 System& sba_system=*((System*)sba_system_ptr);
-	 Bytecode bycl=read_bytecode(sba_system.task_description);
-	 if (sba_system.task_descriptions.size()==1){
-		 StringPair tdc_file=sba_system.task_descriptions.front();sba_system.task_descriptions.pop_front();
-		 sba_system.task_data=tdc_file.datafile;
-		 Bytecode bycl=read_bytecode(tdc_file.taskfile);
-
-		 Bytecode bycl=read_bytecode(sba_system.task_description);
-		 tdcs.push(bycl);
-		return 1;
-	 } else {
-		return 0;
-	 }
- } // of receive()
-
- void Interface::send(Word_List& result,uint taskid) {
-     System& sba_system=*((System*)sba_system_ptr);
-
-        if (sba_system.io_mech==0 ){
-        } else {
-                cout <<endl;
-                if (result.size()==0){
-                    cout << "Return value: []"<<endl;
-                } else {
-                    cout << "Return value:\t" <<getValue(result[0])<< ""<<endl;
-                }
-        }
-    } // of send()
-*/

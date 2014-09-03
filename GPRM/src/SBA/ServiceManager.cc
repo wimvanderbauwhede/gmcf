@@ -173,22 +173,34 @@ using namespace SBA;
          }
 		  case P_DREQ :
 		  {
+#ifdef VERBOSE
 			 cout << service << " P_DREQ\n";
+#endif // VERBOSE
+			 dreq_fifo.push_back(packet);
 		   break;
 		  }
 		  case P_TREQ :
 		  {
+#ifdef VERBOSE
 			 cout << service << " P_TREQ\n";
+#endif // VERBOSE
+			 treq_fifo.push_back(packet);
 		   break;
 		  }
 		  case P_DRESP :
 		  {
+#ifdef VERBOSE
 			 cout << service << " P_DRESP\n";
+#endif // VERBOSE
+			 dresp_fifo.push_back(packet);
 		   break;
 		  }
 		  case P_TRESP :
 		  {
+#ifdef VERBOSE
 			 cout << service << " P_TRESP\n";
+#endif // VERBOSE
+			 tresp_fifo.push_back(packet);
 		   break;
 		  }
 

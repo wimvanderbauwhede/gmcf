@@ -104,7 +104,7 @@ contains
                     ! Just put these data packets in the data fifo
                     ! Then update the current values after the sync
                 case default
-                    print *, "GOT AN UNEXPECTED PACKET ",   packet%type ," from ", packet%source, " to", packet%destination
+                    print *, "GOT AN UNEXPECTED PACKET:",   packet%type ," from ", packet%source, " to", packet%destination
             end select
         end do
 
@@ -142,6 +142,32 @@ contains
         integer, intent(In) :: model_id,requester, timestamp
         call gmcfsendrequestpacketc(sba_sys, sba_tile(model_id), model_id, requester, RESPTIME, timestamp)
     end subroutine gmcfSendTimestamp
+
+    subroutine gmcfWaitFor(packet_type)
+        integer, intent(In) :: packet_type,npackets
+        ! What we do here is listen for packets and demux them, probably using a C function
+        ! We do this until there is a packet in the fifo for packet_type
+        call gmcfwaitforpacketc(sba_sys, sba_tile, packet_type,npackets)
+        ! After this, packets will be in their respective queues, with the packet_type queue guaranteed containing at least one packet
+    end subroutine
+
+    subroutine gmcfShiftPending(packet_type,packet)
+        integer, intent(In) :: packet_type
+        type(gmcfPacket), intent(Out) :: packet
+        integer, intent(Out) :: fifo_empty
+        integer :: source, destination, packet_type, timestamp, pre_post, data_id
+        integer(8) :: data_ptr
+
+        call gmcfshiftpendingc(sba_sys, sba_tile, packet_type,source, destination, timestamp, pre_post, data_id, data_ptr, fifo_empty)
+        packet%type=packet_type
+        packet%source=source
+        packet%destination=destination
+        packet%timestamp=timestamp
+        packet%pre_post=pre_post
+        packet%data_id=data_id
+        packet%data_ptr=data_ptr
+
+    end subroutine gprmShiftPending
 #if 0
     ! This is a call that can either block or not block. if it's non-blocking, the variables will not be used
     !        subroutine gmcfRequest1DFloatArray(var_code, array, array_size, destination, pre_post, time, blocking)
@@ -226,14 +252,6 @@ contains
         request%timestamp=timestamp
         request%pre_post=pre_post
         request%data_ptr=data_ptr
-    end subroutine
-
-    subroutine gmcfWaitFor(packet_type)
-        integer, intent(In) :: packet_type
-        ! What we do here is listen for packets and demux them, probably using a C function
-        ! We do this until there is a packet in the fifo for packet_type
-        call gmcfwaitforpacketc(sba_sys, sba_tile, packet_type)
-        ! After this, packets will be in their respective queues, with the packet_type queue guaranteed containing at least one packet
     end subroutine
 
     ! I think I will make this a non-blocking call and use gmcfWaitFor() to block

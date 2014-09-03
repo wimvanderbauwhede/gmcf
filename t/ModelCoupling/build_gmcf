@@ -3,4 +3,4 @@ cd src/GMCF/Models
 scons -f SConstruct.model1
 scons -f SConstruct.model2
 cd ../../..
-g++-mp-4.9 -std=c++11 -o gmcfCoupler -Wall -DWORDSZ=64 -DUSE_THREADS=1 -I$PWD/gensrc -I$GANNET_DIR/GPRM/src -I$GANNET_DIR/GPRM/src/SBA  -L$PWD/lib -L$PWD/src/GMCF/Models $GANNET_DIR/GPRM/src/gmcfCoupler.cc -lgmcf -lgmcfAPI -lgfortran -lmodel1 -lmodel2 
+scons

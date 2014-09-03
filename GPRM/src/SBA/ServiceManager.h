@@ -44,6 +44,12 @@ class ServiceManager {
 	Packet_Fifo     subtask_reference_fifo;
 	Packet_Fifo subtask_code_fifo;
 	Packet_Fifo tx_fifo;
+	// For GMCF
+	Packet_Fifo dreq_fifo;
+	Packet_Fifo treq_fifo;
+	Packet_Fifo dresp_fifo;
+	Packet_Fifo tresp_fifo;
+
 	Subtasks     pending_subtasks_fifo;
 	Subtask_List     subtask_list;
 	Symbol_Table     symbol_table; // OBSOLETE? NEEDED for streaming, but find a better way!

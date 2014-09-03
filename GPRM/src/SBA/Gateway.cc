@@ -179,6 +179,7 @@ The simplest way seems to be that we malloc some space and return that pointer.
     System& sba_system=*((System*)sba_system_ptr);
            while (rx_fifo.has_packets()){
             	Packet_t data_packet= rx_fifo.pop_front();
+            	cout << ppPacket(data_packet);
 //                Word label= getReturn_as(getHeader(data_packet));
                 Word_List result=getPayload(data_packet);
 //                uint  task_id=getTask(label);

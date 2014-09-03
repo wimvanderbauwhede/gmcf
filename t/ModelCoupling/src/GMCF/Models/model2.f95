@@ -11,7 +11,7 @@ subroutine main_routine2(sys, tile, model_id) ! This replaces 'program main'
 
     ! gmcf-coupler
     integer :: sync_done, pre_post, destination, request_id
-    integer, parameter :: GPRM_VAR_NAME_1=1,GPRM_VAR_NAME_2=2, DEST_1=1, DEST_2=2
+    integer, parameter :: GMCF_VAR_NAME_1=1,GMCF_VAR_NAME_2=2, DEST_1=1, DEST_2=2
     type(gmcfPacket) :: packet
     ! end gmcf-coupler
 
@@ -44,17 +44,23 @@ subroutine main_routine2(sys, tile, model_id) ! This replaces 'program main'
         do while(sync_done == 0)
             call gmcfSync(model_id,t,sync_done)
             print *, "FORTRAN MODEL2 AFTER gmcfSync()"
-!            sync_done =1
-            ! if sync is not done, means we had to break out to send data for some request
-            !    if (sync_done == 0) then
-            !      select case (gmcfRequests(model_id)%data_id) ! <code for the variable var_name, GPRM-style>
-            !        case (GPRM_VAR_NAME_1)
-            !            call gmcfSend1DFloatArray(var_name_1, size(var_name_1), gmcfRequests(model)%destination,t)
-            !      end select
-            !    end if
+             if sync is not done, means we had to break out to send data for some request
+                if (sync_done == 0) then
+                  select case (gmcfRequests(model_id)%data_id) ! <code for the variable var_name, GPRM-style>
+                    case (GMCF_VAR_NAME_1)
+                        call gmcfSend1DFloatArray(var_name_1, size(var_name_1), gmcfRequests(model)%destination,t)
+                  end select
+                end if
             print *, "FORTRAN MODEL2", model_id," sync loop ",t,"..."
         end do
         print *, "FORTRAN MODEL2", model_id," syncing DONE for time step ",t
+
+        ! This is the producer, at this point it can start computing
+        ! Question is if any requests to PRE/POST data should be handled here or if they can wait for the sync?
+        ! If the request is PRE, it means the current data, if it's POST, it means the new data
+        ! If I handle all requests during sync, it might be fine. Alternatively, I could block on PRE requests before
+        ! starting a computation. Can this deadlock?
+        ! And I can block on POST requests after the computation but before sync.
 
     end do
 
