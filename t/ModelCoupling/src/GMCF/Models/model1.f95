@@ -44,6 +44,8 @@ subroutine main_routine1(sys, tile, model_id) ! This replaces 'program main'
         sync_done=0
         do while(sync_done == 0)
             call gmcfSync(model_id,t,sync_done)
+            print *, "FORTRAN MODEL1 AFTER gmcfSync()"
+!            sync_done=1
             ! if sync is not done, means we had to break out to send data for some request
             !    if (sync_done == 0) then
             !      select case (gmcfRequests(model_id)%data_id) ! <code for the variable var_name, GPRM-style>

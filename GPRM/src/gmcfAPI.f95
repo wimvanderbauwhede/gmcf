@@ -17,7 +17,7 @@ module gmcfAPI
     integer(8), dimension(NMODELS) :: sba_tile ! I think this needs to be an array
 
     integer, parameter :: PRE = 0,POST = 1, BLOCKING=1, NON_BLOCKING=0
-    integer, parameter :: REQDATA=4, REQTIME=6, RESPDATA=5, RESPTIME=7
+    integer, parameter :: REQDATA=6, REQTIME=7, RESPDATA=8, RESPTIME=9
 !    integer, parameter :: NMODELS = 2 ! FIXME: use MACRO. In GPRM NSERVICES is a const UINT but I can easily change that.
 
     type gmcfPacket
@@ -57,6 +57,7 @@ contains
         sync_counter = NMODELS-1
         ! Send requests for timestamps to all others
         do dest=1,NMODELS
+            sync_status(model_id,dest)=0
             if (dest /= model_id) then
                 call gmcfSendTimeRequest(model_id,dest,time)
             end if
@@ -79,10 +80,12 @@ contains
                     ! If we store the control variables in an array in the module, that could work
                     sync_irq = 1
                 case (REQTIME)
+                    print *, "GOT A REQTIME PACKET ",   packet%type ," from ", packet%source, " to", packet%destination, ' timestamp=',packet%timestamp
 ! I received a request for timestamp, send a RESPTIME to the sender
                     requester = packet%destination
                     call gmcfSendTimestamp(model_id,requester,time)
                 case (RESPTIME)
+                    print *, "GOT A RESPTIME PACKET ",   packet%type ," from ", packet%source, " to", packet%destination, ' timestamp=',packet%timestamp
                     ! If the data is a timestamp, check the sender address and value
                     ! receive time, check
                     recvfrom = packet%source
@@ -100,6 +103,8 @@ contains
                     ! But we can actually defer this until after the sync,
                     ! Just put these data packets in the data fifo
                     ! Then update the current values after the sync
+                case default
+                    print *, "GOT AN UNEXPECTED PACKET ",   packet%type ," from ", packet%source, " to", packet%destination
             end select
         end do
 
@@ -117,6 +122,7 @@ contains
 
         ! So here we need to call into GPRM
         call gmcfreadfromfifoc(sba_sys, sba_tile(model_id), source, destination, packet_type, timestamp, pre_post, data_id, data_ptr, fifo_empty)
+        print *,'FORTRAN: AFTER gmcfreadfromfifoc'
         packet%type=packet_type
         packet%source=source
         packet%destination=destination

@@ -5,17 +5,8 @@
  For now, we require that the executables work without any command-line arguments.
  */
 
-#ifdef TOP_CYCLES
-#include "../cycle.h"
-#endif
-
-#ifdef TIMINGS
-#include <sys/time.h>
-#endif
-
-
-#include <iostream>
-#include "../SBA/Runtime.h"
+#include <string>
+#include "gmcf.h"
 
 using namespace std;
 using namespace SBA;
@@ -30,15 +21,7 @@ int main(int argc, char* argv[]) {
     // if only to be able to select the starting point of the computation
     // And having a limit on the number of time steps is safe
     // Although I'm not sure if these are the same as the model timesteps
-	Runtime coupler(tdc_file,ncycles);
-#ifdef TOP_CYCLES
-	ticks t0=getticks();
-#endif
-	coupler.run();
-#ifdef TOP_CYCLES
-     ticks t1=getticks();
-cout << "TOP CYCLES: "<<  elapsed(t1,t0) <<"\n";
-#endif
+	gmcfCoupler(tdc_file,ncycles);
 
     return 0;
 }

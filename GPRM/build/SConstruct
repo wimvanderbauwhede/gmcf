@@ -48,15 +48,21 @@ for libname in flibsnames:
         libsrc=libname
     flibs.append(libsrc)
 
+print "WD:"+wd
+nmodels=ARGUMENTS.get('nmodels','')
+NMODELS_FLAG = '-DNMODELS='+nmodels
+FC=os.environ["FC"]
+CXX=os.environ["CXX"]
 
-#nmodels=ARGUMENTS.get('nmodels','')
-#NMODELS_FLAG = '-DNMODELS='+nmodels
-#FC=os.environ["FC"]
-#gmcflibsources=[wd+'/src/GMCF/Models/gmcfAPI.f95']
-#LDFLAGS=[]
-#FFLAGS=[NMODELS_FLAG]
-#envF=Environment(F95=FC,LINK=FC,LINKFLAGS=LDFLAGS,F95FLAGS=FFLAGS,F95PATH=['./src/GMCF/Models'])
-#envF.Library('gmcfAPI',gmcflibsources) # ,LIBS=['m','netcdff'],LIBPATH=['.','/opt/local/lib','/usr/local/lib'])
+gmcflibsources=[GANNET_DIR+'/GPRM/src/gmcfAPI.f95',GANNET_DIR+'/GPRM/src/gmcfF.cc']
+LDFLAGS=[]
+FFLAGS=['-Wall','-cpp','-ffree-form','-ffree-line-length-0',NMODELS_FLAG]
+CXXFLAGS=[ '-Wall',  '-std=c++11' ,  '-DWORDSZ=64', '-DUSE_THREADS=1']
+INCPATH=[ GANNET_DIR+'/GPRM/src', GANNET_DIR+'/GPRM/src/SBA',  wd+'/gensrc']
+envF=Environment(F95=FC,LINK=FC,LINKFLAGS=LDFLAGS,F95FLAGS=FFLAGS,F95PATH=['.',GANNET_DIR+'/GPRM/src'],CXX=CXX,CXXFLAGS=CXXFLAGS,CPPPATH=INCPATH)
+gmfcAPIlib = envF.Library('gmcfAPI',gmcflibsources) 
+envF.Install(wd+'/lib',gmfcAPIlib)
+envF.Alias('install',wd+'/bib') 
 
 sbasources=Split("""
 Bytecode.cc

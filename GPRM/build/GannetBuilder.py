@@ -279,11 +279,10 @@ def build(wd,sources,flibs):
         libs+=['pthread']
 
 
-    INCpaths=['.','../',GANNET_DIR+'/GPRM/src/SBA/'] # ,GANNET_DIR+'/GPRM/SBA/ServiceCoreLibraries/']
+    INCpaths=[wd+'/gensrc/',wd+'/gensrc/GMCF/Models/',wd+'/src/','.','../',GANNET_DIR+'/GPRM/src/SBA/',GANNET_DIR+'/GPRM/src/']
     LIBpaths=[wd+'/gensrc/GMCF/Models/']
 
     if OSX==1:
-        INCpaths=[wd+'/gensrc/',wd+'/gensrc/GMCF/Models/',wd+'/src/','.','../',GANNET_DIR+'/GPRM/src/SBA/',GANNET_DIR+'/GPRM/src/']
         LIBpaths=[wd+'/gensrc/GMCF/Models/','/opt/local/lib/gcc49/','/opt/local/lib/','/usr/local/lib/']
 
     #WV: to have multiple targets, we just need to set bin : bin is short for

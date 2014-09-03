@@ -101,7 +101,7 @@ my @flibs = @{ $config{'System'}{'ModelLibPaths'} };
 my $flibstr = join(',',@flibs);
 my $scons_flibs='flibs='.$flibstr;
 
-my $nmodels =  $config{'System'}{'NServiceNodes'}; # This is actually NModels+1, 1 for the Ctrl node.
+my $nmodels =  $config{'System'}{'NServiceNodes'} - 1; # This is actually NModels+1, 1 for the Ctrl node.
 my $scons_nmodels ="nmodels=$nmodels"; 
 
 my $cxx_gen_source_path="$wd/gensrc";
@@ -151,6 +151,9 @@ if ($clean) {
         my $is_core=0;
         my $nclasses=@sclibs;
         
+		print "build.pl: generating GMCF wrapper\n"; 
+        WrapperGenerator::generateGMCF($nmodels);
+        
 		for my $class (@sclibs) {
             if ($class eq 'CoreServices') {$is_core=1};
 # FIXME: If there are several classes, this will generate a Services.h for each, so it will overwrite!
@@ -162,8 +165,6 @@ if ($clean) {
 				WrapperGenerator::generate($class,$nclasses,$is_core);
             }
 		}
-		print "build.pl: generating GMCF wrapper\n"; 
-        WrapperGenerator::generateGMCF($nmodels);
 		my $c=($clean)?'-c':'';
 		chdir "$gannet_dir/GPRM/build";
 		print "build.pl:  generating SystemConfiguration.h from YML files\n";

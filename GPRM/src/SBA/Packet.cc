@@ -760,9 +760,22 @@ Symbol_t SBA::mkIntSymbol(Word val) {
 		case P_code:
 			outs << "pC";
 			break;
-		case P_subtask:
-			outs << "pS";
+		case P_request:
+			outs << "pRq";
 			break;
+		case P_DREQ:
+			outs << "pDREQ";
+			break;
+		case P_TREQ:
+			outs << "pTREQ";
+			break;
+		case P_DRESP:
+			outs << "pDRESP";
+			break;
+		case P_TRESP:
+			outs << "pTRESP";
+			break;
+
 		default:
 			outs << "?"<<(uint)getPacket_type(wl);
 	};

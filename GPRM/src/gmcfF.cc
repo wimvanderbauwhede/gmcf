@@ -4,7 +4,6 @@
 #include "SBA/Tile.h"
 #include "SBA/Packet.h"
 
-
 /*
 Source == Return_to 16
 Dest = To 16
@@ -27,11 +26,17 @@ void gmcfreadfromfifoc_(
 		int *fifo_empty
 ) {
 // So, we need to read from the FIFO. In fact, not as easy as it seems: the FIFO read operation is built into the Tile, and blocks.
-
-	void* vp=(void*)ivp_tileptr;
+	int64_t ivp = *ivp_tileptr;
+	void* vp=(void*)ivp;
 	SBA::Tile* tileptr = (SBA::Tile*)vp;
+	std::cout << "gmcfreadfromfifoc_: Tile address (sanity): <" << tileptr->address <<">\n";
+	std::cout << "gmcfreadfromfifoc_: wait_for_packets\n";
+
 	tileptr->transceiver->rx_fifo.wait_for_packets();
+
 	// Now we know there is a packet, so get it.
+	std::cout << "gmcfreadfromfifoc_: get packet\n";
+
 	SBA::Packet_t  p = tileptr->transceiver->rx_fifo.pop_front();
 	SBA::Header_t ph= SBA::getHeader(p);
 	 *source = (int)SBA::getTo(ph);
@@ -41,18 +46,27 @@ void gmcfreadfromfifoc_(
 	 *pre_post = (int)getCtrl(ph);
 	 *data_id = (int)SBA::getReturn_as(ph);
 	 *data_ptr = (int64_t)SBA::getPayload_Word(p);
+	 std::cout << "gmcfreadfromfifoc_: check fifo size\n";
 	 *fifo_empty = 	tileptr->transceiver->rx_fifo.has_packets() ? 0 : 1;
 
 }
-
+// this could be generic
 void gmcfsendrequestpacketc_(
 		int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		int* source, int* destination, int* packet_type, int* timestamp
 		) {
-
-	void* vp=(void*)ivp_tileptr;
+	int64_t ivp = *ivp_tileptr;
+	void* vp=(void*)ivp;
 	SBA::Tile* tileptr = (SBA::Tile*)vp;
-	SBA::Header_t ph = SBA::mkHeader(*packet_type,0,0,0,*destination,*source,*timestamp,0);
+	std::cout << "gmcfsendrequestpacketc_: send packet from "<< *source << " to " << *destination <<"\n";
+	SBA::Header_t ph = SBA::mkHeader(*packet_type,0,0,1,*destination,*source,*timestamp, 0);
 	SBA::Packet_t request_packet = SBA::mkPacket_new(ph,0);
+#ifdef VERBOSE
+	std::cout << "gmcfsendrequestpacketc_: " << SBA::ppPacket(request_packet);
+#endif
+	std::cout << "gmcfsendrequestpacketc_: Tile address (sanity): <" << tileptr->address <<">\n";
+	std::cout << "gmcfsendrequestpacketc_: FIFO size:" <<tileptr->transceiver->tx_fifo.size()<<"\n";
 	tileptr->transceiver->tx_fifo.push_back(request_packet);
+	std::cout << "gmcfsendrequestpacketc_: running TRX\n";
+	tileptr->transceiver->run();
 }

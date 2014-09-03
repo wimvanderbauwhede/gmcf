@@ -27,8 +27,8 @@ sub generate {
 			'short'=>1,
 			'long'=>1,
 			);
-	my $classheader = "$src_path/$libname.h";
-    open my $CH, '<', $classheader or die $!;
+	my $classheader = "$gen_src_path/GMCF/Models/$libname.h";
+    open my $CH, '<', $classheader or die "$!:$classheader" ;
     my $mode='private';
     while(my $line=<$CH>) {
 #		print $line;
@@ -321,9 +321,9 @@ close $GWFH;
 ';
 for my $i (1 .. $nmodels) {
 print $GWCC ' 
-int64_t GMCF::run_model1(SBA::System* sba_sysptr, SBA::Tile* sba_tileptr, uint64_t model_id) {
+int64_t GMCF::run_model'.$i.'(SBA::System* sba_sysptr, SBA::Tile* sba_tileptr, uint64_t model_id) {
 #ifdef VERBOSE
-	std::cout << "INSIDE run_model1" << std::endl;
+	std::cout << "INSIDE run_model'.$i.'" << std::endl;
 #endif
 ';
 print $GWCC "	const int model = $i;\n";
@@ -331,7 +331,7 @@ print $GWCC '
     // Cast void* to int64_t
     // We need to cast to int64_t and then pass the address rather than casting to uint64_t* I think
 #ifdef VERBOSE
-	std::cout << "CHECKING pointers: .tdc file name:" << sba_sysptr->task_description << "; Tile address: "<< sba_tileptr->address << std::endl;
+	std::cout << "CHECKING pointers for MODEL '.$i.': .tdc file name:" << sba_sysptr->task_description << "; Tile address: "<< sba_tileptr->address << std::endl;
 #endif
 
 #ifdef VERBOSE

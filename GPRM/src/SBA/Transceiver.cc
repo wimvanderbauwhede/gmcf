@@ -23,10 +23,6 @@ using namespace SBA;
 
  void Transceiver::run()  {
 
-#if DISTR==1
-        receive_packets();
-#endif // DISTR
-
         transmit_packets();
 #ifdef VERBOSE
                 		cout << "Transceiver::run() done\n";
@@ -35,16 +31,6 @@ using namespace SBA;
     } //  of run()
 
 
-#if DISTR==1
- void Transceiver::receive_packets()  {
-    System& sba_system=*((System*)sba_system_ptr);
-#ifdef VERBOSE
-        cout << "Node " <<service<< " receiving on port " <<port<< ""<<endl;
-#endif // VERBOSE
-        uint packet_length=getLength(tmp_packet_header);
-        rx_fifo.push_back(tmp_packet);
-    } // of receive_packets
-#endif // DISTR
 
 #if USE_THREADS==1
  void Transceiver::receive_packets()  {
@@ -52,7 +38,6 @@ using namespace SBA;
 #ifdef VERBOSE
         cout << "Node " <<service<< " receiving"<<endl;
 #endif // VERBOSE
- //       rx_fifo.wait_for_packets(); // This is done by "Tile::run()" and then "ServiceManager::receive_packets()"
     } // of receive_packets
 #endif // USE_THREADS
 
@@ -61,7 +46,6 @@ using namespace SBA;
     System& sba_system=*((System*)sba_system_ptr);
 #ifdef VERBOSE
          cout << service <<" TRX:transmit_packets(): FIFO length: "<< tx_fifo.length() << endl;
-//         cout << "This is tx_fifo.status():" << tx_fifo.status() << endl;// Ashkan_debug
 #endif // VERBOSE
         if (tx_fifo.status()==1 ){
             while (tx_fifo.status()==1){
@@ -69,15 +53,10 @@ using namespace SBA;
                 Service service_id= getTo(getHeader(packet));
 				ServiceAddress dest=service_id;
 #ifdef VERBOSE
-//                cout << "HEADER:"<<endl;
-//                cout << (int)getTo(getHeader(packet))<<endl;
-//
                 cout << "PACKET:\n" << ppPacket(packet) << "\n";
                 cout << "service id: " <<service_id<< "; dest addr: " <<dest<< ""<<endl;// Ashkan_debug
-//                 cout << "" <<(int)getType(getHeader(packet))<< " " <<getReturn_as(getHeader(packet))<< " to " <<sba_system.service_by_address(dest)<< " (addr:" <<dest<< ")\n";
 #endif // VERBOSE
 
-#if DISTR==0
                 if (dest==sba_system.gw_address ){
 #ifdef VERBOSE
                 		cout << "Packet for gateway\n";
@@ -100,18 +79,6 @@ using namespace SBA;
                 	// dest is generally not the same as the index in the nodes array.!
                     sba_system.nodes[dest]->transceiver->rx_fifo.push_back(packet);
                 }
-#else // DISTR
-                format="C";
-#if WORDSZ==32
-                format="L";
-#else // WORDSZ==64
-                format="Q";
-#endif // WORDSZ
-                uint payload_length=getLength_p(packet);
-                packet_buf=packet.pack(format*(3+payload_length));
-                uint32_t host=calcDestIP(dest); // assumes base_ip
-                tx_socket.send(packet_buf, 0, host, GWPORT+dest);
-#endif // DISTR
             }
         }
     } // of transmit_packets

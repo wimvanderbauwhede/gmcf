@@ -171,6 +171,27 @@ using namespace SBA;
             subtask_reference_fifo.push_back(packet);
              break;
          }
+		  case P_DREQ :
+		  {
+			 cout << service << " P_DREQ\n";
+		   break;
+		  }
+		  case P_TREQ :
+		  {
+			 cout << service << " P_TREQ\n";
+		   break;
+		  }
+		  case P_DRESP :
+		  {
+			 cout << service << " P_DRESP\n";
+		   break;
+		  }
+		  case P_TRESP :
+		  {
+			 cout << service << " P_TRESP\n";
+		   break;
+		  }
+
            default:
             cerr << "Packet Type " <<packet_type<< " not recognised";
             exit(1);
