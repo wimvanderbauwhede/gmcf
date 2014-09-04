@@ -20,6 +20,7 @@ RespTime == P_fragment 7
 Any == P_error 0
  * */
 // This doesn't need sysptr, but it could be I will have to use sysptr + address rather than tileptr
+//! sba_sys, sba_tile(model_id), source, destination, packet_type, timestamp, pre_post, data_id, data_sz, data_ptr, fifo_empty
 void gmcfreadfromfifoc_(
 		int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		int* source, int* destination, int* packet_type, int* timestamp, int* pre_post, int* data_id, int* data_sz, int64_t* data_ptr,
@@ -39,12 +40,16 @@ void gmcfreadfromfifoc_(
 
 	SBA::Packet_t  p = tileptr->transceiver->rx_fifo.pop_front();
 	SBA::Header_t ph= SBA::getHeader(p);
-	 *source = (int)SBA::getTo(ph);
-	 *destination = (int)SBA::getReturn_to(ph);
+	 *destination = (int)SBA::getTo(ph);
+	 *source = (int)SBA::getReturn_to(ph);
 	 *packet_type = (int)SBA::getPacket_type(ph);
 	 // For data packets (both req and resp), we packet timestamp and data_id in Ack_to and put data_sz in Return_as
 	 uint64_t timestamp_data_id = getAck_to(ph);
+	 if (*packet_type == P_TREQ or *packet_type==P_TRESP) {
+		 *timestamp =  timestamp_data_id;
+	 } else {
 	 *timestamp =  (int)((timestamp_data_id >> 32) & 0xFFFFFFFFUL);
+	 }
 	 *data_id = (int)(timestamp_data_id & 0xFFFFFFFFUL);
 	 *pre_post = (int)getCtrl(ph);
 	 *data_sz = (int)SBA::getReturn_as(ph);
@@ -53,7 +58,7 @@ void gmcfreadfromfifoc_(
 	 *fifo_empty = 	tileptr->transceiver->rx_fifo.has_packets() ? 0 : 1;
 
 }
-// this could be generic
+
 void gmcfsendpacketc_(
 		int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		int* source, int* destination, int* packet_type, int* data_id, int* pre_post, int* timestamp,
@@ -64,7 +69,7 @@ void gmcfsendpacketc_(
 	SBA::Tile* tileptr = (SBA::Tile*)vp;
 	std::cout << "gmcfsendrequestpacketc_: send packet from "<< *source << " to " << *destination <<"\n";
 	SBA::Header_t ph ;
-	if (packet_type == P_TREQ or packet_type == P_TRESP) {
+	if (*packet_type == P_TREQ or *packet_type == P_TRESP) {
 		ph = SBA::mkHeader(*packet_type,*pre_post,0,1,*destination,*source,*timestamp, 1);
 	} else {
 		uint64_t timestamp_data_id = (((uint64_t)(*timestamp)) << 32) + (uint64_t)(*data_id);
@@ -87,7 +92,7 @@ void gmcfwaitforpacketsc_(
 		int* packet_type, int* npackets
 		) {
 /*
-call gprmWaitFor(RESPDATA, 2)
+call gmcfWaitFor(RESPDATA, 2)
 
 is implemented as:
 - block on RX FIFO
@@ -111,6 +116,7 @@ is implemented as:
 
 }
 
+// ! call gmcfshiftpendingc(sba_sys, sba_tile(model_id), packet_type, source, destination, timestamp, pre_post, data_id, data_sz, data_ptr, fifo_empty)
 void gmcfshiftpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		int* packet_type,
 		int* source, int* destination, int* timestamp, int* pre_post, int* data_id, int64_t* data_sz, int64_t* data_ptr,
@@ -152,8 +158,8 @@ void gmcfshiftpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		cerr << "Only Data/Time Req/Resp supported\n";
 	};
 	SBA::Header_t ph= SBA::getHeader(p);
-	 *source = (int)SBA::getTo(ph);
-	 *destination = (int)SBA::getReturn_to(ph);
+	 *destination = (int)SBA::getTo(ph);
+	 *source = (int)SBA::getReturn_to(ph);
 	 if (*packet_type == P_TREQ or *packet_type == P_TRESP ) {
 		 *timestamp = (int)getAck_to(ph);
 		 *data_id =0;
@@ -170,7 +176,54 @@ void gmcfshiftpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 }
 
 
-void gmcfsendarrayc(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
+void gmcfpushpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
+		int* packet_type,
+		int* source, int* destination, int* timestamp, int* pre_post, int* data_id, int64_t* data_sz, int64_t* data_ptr
+		) {
+
+	int64_t ivp = *ivp_tileptr;
+	void* vp=(void*)ivp;
+	SBA::Tile* tileptr = (SBA::Tile*)vp;
+	std::cout << "gmcfpushpendingc_: Tile address (sanity): <" << tileptr->address <<">\n";
+
+	uint64_t timestamp_data_id = *timestamp;
+	if (*packet_type == P_DREQ or *packet_type == P_DRESP) {
+		timestamp_data_id = (((uint64_t)(*timestamp)) << 32) + (uint64_t)(*data_id);
+	}
+
+	SBA::Header_t ph= SBA::mkHeader(*packet_type,*pre_post,0,1,*destination,*source,timestamp_data_id, *data_sz);
+    SBA::Packet_t  p = SBA::mkPacket_new(ph,*data_ptr);
+
+	switch (*packet_type) {
+	case P_DREQ:
+		if (tileptr->service_manager.dreq_fifo.size()>0) {
+			tileptr->service_manager.dreq_fifo.push(p);
+		}
+		break;
+	case P_TREQ:
+		if (tileptr->service_manager.treq_fifo.size()>0) {
+			tileptr->service_manager.treq_fifo.push(p);
+		}
+		break;
+	case P_DRESP:
+		if (tileptr->service_manager.dresp_fifo.size()>0) {
+			tileptr->service_manager.dresp_fifo.push(p);
+		}
+		break;
+	case P_TRESP:
+		if (tileptr->service_manager.tresp_fifo.size()>0) {
+			tileptr->service_manager.tresp_fifo.push(p);
+		}
+		break;
+	default:
+		cerr << "Only Data/Time Req/Resp supported\n";
+	};
+
+}
+
+
+
+void gmcfsendarrayc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		int* data_id, int* source, int* destination, int* pre_post, int* time, int64_t* sz1d,
 		float* array
 		) {

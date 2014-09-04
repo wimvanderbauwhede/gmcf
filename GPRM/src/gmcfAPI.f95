@@ -82,12 +82,12 @@ contains
                     gmcfDataRequests(model_id)=packet
                     sync_irq = 1
                 case (REQTIME)
-                    print *, "GOT A REQTIME PACKET ",   packet%type ," from ", packet%source, " to", packet%destination, ' timestamp=',packet%timestamp
+                    print *, "FORTRAN API SYNC: GOT A REQTIME PACKET ",   packet%type ," from ", packet%source, " to", packet%destination, ' timestamp=',packet%timestamp
 ! I received a request for timestamp, send a RESPTIME to the sender
                     requester = packet%destination
                     call gmcfSendTimestamp(model_id,requester,time)
                 case (RESPTIME)
-                    print *, "GOT A RESPTIME PACKET ",   packet%type ," from ", packet%source, " to", packet%destination, ' timestamp=',packet%timestamp
+                    print *, "FORTRAN API SYNC: GOT A RESPTIME PACKET ",   packet%type ," from ", packet%source, " to", packet%destination, ' timestamp=',packet%timestamp
                     ! If the data is a timestamp, check the sender address and value
                     ! receive time, check
                     recvfrom = packet%source
@@ -100,14 +100,15 @@ contains
                         end if
                     end if
                 case (RESPDATA)
+                    print *, "FORTRAN API SYNC: GOT A RESPDATA PACKET ",   packet%type ," from ", packet%source, " to", packet%destination, ' timestamp=',packet%timestamp
                     ! If it's data, presumably this means there is some non-blocking request for it
                     ! receive data. Again, requires access to all data ...
                     ! But we can actually defer this until after the sync,
                     ! Just put these data packets in the data fifo
-                    gmcfPushPending(RESPDATA,packet)
+                    call gmcfPushPending(model_id, packet)
                     ! Then update the current values after the sync
                 case default
-                    print *, "GOT AN UNEXPECTED PACKET:",   packet%type ," from ", packet%source, " to", packet%destination
+                    print *, "FORTRAN API SYNC: GOT AN UNEXPECTED PACKET:",   packet%type ," from ", packet%source, " to", packet%destination
             end select
         end do
 
@@ -125,7 +126,7 @@ contains
 
         ! So here we need to call into GPRM
         call gmcfreadfromfifoc(sba_sys, sba_tile(model_id), source, destination, packet_type, timestamp, pre_post, data_id, data_sz, data_ptr, fifo_empty)
-        print *,'FORTRAN: AFTER gmcfreadfromfifoc'
+        print *,'FORTRAN API: AFTER gmcfreadfromfifoc'
         packet%type=packet_type
         packet%source=source
         packet%destination=destination
@@ -139,36 +140,37 @@ contains
 
     subroutine gmcfSendTimeRequest(model_id,dest, timestamp)
         integer, intent(In) :: model_id,dest, timestamp
-        call gmcfsendpacketc(sba_sys, sba_tile(model_id), model_id, dest, REQTIME, 0, timestamp,1,0)
+        call gmcfsendpacketc(sba_sys, sba_tile(model_id), model_id, dest, REQTIME, 0, PRE, timestamp,1,0)
     end subroutine gmcfSendTimeRequest
 
     subroutine gmcfSendTimestamp(model_id,requester, timestamp)
         integer, intent(In) :: model_id,requester, timestamp
-        call gmcfsendrequestpacketc(sba_sys, sba_tile(model_id), model_id, requester, RESPTIME, timestamp)
+        call gmcfsendpacketc(sba_sys, sba_tile(model_id), model_id, requester, RESPTIME, 0, PRE, timestamp,1, 0)
     end subroutine gmcfSendTimestamp
 
-    subroutine gmcfWaitFor(packet_type)
-        integer, intent(In) :: packet_type,npackets
+    subroutine gmcfWaitFor(model_id,packet_type,npackets)
+        integer, intent(In) :: model_id,packet_type,npackets
         ! What we do here is listen for packets and demux them, probably using a C function
         ! We do this until there is a packet in the fifo for packet_type
-        call gmcfwaitforpacketc(sba_sys, sba_tile, packet_type,npackets)
+        print *,"FORTRAN API: gmcfWaitFor(",packet_type,npackets,")"
+        call gmcfwaitforpacketsc(sba_sys, sba_tile(model_id), packet_type,npackets)
         ! After this, packets will be in their respective queues, with the packet_type queue guaranteed containing at least one packet
     end subroutine
 
-    subroutine gmcfHasPackets(packet_type, has_packets)
-        integer, intent(In) :: packet_type
+    subroutine gmcfHasPackets(model_id, packet_type, has_packets)
+        integer, intent(In) :: model_id, packet_type
         integer, intent(Out) :: has_packets
-        call gmcfcheckfifoc(sba_sys, sba_tile,packet_type,has_packets);
+        call gmcfcheckfifoc(sba_sys, sba_tile(model_id),packet_type,has_packets);
     end subroutine gmcfHasPackets
 
-    subroutine gmcfShiftPending(packet_type,packet)
-        integer, intent(In) :: packet_type
+    subroutine gmcfShiftPending(model_id, packet_type,packet,fifo_empty)
+        integer, intent(In) :: model_id, packet_type
         type(gmcfPacket), intent(Out) :: packet
         integer, intent(Out) :: fifo_empty
-        integer :: source, destination, packet_type, timestamp, pre_post, data_id
+        integer :: source, destination, timestamp, pre_post, data_id
         integer(8) :: data_sz, data_ptr
 
-        call gmcfshiftpendingc(sba_sys, sba_tile, packet_type,source, destination, timestamp, pre_post, data_id, data_sz, data_ptr, fifo_empty)
+        call gmcfshiftpendingc(sba_sys, sba_tile(model_id), packet_type,source, destination, timestamp, pre_post, data_id, data_sz, data_ptr, fifo_empty)
         packet%type=packet_type
         packet%source=source
         packet%destination=destination
@@ -177,38 +179,41 @@ contains
         packet%data_id=data_id
         packet%data_sz=data_sz
         packet%data_ptr=data_ptr
-    end subroutine gprmShiftPending
+    end subroutine gmcfShiftPending
 
-    subroutine gmcfPushPending(packet_type,packet)
-        integer, intent(In) :: packet_type
+    subroutine gmcfPushPending(model_id, packet)
+        integer, intent(In) :: model_id
         type(gmcfPacket), intent(In) :: packet
-        call gmcfpushpendingc(sba_sys, sba_tile, packet%type,packet%source, packet%destination, packet%timestamp, packet%pre_post, packet%data_id, packet%data_sz, packet%data_ptr)
-    end subroutine gprmShiftPending
+        call gmcfpushpendingc(sba_sys, sba_tile(model_id), packet%type,packet%source, packet%destination, packet%timestamp, packet%pre_post, packet%data_id, packet%data_sz, packet%data_ptr)
+    end subroutine gmcfPushPending
 
     subroutine gmcfRequestData(model_id,data_id, data_sz, dest, pre_post, timestamp)
-        integer, intent(In) :: model_id, data_it, dest, pre_post, timestamp
-        integer(8), intent(In) :: data_sz
+        integer, intent(In) :: model_id, data_id, dest, pre_post, timestamp
+        integer, intent(In) :: data_sz
         call gmcfsendpacketc(sba_sys, sba_tile(model_id), model_id, dest, REQDATA, data_id, pre_post, timestamp,data_sz,0)
     end subroutine gmcfRequestData
     ! same for other types and sizes, as in OpenCL wrapper
 
-    subroutine gmcfSend1DFloatArray(array, sz, data_id, destination,time)
-        integer, intent(In):: sz, data_id
-        real,dimension(sz), intent(In) :: array
+    subroutine gmcfSend1DFloatArray(model_id, array, sz, data_id, destination, pre_post,time)
+        integer, dimension(1), intent(In):: sz
+        integer,intent(In) :: data_id
+        real,dimension(sz(1)), intent(In) :: array
 
-        integer, intent(In) :: destination, time
+        integer, intent(In) :: model_id, destination,pre_post,time
         integer :: sz1d
         sz1d = size(array)*4
-        call gmcfsendarrayc(sba_sys, sba_tile, destination, time, sz1d,array)
+
+        call gmcfsendarrayc(sba_sys, sba_tile(model_id), data_id, model_id, destination, pre_post,  time, sz1d,array)
     end subroutine gmcfSend1DFloatArray
 
-    subroutine gmcfSend3DFloatArray(array, sz, data_id, destination,time)
+    subroutine gmcfSend3DFloatArray(model_id, array, sz, data_id, destination, pre_post,time)
         integer, dimension(3), intent(In):: sz
+        integer,intent(In) :: data_id
         real,dimension(sz(1), sz(2), sz(3)), intent(In) :: array
-        integer, intent(In) :: destination, time
+        integer, intent(In) :: model_id, destination,pre_post,time
         integer :: sz1d
         sz1d = size(array)*4
-        call gmcfsendarrayc(sba_sys, sba_tile, destination, time, sz1d,array)
+        call gmcfsendarrayc(sba_sys, sba_tile(model_id), data_id, model_id, destination, pre_post,  time, sz1d,array)
     end subroutine gmcfSend3DFloatArray
 
    subroutine gmcfRead1DFloatArray(array, sz, packet) ! This will have to be a wrapper around a C function
@@ -233,7 +238,7 @@ contains
 
     subroutine gmcfRead3DFloatArray(array, sz, packet)
         type(gmcfPacket) :: packet
-        integer(8):: ptr
+        integer(8):: ptr, ptr_sz
         integer :: sz1d
         integer, dimension(3):: sz
         real,dimension(sz(1), sz(2), sz(3)) :: array

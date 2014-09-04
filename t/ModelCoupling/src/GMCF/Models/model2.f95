@@ -1,8 +1,8 @@
 ! This is the producer of a producer/consumer coupled model example.
 subroutine main_routine2(sys, tile, model_id) ! This replaces 'program main'
-! Lines marked with ! gprm-coupler / ! end gprm-coupler are additions for coupling
+! Lines marked with ! gmcf-coupler / ! end gmcf-coupler are additions for coupling
 
-! gprm-coupler
+! gmcf-coupler
     use gmcfAPI
 
     integer(8) , intent(In) :: sys
@@ -11,13 +11,14 @@ subroutine main_routine2(sys, tile, model_id) ! This replaces 'program main'
     ! end gmcf-coupler
 
     ! gmcf-coupler
-    integer :: sync_done, pre_post, destination, request_id
+    integer :: sync_done, fifo_empty, t_sync
     integer, parameter :: GMCF_VAR_NAME_1=1,GMCF_VAR_NAME_2=2, DEST_1=1, DEST_2=2
     type(gmcfPacket) :: packet
     ! end gmcf-coupler
 
     integer :: t,t_start,t_stop,t_step
-    real(kind=4), dimension(32) :: var_name_1, var_name_2
+    real(kind=4), dimension(128) :: var_name_1
+    real(kind=4), dimension(128,128,128) :: var_name_2
     t_start=0
     t_stop = 10
     t_step = 1
@@ -41,17 +42,22 @@ subroutine main_routine2(sys, tile, model_id) ! This replaces 'program main'
 
         ! Sync will synchronise simulation time steps but also handle any pending requests
         !$GMC sync(t)
+        t_sync = t
         sync_done=0
         do while(sync_done == 0)
             call gmcfSync(model_id,t,sync_done)
             print *, "FORTRAN MODEL2 AFTER gmcfSync()"
-             if sync is not done, means we had to break out to send data for some request
-                if (sync_done == 0) then
-                  select case (gmcfRequests(model_id)%data_id) ! <code for the variable var_name, GPRM-style>
+#ifdef WV_OK
+            if (sync_done == 0) then
+            print *, "FORTRAN MODEL2 SYNC NOT DONE!"
+                select case (gmcfDataRequests(model_id)%data_id) ! <code for the variable var_name, GMCF-style>
                     case (GMCF_VAR_NAME_1)
-                        call gmcfSend1DFloatArray(var_name_1, size(var_name_1), gmcfRequests(model)%destination,t)
-                  end select
-                end if
+                        call gmcfSend1DFloatArray(model_id,var_name_1, shape(var_name_1), GMCF_VAR_NAME_1,gmcfDataRequests(model_id)%source,PRE,t_sync)
+                    case (GMCF_VAR_NAME_2)
+                        call gmcfSend3DFloatArray(model_id,var_name_2, shape(var_name_2), GMCF_VAR_NAME_2, gmcfDataRequests(model_id)%source,PRE,t_sync)
+                end select
+            end if
+#endif
             print *, "FORTRAN MODEL2", model_id," sync loop ",t,"..."
         end do
         print *, "FORTRAN MODEL2", model_id," syncing DONE for time step ",t
@@ -62,7 +68,46 @@ subroutine main_routine2(sys, tile, model_id) ! This replaces 'program main'
         ! If I handle all requests during sync, it might be fine. Alternatively, I could block on PRE requests before
         ! starting a computation. Can this deadlock?
         ! And I can block on POST requests after the computation but before sync.
+        ! I think it is neater to block on PRE/POST requests separately from sync
 
+        ! Wait for one pre data request
+        print *,"FORTRAN MODEL2: WAITING FOR REQDATA (PRE) ..."
+        call gmcfWaitFor(model_id,REQDATA, 1)
+        call gmcfShiftPending(model_id,REQDATA,packet, fifo_empty)
+        print *,"FORTRAN MODEL2: GOT a REQDATA packet (PRE) from ",packet%source,'to',packet%destination
+        select case (packet%data_id)
+            case (GMCF_VAR_NAME_1)
+                if (packet%pre_post == PRE) then
+                    print *,"FORTRAN MODEL2: SENDING RESPDATA (PRE) from",model_id,'to',packet%source
+                    call gmcfSend1DFloatArray(model_id,var_name_1, shape(var_name_1), GMCF_VAR_NAME_1,packet%source,PRE,t)
+                else
+                    print *,'FORTRAN WARNING: request was for POST, this is PRE, deferring'
+                end if
+            case default
+                print *,'FORTRAN WARNING: request for invalid data:', packet%data_id
+        end select
+
+
+        ! Compute
+
+        ! Wait for one post data request
+        print *,"FORTRAN MODEL2: WAITING FOR REQDATA (POST) ..."
+        call gmcfWaitFor(model_id,REQDATA, 1)
+
+        call gmcfShiftPending(model_id,REQDATA,packet,fifo_empty)
+        select case (packet%data_id)
+            case (GMCF_VAR_NAME_2)
+            if (packet%pre_post == POST) then
+                    print *,"FORTRAN MODEL2: SENDING RESPDATA (POST) from",model_id,'to',packet%source
+                    call gmcfSend3DFloatArray(model_id,var_name_2, shape(var_name_2), GMCF_VAR_NAME_2,packet%source,POST,t)
+                else
+                    print *,'FORTRAN WARNING: request was for PRE, this is POST. Sending POST value!'
+                end if
+            case default
+                print *,'FORTRAN WARNING: request for invalid data:', packet%data_id
+        end select
+#ifndef WV_OK
+#endif
     end do
 
     print *, "FORTRAN MODEL2", model_id,"main routine finished after ",t_stop - t_start," time steps"
