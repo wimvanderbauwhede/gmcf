@@ -27,10 +27,11 @@ module gmcfAPI
         integer :: timestamp
         integer :: pre_post
         integer :: data_id
-        integer(8) :: data_ptr ! This does not work. Instead, I'll use a C struct and a C function to make it work
+        integer(8) :: data_sz
+        integer(8) :: data_ptr
     end type gmcfPacket
 
-    type(gmcfPacket), dimension(NMODELS) :: gmcfRequests
+    type(gmcfPacket), dimension(NMODELS) :: gmcfDataRequests
     !        type(gmcfPacket), dimension(NMODELS) :: gmcfData
     integer, dimension(NMODELS,NMODELS) :: sync_status
     integer, dimension(NMODELS) :: sync_counter = NMODELS-1
@@ -78,6 +79,7 @@ contains
                     ! I guess we could break out of the sync,
                     ! send the data and then go back to the sync
                     ! If we store the control variables in an array in the module, that could work
+                    gmcfDataRequests(model_id)=packet
                     sync_irq = 1
                 case (REQTIME)
                     print *, "GOT A REQTIME PACKET ",   packet%type ," from ", packet%source, " to", packet%destination, ' timestamp=',packet%timestamp
@@ -102,6 +104,7 @@ contains
                     ! receive data. Again, requires access to all data ...
                     ! But we can actually defer this until after the sync,
                     ! Just put these data packets in the data fifo
+                    gmcfPushPending(RESPDATA,packet)
                     ! Then update the current values after the sync
                 case default
                     print *, "GOT AN UNEXPECTED PACKET:",   packet%type ," from ", packet%source, " to", packet%destination
@@ -118,10 +121,10 @@ contains
         type(gmcfPacket), intent(Out) :: packet
         integer, intent(Out) :: fifo_empty
         integer :: source, destination, packet_type, timestamp, pre_post, data_id
-        integer(8) :: data_ptr
+        integer(8) :: data_sz, data_ptr
 
         ! So here we need to call into GPRM
-        call gmcfreadfromfifoc(sba_sys, sba_tile(model_id), source, destination, packet_type, timestamp, pre_post, data_id, data_ptr, fifo_empty)
+        call gmcfreadfromfifoc(sba_sys, sba_tile(model_id), source, destination, packet_type, timestamp, pre_post, data_id, data_sz, data_ptr, fifo_empty)
         print *,'FORTRAN: AFTER gmcfreadfromfifoc'
         packet%type=packet_type
         packet%source=source
@@ -129,13 +132,14 @@ contains
         packet%timestamp=timestamp
         packet%pre_post=pre_post
         packet%data_id=data_id
+        packet%data_sz=data_sz
         packet%data_ptr=data_ptr
 
     end subroutine gmcfReadFromFifo
 
     subroutine gmcfSendTimeRequest(model_id,dest, timestamp)
         integer, intent(In) :: model_id,dest, timestamp
-        call gmcfsendrequestpacketc(sba_sys, sba_tile(model_id), model_id, dest, REQTIME, timestamp)
+        call gmcfsendpacketc(sba_sys, sba_tile(model_id), model_id, dest, REQTIME, 0, timestamp,1,0)
     end subroutine gmcfSendTimeRequest
 
     subroutine gmcfSendTimestamp(model_id,requester, timestamp)
@@ -151,44 +155,79 @@ contains
         ! After this, packets will be in their respective queues, with the packet_type queue guaranteed containing at least one packet
     end subroutine
 
+    subroutine gmcfHasPackets(packet_type, has_packets)
+        integer, intent(In) :: packet_type
+        integer, intent(Out) :: has_packets
+        call gmcfcheckfifoc(sba_sys, sba_tile,packet_type,has_packets);
+    end subroutine gmcfHasPackets
+
     subroutine gmcfShiftPending(packet_type,packet)
         integer, intent(In) :: packet_type
         type(gmcfPacket), intent(Out) :: packet
         integer, intent(Out) :: fifo_empty
         integer :: source, destination, packet_type, timestamp, pre_post, data_id
-        integer(8) :: data_ptr
+        integer(8) :: data_sz, data_ptr
 
-        call gmcfshiftpendingc(sba_sys, sba_tile, packet_type,source, destination, timestamp, pre_post, data_id, data_ptr, fifo_empty)
+        call gmcfshiftpendingc(sba_sys, sba_tile, packet_type,source, destination, timestamp, pre_post, data_id, data_sz, data_ptr, fifo_empty)
         packet%type=packet_type
         packet%source=source
         packet%destination=destination
         packet%timestamp=timestamp
         packet%pre_post=pre_post
         packet%data_id=data_id
+        packet%data_sz=data_sz
         packet%data_ptr=data_ptr
-
     end subroutine gprmShiftPending
-#if 0
-    ! This is a call that can either block or not block. if it's non-blocking, the variables will not be used
-    !        subroutine gmcfRequest1DFloatArray(var_code, array, array_size, destination, pre_post, time, blocking)
-    !           ! STUB!
-    !        end subroutine gmcfRequest1DFloatArray
-    ! For non-blocking calls, what will happen is that the data will at some point be available in the data fifo
-    ! Basically, we wrap this in a loop until the fifo is empty, get the destination and code from the packet, and use these to match the required data
-    ! This again requires some magic with C pointers
-    subroutine gmcfGet1DFloatArray(array, sz, packet) ! This will have to be a wrapper around a C function
+
+    subroutine gmcfPushPending(packet_type,packet)
+        integer, intent(In) :: packet_type
+        type(gmcfPacket), intent(In) :: packet
+        call gmcfpushpendingc(sba_sys, sba_tile, packet%type,packet%source, packet%destination, packet%timestamp, packet%pre_post, packet%data_id, packet%data_sz, packet%data_ptr)
+    end subroutine gprmShiftPending
+
+    subroutine gmcfRequestData(model_id,data_id, data_sz, dest, pre_post, timestamp)
+        integer, intent(In) :: model_id, data_it, dest, pre_post, timestamp
+        integer(8), intent(In) :: data_sz
+        call gmcfsendpacketc(sba_sys, sba_tile(model_id), model_id, dest, REQDATA, data_id, pre_post, timestamp,data_sz,0)
+    end subroutine gmcfRequestData
+    ! same for other types and sizes, as in OpenCL wrapper
+
+    subroutine gmcfSend1DFloatArray(array, sz, data_id, destination,time)
+        integer, intent(In):: sz, data_id
+        real,dimension(sz), intent(In) :: array
+
+        integer, intent(In) :: destination, time
+        integer :: sz1d
+        sz1d = size(array)*4
+        call gmcfsendarrayc(sba_sys, sba_tile, destination, time, sz1d,array)
+    end subroutine gmcfSend1DFloatArray
+
+    subroutine gmcfSend3DFloatArray(array, sz, data_id, destination,time)
+        integer, dimension(3), intent(In):: sz
+        real,dimension(sz(1), sz(2), sz(3)), intent(In) :: array
+        integer, intent(In) :: destination, time
+        integer :: sz1d
+        sz1d = size(array)*4
+        call gmcfsendarrayc(sba_sys, sba_tile, destination, time, sz1d,array)
+    end subroutine gmcfSend3DFloatArray
+
+   subroutine gmcfRead1DFloatArray(array, sz, packet) ! This will have to be a wrapper around a C function
         ! read data packets from the data fifo and update the variables
         ! We do the same as in OpenCL
         ! Then we get the pointer from the packet and cast it
         type(gmcfPacket) :: packet
-        integer(8):: ptr
+        integer(8):: ptr, ptr_sz
         integer :: sz1d
         integer, dimension(1):: sz
         real,dimension(sz(1)) :: array
         real, dimension(size(array)):: array1d
         sz1d = size(array)*4
         ptr = packet%data_ptr
-        call gmcfarrayfromptrc(ptr,sz1d,array1d)
+        ptr_sz = packet%data_sz
+        if (ptr_sz /= sz1d) then
+            print *, 'WARNING: size of read array',ptr_sz,'does not match size of target', sz1d
+        end if
+        call gmcffloatarrayfromptrc(ptr,array1d)
         array = reshape(array1d,shape(array))
     end subroutine
 
@@ -201,72 +240,12 @@ contains
         real, dimension(size(array)):: array1d
         sz1d = size(array)*4
         ptr = packet%data_ptr
-        call gmcfarrayfromptrc(ptr,sz1d,array1d) ! This ugly function will simply cast the ptr and return it as the array1d
+        ptr_sz = packet%data_sz
+        if (ptr_sz /= sz1d) then
+            print *, 'WARNING: size of read array',ptr_sz,'does not match size of target', sz1d
+        end if
+        call gmcffloatarrayfromptrc(ptr,array1d) ! This ugly function will simply cast the ptr and return it as the array1d
         array = reshape(array1d,shape(array))
     end subroutine
 
-    ! same for other types and sizes, as in OpenCL wrapper
-
-    subroutine gmcfSend1DFloatArray(array, sz, destination,time)
-        !            integer, dimension(1),intent(In):: sz
-        !            real,dimension(sz(1)), intent(In) :: array
-        integer, intent(In):: sz
-        real,dimension(sz), intent(In) :: array
-
-        integer, intent(In) :: destination, time
-        integer :: sz1d
-        sz1d = size(array)*4
-        call gmcfsendarrayc(sba_sys, sba_tile, destination, time, sz1d,array)
-    end subroutine gmcfSend1DFloatArray
-
-    subroutine gmcfSend3DFloatArray(array, sz, destination,time)
-        integer, dimension(3), intent(In):: sz
-        real,dimension(sz(1), sz(2), sz(3)), intent(In) :: array
-        integer, intent(In) :: destination, time
-        integer :: sz1d
-        sz1d = size(array)*4
-        call gmcfsendarrayc(sba_sys, sba_tile, destination, time, sz1d,array)
-    end subroutine gmcfSend3DFloatArray
-    ! same for other types and sizes, as in OpenCL wrapper
-
-    subroutine gmcfGetNumberOfRequests(nrequests)
-        integer, intent(Out) :: nrequests
-        ! STUB!
-        nrequests = 1
-    end subroutine
-    !
-    subroutine gmcfShiftPendingRequest(request)
-        type(gmcfPacket), intent(Out) :: request
-        integer :: source
-        integer :: destination
-        integer :: type
-        integer :: timestamp
-        integer :: pre_post
-        integer :: data_id
-        integer(8) :: data_ptr
-        ! STUB!
-        request%type=REQDATA
-        call gmcfshiftpacketc(REQDATA, source, destination, type, timestamp, pre_post, data_id, data_ptr)
-        request%source=source
-        request%destination=destination
-        request%timestamp=timestamp
-        request%pre_post=pre_post
-        request%data_ptr=data_ptr
-    end subroutine
-
-    ! I think I will make this a non-blocking call and use gmcfWaitFor() to block
-    subroutine gmcfReadPacket(packet_type,packet,fifo_empty)
-        integer, intent(In) :: packet_type
-        type(gmcfPacket), intent(Out) :: packet
-        integer, intent(Out) :: fifo_empty
-        ! So here we need to call into GPRM
-        call gmcfreadpacketc(sba_sys, sba_tile, packet_type, packet, fifo_empty)
-    end subroutine gmcfReadPacket
-
-#endif
-!        subroutine gmcfHas(packet_type, has_packet)
-!            integer, intent(In) :: packet_type
-!            integer, intent(Out) :: has_packet
-!            has_packet = 0 ! STUB!
-!        end subroutine
 end module gmcfAPI

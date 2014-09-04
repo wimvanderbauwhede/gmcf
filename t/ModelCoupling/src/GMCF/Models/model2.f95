@@ -1,3 +1,4 @@
+! This is the producer of a producer/consumer coupled model example.
 subroutine main_routine2(sys, tile, model_id) ! This replaces 'program main'
 ! Lines marked with ! gprm-coupler / ! end gprm-coupler are additions for coupling
 
