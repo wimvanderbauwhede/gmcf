@@ -54,7 +54,7 @@ NMODELS_FLAG = '-DNMODELS='+nmodels
 FC=os.environ["FC"]
 CXX=os.environ["CXX"]
 
-gmcflibsources=[GANNET_DIR+'/GPRM/src/gmcfAPI.f95',GANNET_DIR+'/GPRM/src/gmcfF.cc']
+gmcflibsources=[GANNET_DIR+'/GPRM/src/gmcfAPI.f95',wd+'/gensrc/GMCF/Models/gmcfConfiguration.f95',GANNET_DIR+'/GPRM/src/gmcfF.cc']
 LDFLAGS=[]
 FFLAGS=['-Wall','-cpp','-ffree-form','-ffree-line-length-0',NMODELS_FLAG]
 CXXFLAGS=[ '-Wall',  '-std=c++11' ,  '-DWORDSZ=64', '-DUSE_THREADS=1']

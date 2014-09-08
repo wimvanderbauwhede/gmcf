@@ -195,7 +195,8 @@ The simplest way seems to be that we malloc some space and return that pointer.
                      uint* val_ptr=&val;
                      sba_system.result=(void*)val_ptr;
 					} else if (getKind(w)==K_P) {
-						cout << "Return pointer:\t" <<std::hex <<getPointer(w)<< std::dec<<""<<endl;
+						cout << "Return pointer:\t" << getPointer(w)<<endl;
+//						cout << "Return pointer:\t" << std::hex << getPointer(w)<< std::dec<<""<<endl;
 						sba_system.result=getPointer(w);
 					} else {
 						cout << "Return ERROR!\n";

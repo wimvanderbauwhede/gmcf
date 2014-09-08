@@ -203,9 +203,16 @@ using namespace SBA;
 			 tresp_fifo.push_back(packet);
 		   break;
 		  }
-
+		  case P_FIN :
+		  {
+#ifdef VERBOSE
+			 cout << service << " P_FIN\n";
+#endif // VERBOSE
+			 fin_fifo.push_back(packet);
+		   break;
+		  }
            default:
-            cerr << "Packet Type " <<packet_type<< " not recognised";
+            cerr << "Packet Type <" <<packet_type<< "> not recognised";
             exit(1);
         }
     } // of demux_packets_by_type

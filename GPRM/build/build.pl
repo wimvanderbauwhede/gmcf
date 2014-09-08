@@ -92,6 +92,11 @@ if ($ymlfile!~/^\//) {
 my $config_href = YAML::Syck::LoadFile($ymlpath);
 my %config = %{$config_href};
 
+# TEMPORARY HACK: copy gmcfConfiguration from src/GMCF/Models to gensrc/GMCF/Models
+# The idea is that this will become a generated file, e.g. based on the YAML config
+print "cp src/GMCF/Models/gmcfConfiguration.f95 gensrc/GMCF/Models/gmcfConfiguration.f95\n"; 
+system('cp src/GMCF/Models/gmcfConfiguration.f95 gensrc/GMCF/Models/gmcfConfiguration.f95');
+
 # Passing config info om to Scons
 my @sclibs=@{ $config{'System'}{'Libraries'} };
 my $sclib=join(',',@sclibs);
@@ -102,7 +107,7 @@ my $flibstr = join(',',@flibs);
 my $scons_flibs='flibs='.$flibstr;
 
 my $nmodels =  $config{'System'}{'NServiceNodes'} - 1; # This is actually NModels+1, 1 for the Ctrl node.
-my $scons_nmodels ="nmodels=$nmodels"; 
+my $scons_nmodels ="nmodels=$nmodels";
 
 my $cxx_gen_source_path="$wd/gensrc";
 my $cxx_source_path="$gannet_dir/GPRM/SBA";

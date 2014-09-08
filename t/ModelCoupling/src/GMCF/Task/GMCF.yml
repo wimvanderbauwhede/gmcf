@@ -15,5 +15,33 @@ System:
     model1: mn1.GMCF.GMCF.run_model1
     model2: mn2.GMCF.GMCF.run_model2
 
-  ModelLibPaths: ['libmodel1.a', 'libmodel2.a'] # if just a filename, should be in Kernel, else must be a full path
+  ModelLibPaths: ['libmodel1.a', 'libmodel2.a'] # if just a filename, should be in Models, else must be a full path
+
+# I need a simple configuration
+# We must describe the model in terms of what it requires, what it provides, and the time frequency.
+# In principle each model could provide/required each variable with a different time step and offset
+# 
+#       Provides: [To: 3, [Var: 'real(4) u(128,128,128)', Step: 2, Offset: 2], [Var: 'real(4) v(128,128,128)'], [Var: 'real(4) v(128,128,128)'] ]
+# and of course then the Requires must match up
+# Also, the variables don't have in general the same names, so we must have something like ' model1 requires vx from model2 as u
+# As the idea is to generate all of this anyway, maybe  'real(4) u(-1:129,0:127,1:128)' could become real/double/int/long, name, dim as array
+# Yet another complication is that we often will require a part of an array, so we need a way to describe exactly what we want.
+# This seems to lead us back to set comprehensions and even SAC, which is nice.  
+  Models:    
+    model1:        
+        ModelId: 1
+        TimeVar: t
+        SyncTimeStep: 1
+        SyncOffset: 0
+        Provides: [ ]
+        Requires: [2, [[real, [[1, 128]], var_name_1, var_name_1], [real, [[1, 128], [1, 128], [1, 128]], var_name_2, var_name_2] ] ]
+    model2:        
+        ModelId: 2
+        TimeVar: t
+        SyncTimeStep: 1
+        SyncOffset: 0
+        Provides: [1, ['real(4) var_name_1(128)', 'real(4) var_name_2(128,128,128)'] ]
+        Requires: [ ]
+       
+  
 

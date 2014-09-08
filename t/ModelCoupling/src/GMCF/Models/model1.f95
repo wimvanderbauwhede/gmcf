@@ -17,17 +17,23 @@ subroutine main_routine1(sys, tile, model_id) ! This replaces 'program main'
     type(gmcfPacket) :: packet
     ! end gmcf-coupler
 
-    integer :: t,t_start,t_stop,t_step, t_sync, t_sync_step, ii, jj, kk
+    integer :: t,t_start,t_stop,t_step, t_sync, t_sync_prev, t_sync_step, ii, jj, kk, can_interpolate
     real(kind=4) :: v1sum,v2sum
-    real(kind=4), dimension(128) :: var_name_1
-    real(kind=4), dimension(128,128,128) :: var_name_2
+    real(kind=4), dimension(128) :: var_name_1_prev,var_name_1
+!    real(kind=4), pointer, dimension(:) :: var_name_1
+    real(kind=4), dimension(128,128,128) ::  var_name_2_prev,var_name_2
+!    real(kind=4), pointer, dimension(:,:,:) :: var_name_2
     t_start = 0
-    t_stop = 10 ! 200
+    t_stop = 200
     t_step = 1
+
+    t_sync_prev = -1
     t_sync = t_start
     t_sync_step = 20
     var_name_1=0.0
     var_name_2=0.0
+    can_interpolate = 0
+
     ! gmcf-coupler
     ! Init amongst other things gathers info about the time loops, maybe from a config file, need to work this out in detail:
     call gmcfInitCoupler(sys,tile, model_id)
@@ -45,10 +51,12 @@ subroutine main_routine1(sys, tile, model_id) ! This replaces 'program main'
         ! You'll get requests and/or data. For every request, send data; keep going until you've sent data to all and received data from all.
         ! I don't think this will deadlock.
 
-        t_sync = t ! / t_sync_step
-
+        t_sync = t / t_sync_step
+        t_inter = mod(t,t_sync_step)
         ! Sync will synchronise simulation time steps but also handle any pending requests
         !$GMC sync(t)
+        if (t_sync == t_sync_prev+1) then
+        t_sync_prev = t_sync
         sync_done=0
         do while(sync_done == 0)
             call gmcfSync(model_id,t_sync,sync_done)
@@ -69,6 +77,10 @@ subroutine main_routine1(sys, tile, model_id) ! This replaces 'program main'
         end do
         print *, "FORTRAN MODEL1", model_id," syncing DONE for time step ",t
         ! So now we can do some work. Let's suppose model1 is the LES, and it requests data from model2, WRF.
+        ! First overwrite the *prev vars with the current vars
+!         var_name_1_prev = var_name_1
+!         var_name_2_prev = var_name_2
+
         ! The data requested consists of 1-D and a 3-D array of floats
         print *, "FORTRAN MODEL1: sending DREQ 1 from",model_id,'to',DEST_2
         call gmcfRequestData(model_id,GMCF_VAR_NAME_1, size(var_name_1), DEST_2, PRE, t_sync) ! check if PRE/POST makes some sense here
@@ -92,18 +104,34 @@ subroutine main_routine1(sys, tile, model_id) ! This replaces 'program main'
             call gmcfHasPackets(model_id,RESPDATA,has_packets)
         end do
         print *, "FORTRAN MODEL1: DONE reading DRESP into vars, ready to compute ..."
-        ! And now we can do work on this data
-        v1sum=0.0
-        v2sum=0.0
-        do ii=1,128
-            v1sum = v1sum+var_name_1(ii)
-        do jj=1,128
-        do kk=1,128
-            v2sum = v2sum+var_name_2(ii,jj,kk)
-        end do
-        end do
-        end do
-        print *, "FORTRAN MODEL1", model_id,"WORK DONE:",v1sum,v2sum
+
+        end if ! of t_sync
+
+
+        ! WV: Another complication is that we might need to interpolate the received values.
+        ! WV: This will always be the case if the consumer time step is smaller than the producer
+        ! WV: And we know this from the configuration.
+        ! WV: In that case
+
+        if (can_interpolate == 0) then
+            can_interpolate = 1
+        else
+            ! And now we can do work on this data
+            ! WV: I would prefer to introduce a copy step with the interpolated values, but that is yet another copy ...
+            ! WV: In fact, the current full-size copy in the gmcffloatarrayfromptrc_ function should be removed!
+            ! WV: And then we could do
+            v1sum=0.0
+            v2sum=0.0
+            do ii=1,128
+                v1sum = v1sum + (var_name_1_prev(ii)*t_inter + var_name_1(ii)*(t_sync_step-t_inter) )/t_sync_step
+            do jj=1,128
+            do kk=1,128
+                v2sum = v2sum + var_name_2(ii,jj,kk)
+            end do
+            end do
+            end do
+            print *, "FORTRAN MODEL1", model_id,"WORK DONE:",v1sum,v2sum
+        end if
 
     end do
     call gmcfFinished(model_id)

@@ -3,7 +3,7 @@
 #include "SBA/System.h"
 #include "SBA/Tile.h"
 #include "SBA/Packet.h"
-
+//#define GMCF_DEBUG
 /*
 Source == Return_to 16
 Dest = To 16
@@ -30,14 +30,16 @@ void gmcfreadfromfifoc_(
 	int64_t ivp = *ivp_tileptr;
 	void* vp=(void*)ivp;
 	SBA::Tile* tileptr = (SBA::Tile*)vp;
+#ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcfreadfromfifoc_: Tile address (sanity): <" << tileptr->address <<">\n";
 	std::cout << "FORTRAN API C++ gmcfreadfromfifoc_: wait_for_packets\n";
-
+#endif
 	tileptr->transceiver->rx_fifo.wait_for_packets();
 
 	// Now we know there is a packet, so get it.
+#ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcfreadfromfifoc_: get packet\n";
-
+#endif
 	SBA::Packet_t  p = tileptr->transceiver->rx_fifo.pop_front();
 	SBA::Header_t ph= SBA::getHeader(p);
 	 *destination = (int)SBA::getTo(ph);
@@ -54,7 +56,9 @@ void gmcfreadfromfifoc_(
 	 *pre_post = (int)getCtrl(ph);
 	 *data_sz = (int)SBA::getReturn_as(ph);
 	 *data_ptr = (int64_t)SBA::getPayload_Word(p);
+#ifdef GMCF_DEBUG
 	 std::cout << "FORTRAN API C++ gmcfreadfromfifoc_: check fifo size\n";
+#endif
 	 *fifo_empty = 	tileptr->transceiver->rx_fifo.has_packets() ? 0 : 1;
 
 }
@@ -67,8 +71,10 @@ void gmcfsendpacketc_(
 	int64_t ivp = *ivp_tileptr;
 	void* vp=(void*)ivp;
 	SBA::Tile* tileptr = (SBA::Tile*)vp;
+#ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcfsendrequestpacketc_: send packet from "<< *source << " to " << *destination <<"\n";
 	std::cout << "FORTRAN API C++ gmcfsendpacketc_: " << *data_ptr << "\n";
+#endif
 	SBA::Header_t ph ;
 	if (*packet_type == P_TREQ or *packet_type == P_TRESP) {
 		ph = SBA::mkHeader(*packet_type,*pre_post,0,1,*destination,*source,*timestamp, 1);
@@ -78,13 +84,15 @@ void gmcfsendpacketc_(
 	}
 
 	SBA::Packet_t request_packet = SBA::mkPacket_new(ph,*data_ptr);
-#ifdef VERBOSE
+#ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcfsendrequestpacketc_: " << SBA::ppPacket(request_packet);
-#endif
 	std::cout << "FORTRAN API C++ gmcfsendrequestpacketc_: Tile address (sanity): <" << tileptr->address <<">\n";
 	std::cout << "FORTRAN API C++ gmcfsendrequestpacketc_: FIFO size:" <<tileptr->transceiver->tx_fifo.size()<<"\n";
+#endif
 	tileptr->transceiver->tx_fifo.push_back(request_packet);
+#ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcfsendrequestpacketc_: running TRX\n";
+#endif
 	tileptr->transceiver->run();
 }
 
@@ -104,7 +112,9 @@ is implemented as:
 	int64_t ivp = *ivp_tileptr;
 	void* vp=(void*)ivp;
 	SBA::Tile* tileptr = (SBA::Tile*)vp;
+#ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcfwaitforpacketsc_: Tile address (sanity): <" << tileptr->address <<">\n";
+#endif
 	int pending_packets=*npackets;
 	while(pending_packets!=0) {
 		tileptr->transceiver->rx_fifo.wait_for_packets();
@@ -129,7 +139,9 @@ void gmcfshiftpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 	int64_t ivp = *ivp_tileptr;
 	void* vp=(void*)ivp;
 	SBA::Tile* tileptr = (SBA::Tile*)vp;
+#ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcfshiftpendingc_: Tile address (sanity): <" << tileptr->address <<">\n";
+#endif
 	// this is defensive, so it's slow. And I don't know what to do if there is not packet ...
 	// TODO: I should add a status in all calls to evaluate success!
 	SBA::Packet_t  p;
@@ -188,8 +200,9 @@ void gmcfpushpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 	int64_t ivp = *ivp_tileptr;
 	void* vp=(void*)ivp;
 	SBA::Tile* tileptr = (SBA::Tile*)vp;
+#ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcfpushpendingc_: Tile address (sanity): <" << tileptr->address <<">\n";
-
+#endif
 	uint64_t timestamp_data_id = *timestamp;
 	if (*packet_type == P_DREQ or *packet_type == P_DRESP) {
 		timestamp_data_id = (((uint64_t)(*timestamp)) << 32) + (uint64_t)(*data_id);
@@ -234,11 +247,10 @@ void gmcfsendarrayc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 	// So we take the float* array pointer and cast it to a uint64_t which we then pass as a pointer into gmcfsendpacketc_:
 	void* fvp = (void*)array;
 	int64_t fivp = (int64_t)fvp;
+#ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcfsendarrayc_: " << fivp <<" 0x"<<std::hex << fivp << " WAS " << array << std::dec<< "\n";
+#endif
 	int ptype = P_DRESP;
-//	int64_t* ivp_sysptr, int64_t* ivp_tileptr,
-//	int* source, int* destination, int* packet_type, int* data_id, int* timestamp,
-//	int64_t* data_sz, int64_t* data_ptr
 	gmcfsendpacketc_(
 			ivp_sysptr, ivp_tileptr,
 			source, destination, &ptype, data_id,pre_post,time,
@@ -248,23 +260,34 @@ void gmcfsendarrayc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 
 void gmcffloatarrayfromptrc_(int64_t* ptr,float* array1d, int* sz) {
 	int64_t ivp = *ptr;
+#ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: ivp: " << ivp << " 0x" <<std::hex << ivp << std::dec<< "\n";
+#endif
 	void* vp=(void*)ivp;
+#ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: vp:" << vp <<"\n";
+#endif
+//	float* array1d = (float*)vp;
 	float* tmp_array1d = (float*)vp;
+#ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: SZ:" << *sz <<"\n";
-
+#endif
 	// This is an expensive copy operation. I wish I could simply overwrite the pointer, but it does not work!
 	// Maybe it would work if the variable was malloc'ed
+	// But that is very intrusive: regular Fortran arrays are not malloc'ed
+	// A slightly better way would be if we could specify exactly what to copy
+	// To make that work within Fortran's limitations, it means we need to express this as an array
 	float sum=0.0;
 	for (int i =0;i< *sz;i++) {
 		array1d[i]=tmp_array1d[i];
 		sum+=tmp_array1d[i];
 	}
-	array1d = tmp_array1d;
+//	array1d = tmp_array1d;
+#ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: SANITY:" << sum <<"\n";
 	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: " << tmp_array1d[0] <<"\n";
 	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: " << array1d[0] <<"\n";
+#endif
 }
 
 void gmcfcheckfifoc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,int* packet_type, int* has_packets) {
@@ -272,7 +295,9 @@ void gmcfcheckfifoc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,int* packet_type,
 	int64_t ivp = *ivp_tileptr;
 	void* vp=(void*)ivp;
 	SBA::Tile* tileptr = (SBA::Tile*)vp;
+#ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcfcheckfifoc_: Tile address (sanity): <" << tileptr->address <<">\n";
+#endif
 	*has_packets=0;
 	switch (*packet_type) {
 	case P_DREQ:
