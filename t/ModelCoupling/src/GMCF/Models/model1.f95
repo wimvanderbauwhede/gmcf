@@ -17,7 +17,8 @@ subroutine main_routine1(sys, tile, model_id) ! This replaces 'program main'
     type(gmcfPacket) :: packet
     ! end gmcf-coupler
 
-    integer :: t,t_start,t_stop,t_step, t_sync, t_sync_step
+    integer :: t,t_start,t_stop,t_step, t_sync, t_sync_step, ii, jj, kk
+    real(kind=4) :: v1sum,v2sum
     real(kind=4), dimension(128) :: var_name_1
     real(kind=4), dimension(128,128,128) :: var_name_2
     t_start = 0
@@ -25,7 +26,8 @@ subroutine main_routine1(sys, tile, model_id) ! This replaces 'program main'
     t_step = 1
     t_sync = t_start
     t_sync_step = 20
-
+    var_name_1=0.0
+    var_name_2=0.0
     ! gmcf-coupler
     ! Init amongst other things gathers info about the time loops, maybe from a config file, need to work this out in detail:
     call gmcfInitCoupler(sys,tile, model_id)
@@ -73,7 +75,7 @@ subroutine main_routine1(sys, tile, model_id) ! This replaces 'program main'
         print *, "FORTRAN MODEL1: sending DREQ 2 from",model_id,'to',DEST_2
         call gmcfRequestData(model_id,GMCF_VAR_NAME_2, size(var_name_2), DEST_2, POST, t_sync)
 
-        call gmcfWaitFor(model_id,RESPDATA, 2)
+        call gmcfWaitFor(model_id,RESPDATA, DEST_2, 2)
                 print *, "FORTRAN MODEL1: got 2 DRESPs ..."
 
         ! and then we read them
@@ -89,12 +91,22 @@ subroutine main_routine1(sys, tile, model_id) ! This replaces 'program main'
             end select
             call gmcfHasPackets(model_id,RESPDATA,has_packets)
         end do
+        print *, "FORTRAN MODEL1: DONE reading DRESP into vars, ready to compute ..."
         ! And now we can do work on this data
-#ifdef WV_OK
-#endif
+        v1sum=0.0
+        v2sum=0.0
+        do ii=1,128
+            v1sum = v1sum+var_name_1(ii)
+        do jj=1,128
+        do kk=1,128
+            v2sum = v2sum+var_name_2(ii,jj,kk)
+        end do
+        end do
+        end do
+        print *, "FORTRAN MODEL1", model_id,"WORK DONE:",v1sum,v2sum
 
     end do
-
+    call gmcfFinished(model_id)
     print *, "FORTRAN MODEL1", model_id,"main routine finished after ",t_stop - t_start," time steps"
 
 end subroutine

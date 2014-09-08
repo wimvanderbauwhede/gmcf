@@ -20,7 +20,7 @@ void gmcfsendpacketc_(
 
 void gmcfwaitforpacketsc_(
 		int64_t* ivp_sysptr, int64_t* ivp_tileptr,
-		int* packet_type, int* npackets
+		int* packet_type, int* sender, int* npackets
 		);
 void gmcfshiftpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		int* packet_type,
@@ -38,7 +38,7 @@ void gmcfsendarrayc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		float* array
 		);
 
-void gmcffloatarrayfromptrc_(int64_t* ptr,float* array1d);
+void gmcffloatarrayfromptrc_(int64_t* ptr,float* array1d, int* sz);
 
 void gmcfcheckfifoc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,int* packet_type, int* has_packets);
 

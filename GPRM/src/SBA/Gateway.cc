@@ -179,11 +179,10 @@ The simplest way seems to be that we malloc some space and return that pointer.
     System& sba_system=*((System*)sba_system_ptr);
            while (rx_fifo.has_packets()){
             	Packet_t data_packet= rx_fifo.pop_front();
+#ifdef VERBOSE
             	cout << ppPacket(data_packet);
-//                Word label= getReturn_as(getHeader(data_packet));
+#endif
                 Word_List result=getPayload(data_packet);
-//                uint  task_id=getTask(label);
-//                        vmif.send(result,task_id);
 				cout <<endl;
 				if (result.size()==0){
                      cout << "Return value: []"<<endl;
@@ -202,16 +201,7 @@ The simplest way seems to be that we malloc some space and return that pointer.
 						cout << "Return ERROR!\n";
 					}
 				}
-
-#if DISTR==1
-                        exit(0);
-#endif // DISTR
-//                        tasks_stack.push_back(task_id);
-//                        uint stack_full = MAX_NTASKS;
-//                        if (tasks_stack.size()==stack_full){
-//                            core_status = CS_idle;
 							gw_tile.finished=true;
-//                        }
             }
     } // of store_result_packets
 

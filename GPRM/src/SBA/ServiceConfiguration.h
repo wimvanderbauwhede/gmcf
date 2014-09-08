@@ -78,7 +78,7 @@ enum Packet_Type { // >7, so needs at least 4 bits. We have 8 bits.
         P_TREQ=7,
         P_DRESP=8, // "what is the address of service n?", with n a number => 1-elt list of uint64
         P_TRESP=9, //
-        P_advertise=10 // "my address is n", with n a number => 1-elt list of uint64
+        P_FIN=10 // "my address is n", with n a number => 1-elt list of uint64
     };
 
 enum Core_Status {

@@ -1,4 +1,4 @@
-build.pl -Y src/GMCF/Task/GMCF.yml -d -v -L 
+build.pl -Y src/GMCF/Task/GMCF.yml  -L 
 cd src/GMCF/Models
 scons -f SConstruct.model1 
 scons -f SConstruct.model2 
