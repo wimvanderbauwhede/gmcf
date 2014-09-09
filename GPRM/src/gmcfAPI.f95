@@ -8,7 +8,7 @@
 ! According to http://stackoverflow.com/questions/23743716/simultaneous-calls-of-a-method-in-a-fortran-dll-with-module-variables-in-c-shar
 ! The variables in the module will be shared after all, so I need to keep the current approach.
 ! Seems to me that we could actually use this to make sharing easy ...
-!#define GMCF_DEBUG
+#define GMCF_DEBUG
 module gmcfAPI
     use gmcfConfiguration
 
@@ -257,7 +257,10 @@ contains
        real, dimension(size(array)):: array1d
 !        real, pointer, dimension(:) :: array
 !        real, pointer, dimension(:) :: array1d
+
         sz1d = size(array)
+!        allocate( array1d(sz1d) )
+!        allocate( array(sz1d) )
         ptr = packet%data_ptr
         ptr_sz = packet%data_sz
         if (ptr_sz /= sz1d) then
@@ -269,8 +272,8 @@ contains
         call gmcffloatarrayfromptrc(ptr,array1d,sz1d)
 
 #ifdef GMCF_DEBUG
-        print *, "FORTRAN API gmcfRead1DFloatArray: SANITY:",array1d(1)
-        print *, "FORTRAN API gmcfRead1DFloatArray: SANITY:",sum(array1d)
+        print *, "FORTRAN API gmcfRead1DFloatArray: SANITY:" , array1d(1)
+        print *, "FORTRAN API gmcfRead1DFloatArray: SANITY:" , sum(array1d)
 #endif
         array = reshape(array1d,shape(array))
 #ifdef GMCF_DEBUG
@@ -285,10 +288,10 @@ contains
         integer, dimension(3):: sz
         real,dimension(sz(1), sz(2), sz(3)) :: array
         real, dimension(size(array)):: array1d
-
+!
 !        real, pointer, dimension(:,:,:) :: array
-!        real, pointer, dimension(:):: array1d
-        sz1d = size(array)
+!        real, pointer, dimension(:) :: array1d
+        sz1d = size(array1d) ! product(sz)
         ptr = packet%data_ptr
         ptr_sz = packet%data_sz
         if (ptr_sz /= sz1d) then

@@ -61,7 +61,7 @@ subroutine main_routine1(sys, tile, model_id) ! This replaces 'program main'
         do while(sync_done == 0)
             call gmcfSync(model_id,t_sync,sync_done)
             print *, "FORTRAN MODEL1 AFTER gmcfSync()"
-#ifndef WV_OK
+#ifdef WV_OK
             ! if sync is not done, means we had to break out to send data for some request
             if (sync_done == 0) then
             print *, "FORTRAN MODEL1 SYNC NOT DONE!"
@@ -78,8 +78,8 @@ subroutine main_routine1(sys, tile, model_id) ! This replaces 'program main'
         print *, "FORTRAN MODEL1", model_id," syncing DONE for time step ",t
         ! So now we can do some work. Let's suppose model1 is the LES, and it requests data from model2, WRF.
         ! First overwrite the *prev vars with the current vars
-!         var_name_1_prev = var_name_1
-!         var_name_2_prev = var_name_2
+         var_name_1_prev = var_name_1
+         var_name_2_prev = var_name_2
 
         ! The data requested consists of 1-D and a 3-D array of floats
         print *, "FORTRAN MODEL1: sending DREQ 1 from",model_id,'to',DEST_2

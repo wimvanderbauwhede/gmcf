@@ -3,7 +3,7 @@
 #include "SBA/System.h"
 #include "SBA/Tile.h"
 #include "SBA/Packet.h"
-//#define GMCF_DEBUG
+#define GMCF_DEBUG
 /*
 Source == Return_to 16
 Dest = To 16
@@ -85,7 +85,9 @@ void gmcfsendpacketc_(
 
 	SBA::Packet_t request_packet = SBA::mkPacket_new(ph,*data_ptr);
 #ifdef GMCF_DEBUG
+#ifdef VERBOSE
 	std::cout << "FORTRAN API C++ gmcfsendrequestpacketc_: " << SBA::ppPacket(request_packet);
+#endif
 	std::cout << "FORTRAN API C++ gmcfsendrequestpacketc_: Tile address (sanity): <" << tileptr->address <<">\n";
 	std::cout << "FORTRAN API C++ gmcfsendrequestpacketc_: FIFO size:" <<tileptr->transceiver->tx_fifo.size()<<"\n";
 #endif
@@ -277,17 +279,19 @@ void gmcffloatarrayfromptrc_(int64_t* ptr,float* array1d, int* sz) {
 	// But that is very intrusive: regular Fortran arrays are not malloc'ed
 	// A slightly better way would be if we could specify exactly what to copy
 	// To make that work within Fortran's limitations, it means we need to express this as an array
+	array1d = tmp_array1d;
 	float sum=0.0;
 	for (int i =0;i< *sz;i++) {
-		array1d[i]=tmp_array1d[i];
-		sum+=tmp_array1d[i];
+//		array1d[i]=tmp_array1d[i];
+		sum+=array1d[i];
 	}
-//	array1d = tmp_array1d;
+
 #ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: SANITY:" << sum <<"\n";
-	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: " << tmp_array1d[0] <<"\n";
-	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: " << array1d[0] <<"\n";
+//	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: " << tmp_array1d[0] <<"\n";
+//	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: " << array1d[0] <<"\n";
 #endif
+	// So in C space, I can access array1d, but when it gets to Fortran, it segfaults.
 }
 
 void gmcfcheckfifoc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,int* packet_type, int* has_packets) {

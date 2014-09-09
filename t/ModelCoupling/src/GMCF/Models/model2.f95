@@ -4,18 +4,19 @@ subroutine main_routine2(sys, tile, model_id) ! This replaces 'program main'
 
 ! gmcf-coupler
     use gmcfAPI
+    use gmcfAPImodel2
 
     integer(8) , intent(In) :: sys
     integer(8) , intent(In) :: tile
     integer , intent(In) :: model_id
-    ! end gmcf-coupler
-
-    ! gmcf-coupler
+! end gmcf-coupler
+#ifdef WV_OK
+!    ! gmcf-coupler
     integer :: sync_done, has_packets, fifo_empty, t_sync
     integer, parameter :: GMCF_VAR_NAME_1=1,GMCF_VAR_NAME_2=2, DEST_1=1, DEST_2=2
     type(gmcfPacket) :: packet
-    ! end gmcf-coupler
-
+!    ! end gmcf-coupler
+#endif
     integer :: t,t_start,t_stop,t_step, ii, jj, kk
     real(kind=4), dimension(128) :: var_name_1
     real(kind=4), dimension(128,128,128) :: var_name_2
@@ -54,6 +55,9 @@ subroutine main_routine2(sys, tile, model_id) ! This replaces 'program main'
         ! I don't think this will deadlock.
 
         ! Sync will synchronise simulation time steps but also handle any pending requests
+        call gmcfSyncModel2(model_id,var_name_1, var_name_2, t)
+        call gmcfPreModel2(model_id,var_name_1)
+#ifdef WV_OK
         !$GMC sync(t)
         t_sync = t
 
@@ -63,7 +67,7 @@ subroutine main_routine2(sys, tile, model_id) ! This replaces 'program main'
         do while(sync_done == 0)
             call gmcfSync(model_id,t,sync_done)
             print *, "FORTRAN MODEL2 AFTER gmcfSync()"
-#ifdef WV_OK
+
             if (sync_done == 0) then
             print *, "FORTRAN MODEL2 SYNC NOT DONE!"
                 select case (gmcfDataRequests(model_id)%data_id) ! <code for the variable var_name, GMCF-style>
@@ -73,7 +77,7 @@ subroutine main_routine2(sys, tile, model_id) ! This replaces 'program main'
                         call gmcfSend3DFloatArray(model_id,var_name_2, shape(var_name_2), GMCF_VAR_NAME_2, gmcfDataRequests(model_id)%source,PRE,t_sync)
                 end select
             end if
-#endif
+
             print *, "FORTRAN MODEL2", model_id," sync loop ",t,"..."
         end do
         print *, "FORTRAN MODEL2", model_id," syncing DONE for time step ",t
@@ -108,8 +112,9 @@ subroutine main_routine2(sys, tile, model_id) ! This replaces 'program main'
             case default
                 print *,'FORTRAN WARNING: request for invalid data:', packet%data_id
         end select
-
-
+        end if ! FIN
+#endif
+        if (gmcfStatus(DEST_1) /= FIN) then
         ! Compute
         do ii=1,128
             var_name_1(ii) = ii / (t_sync+1)
@@ -122,7 +127,9 @@ subroutine main_routine2(sys, tile, model_id) ! This replaces 'program main'
         var_name_1(1) = 55.7188
         var_name_2(1,1,1) = 55.7188
         print *, "FORTRAN MODEL2", model_id,"WORK DONE:",sum(var_name_1),sum(var_name_2)
-
+        end if ! FIN
+#ifdef WV_OK
+        if (gmcfStatus(DEST_1) /= FIN) then
         ! Wait for one post data request
         print *,"FORTRAN MODEL2: WAITING FOR REQDATA (POST) ..."
         ! The problem is, this should not happen if the consumer has finished. Problem is that this could happen
@@ -149,8 +156,9 @@ subroutine main_routine2(sys, tile, model_id) ! This replaces 'program main'
         end if
 
         end if ! FIN
-#ifndef WV_OK
+
 #endif
+        call gmcfPostModel2(model_id, var_name_2)
     end do
     call gmcfFinished(model_id)
     print *, "FORTRAN MODEL2", model_id,"main routine finished after ",t_stop - t_start," time steps"
