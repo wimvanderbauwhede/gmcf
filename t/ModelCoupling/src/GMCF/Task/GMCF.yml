@@ -33,7 +33,7 @@ System:
         SyncTimeStep: 1
         Provides: [ ]
         Requires: [2, [[real, [[1, 128]], var_name_1, var_name_1], [real, [[1, 128], [1, 128], [1, 128]], var_name_2, var_name_2] ] ]
-    wrf_gmcf:        
+    model2:        
         ModelId: 2
         SyncTimeStep: 1
         Provides: [1, ['real(4) var_name_1(128)', 'real(4) var_name_2(128,128,128)'] ]

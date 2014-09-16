@@ -1,0 +1,25 @@
+DEBUG = '' # '-DWV_DEBUG'
+
+import OclBuilder 
+OclBuilder.opts=Variables()
+from OclBuilder import getOpt
+verbose=getOpt('v','Verbose','1')
+    
+import os
+
+#NETCDF=os.environ.get('NETCDF')
+FC=os.environ.get('FC')
+
+fsources = ['./adam.f95','./anime.f95','./aveflow.f95','./bondFG.f95','./bondv1.f95','./boundp.f95','./boundsm.f95','./feedbf.f95','./feedbfm.f95','./grid.f95','./ifdata.f95','./init.f95','./les.f95','./main_gmcf.f95','./press.f95','./set.f95','./timdata.f95','./timseris.f95','./vel2.f95','./velFG.f95','./velnw.f95','common_sn.f95','params_common_sn.f95','./gmcfAPIles.f95'] #,'../OpenCL/module_LES_write_netcdf.f95']
+
+LDFLAGS= [] # '-fopenmp'] # ['-Wl,-stack_size,0x40000000']
+FFLAGS  = ['-cpp','-Ofast', '-m64', '-Wall','-ffree-form', '-fconvert=big-endian']
+FFLAGS+=[DEBUG]
+if verbose == '1':
+    FFLAGS+=['-DVERBOSE'] 
+FFLAGS+=['-DIFBF=1','-DICAL=0','-DIADAM=0'] #,'-DTIMINGS'] 
+LIBS = ['gmcfAPI','m']
+envF=Environment(F95=FC,LINK=FC,LINKFLAGS=LDFLAGS,F95FLAGS=FFLAGS,F95PATH=['.','../../lib'])
+
+gmfclib = envF.Library('les_gmcf',fsources,LIBS=LIBS,LIBPATH=['.','../../lib'])
+envF.Alias('install',envF.Install('../GMCF/Models/',gmfclib)) 

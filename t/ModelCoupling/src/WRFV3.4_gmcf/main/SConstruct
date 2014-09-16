@@ -1,0 +1,42 @@
+# This file could be generated, or the list of model libraries could be a command line flag. Let's start with the latter.
+import os
+import platform
+
+CXX=os.environ['CXX']
+GANNET_DIR=os.environ['GANNET_DIR']
+wd= os.environ['PWD']
+os = platform.uname()[0]
+
+gmcfsources=[ 'wrf_gmcf_main.cc']
+LDFLAGS = []
+if os=='Darwin':
+	LDFLAGS=['-Wl,-stack_size,0x40000000']
+	
+LDFLAGS=LDFLAGS+['-pthread'] # ['-fconvert=big-endian','-frecord-marker=4',]
+
+FFLAGS= [] # ['-fconvert=big-endian','-frecord-marker=4']
+CXXFLAGS=[ '-Wall',  '-std=c++11' ,  '-DWORDSZ=64', '-DUSE_THREADS=1']
+INCPATHS=[ GANNET_DIR+'/GPRM/src', GANNET_DIR+'/GPRM/src/SBA',  wd+'/gensrc']
+
+wrf_libs=Split("""
+wrflib
+fftpack
+io_grib1
+io_grib_share
+wrfio_int
+wrfio_nf 
+esmf_time 
+wrf_objs
+netcdff 
+netcdf 
+""")
+
+WRF_DIR='..'
+wrf_libpaths=[ WRF_DIR+'/main', WRF_DIR+'/external/fftpack/fftpack5/', WRF_DIR+'/external/io_grib1/', WRF_DIR+'/external/io_grib_share/', WRF_DIR+'/external/io_int/', WRF_DIR+'/external/esmf_time_f90', WRF_DIR+'/external/io_netcdf', '/usr/local/lib' ] 
+
+LIBPATHS=['../../../lib', '../../src/GMCF/Models'] + wrf_libpaths
+LIBS=['wrf_gmcf']+wrf_libs+['gmcf','gmcfAPI','gfortran' ]
+env=Environment(LINK=CXX,LINKFLAGS=LDFLAGS,CXX=CXX,CXXFLAGS=CXXFLAGS,CPPPATH=INCPATHS,LIBPATH=LIBPATHS,FORTRANFLAGS=FFLAGS)
+env.Program('wrf_gmcf.exe',gmcfsources,LIBS=LIBS) 
+
+
