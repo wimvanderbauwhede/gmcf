@@ -43,11 +43,10 @@ The Fortran API is just a wrapper around the C++ API. This API is not really int
 
 ## Installation
 
-**NOTE: WRF/LES COUPLING DOES NOT WORK YET! The WRF/LES sources are not included, and need to be patched. Hopefully by the next push. But you can try the simple example with `model1`  and `model2` .**
-
 - You need to set the environment GANNET_DIR to the path of the gmcf folder, e.g. `$HOME/gmcf`.
 - In the gmcf folder, you need to source the etc/gannetrc file: `. etc/gannetrc`
 - You need to set the $CC, $FC and $CXX environment variables for the C, Fortran and C++ compilers.
+
 - To build the model1/model2 producer-consumer coupling example:
 
   $ cd $GANNET_DIR/t/ModelCoupling
@@ -56,6 +55,21 @@ The Fortran API is just a wrapper around the C++ API. This API is not really int
 - And to clean:
 
   $ ./clean_gmcf
+
+**NOTE: The WRF/LES source are not included, and need to be patched.**
+
+- Get WRFV3.4 from http://www2.mmm.ucar.edu/wrf/users/wrfv3.4/updates-3.4.html. Put it anywhere but _not_ in `$GANNET_DIR/t/ModelCoupling/src/WRFV3.4_gmcf`.
+- Replace the original files with the modified ones from the GMCF repository, and move the folder to `$GANNET_DIR/t/ModelCoupling/src/WRFV3.4_gmcf`.
+- Do the same for LES: get it from https://github.com/wimvanderbauwhede/LES, patch it and put it under `$GANNET_DIR/t/ModelCoupling/src/LES_F95`.
+
+- To build the WRF/LES producer-consumer coupling example:
+
+    $ cd $GANNET_DIR/t/ModelCoupling
+    $ ./build_gmcf_wrf_les
+
+- And to clean:
+
+    $ ./clean_gmcf_wrf_les
 
 ## Making it work with other models
 
