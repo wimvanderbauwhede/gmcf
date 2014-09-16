@@ -12,7 +12,8 @@ using namespace std;
 using namespace SBA;
 
 int main(int argc, char* argv[]) {
-	std::string tdc_file(argv[1]);
+	//std::string tdc_file(argv[1]);
+	std::string tdc_file("gmcf.tdc64");
 	unsigned int ncycles=0xFFFFFFFFUL; // 4 billion time steps by default
     if(argc>2) {
         ncycles=atoi(argv[2]);

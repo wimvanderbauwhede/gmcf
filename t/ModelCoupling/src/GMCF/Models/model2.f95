@@ -1,16 +1,18 @@
+#define MODEL_API
 ! This is the producer of a producer/consumer coupled model example.
-subroutine main_routine2(sys, tile, model_id) ! This replaces 'program main'
+subroutine program_model2(sys, tile, model_id) ! This replaces 'program main'
 ! Lines marked with ! gmcf-coupler / ! end gmcf-coupler are additions for coupling
 
 ! gmcf-coupler
     use gmcfAPI
+#ifdef MODEL_API
     use gmcfAPImodel2
-
+#endif
     integer(8) , intent(In) :: sys
     integer(8) , intent(In) :: tile
     integer , intent(In) :: model_id
 ! end gmcf-coupler
-#ifdef WV_OK
+#ifndef MODEL_API
 !    ! gmcf-coupler
     integer :: sync_done, has_packets, fifo_empty, t_sync
     integer, parameter :: GMCF_VAR_NAME_1=1,GMCF_VAR_NAME_2=2, DEST_1=1, DEST_2=2
@@ -26,7 +28,11 @@ subroutine main_routine2(sys, tile, model_id) ! This replaces 'program main'
 
     ! gmcf-coupler
     ! Init amongst other things gathers info about the time loops, maybe from a config file, need to work this out in detail:
+#ifdef MODEL_API
+    call gmcfInitModel2(sys,tile, model_id)
+#else
     call gmcfInitCoupler(sys,tile, model_id)
+#endif
     ! end gmcf-coupler
 
     print *, "FORTRAN MODEL2", model_id,"main routine called with pointers",sys,tile
@@ -53,11 +59,12 @@ subroutine main_routine2(sys, tile, model_id) ! This replaces 'program main'
         ! block if there is nothing there.
         ! You'll get requests and/or data. For every request, send data; keep going until you've sent data to all and received data from all.
         ! I don't think this will deadlock.
-
+#ifdef MODEL_API
         ! Sync will synchronise simulation time steps but also handle any pending requests
-        call gmcfSyncModel2(model_id,var_name_1, var_name_2, t)
-        call gmcfPreModel2(model_id,var_name_1)
-#ifdef WV_OK
+        call gmcfSyncModel2(t, var_name_1, var_name_2)
+
+        call gmcfPreModel2(var_name_1)
+#else
         !$GMC sync(t)
         t_sync = t
 
@@ -128,7 +135,7 @@ subroutine main_routine2(sys, tile, model_id) ! This replaces 'program main'
         var_name_2(1,1,1) = 55.7188
         print *, "FORTRAN MODEL2", model_id,"WORK DONE:",sum(var_name_1),sum(var_name_2)
         end if ! FIN
-#ifdef WV_OK
+#ifndef MODEL_API
         if (gmcfStatus(DEST_1) /= FIN) then
         ! Wait for one post data request
         print *,"FORTRAN MODEL2: WAITING FOR REQDATA (POST) ..."
@@ -154,11 +161,10 @@ subroutine main_routine2(sys, tile, model_id) ! This replaces 'program main'
                 print *,'FORTRAN WARNING: request for invalid data:', packet%data_id
         end select
         end if
-
         end if ! FIN
-
+#else
+        call gmcfPostModel2(var_name_2)
 #endif
-        call gmcfPostModel2(model_id, var_name_2)
     end do
     call gmcfFinished(model_id)
     print *, "FORTRAN MODEL2", model_id,"main routine finished after ",t_stop - t_start," time steps"

@@ -1,7 +1,7 @@
 import os
 FC=os.environ.get('FC')
 
-fsources = ['./model1.f95']
+fsources = ['./model1.f95','./gmcfAPImodel1.f95']
 
 LDFLAGS= [] # '-fopenmp'] # ['-Wl,-stack_size,0x40000000']
 FFLAGS  = ['-Wall','-cpp','-ffree-form','-ffree-line-length-0']

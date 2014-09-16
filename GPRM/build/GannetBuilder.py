@@ -193,7 +193,7 @@ def build(wd,sources,flibs):
         if option.key == 'dyn' and opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
             STATIC_ALLOC=''
         if option.key == 'dbg' and opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
-            DEBUG='-g -O0 ' #'-g -fno-exceptions -fno-rtti '
+            DEBUG='-g -O0 -DGMCF_DEBUG ' #'-g -fno-exceptions -fno-rtti '
             OPT=''
         if option.key == 'opt' and opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
             OPT=OPTSPEED
@@ -290,10 +290,8 @@ def build(wd,sources,flibs):
 
     if LIB:
             glib=env.Library('gmcf',sources,LIBS=libs,LIBPATH=LIBpaths,CPPPATH=INCpaths)
-            env.Install(wd+'/lib',glib)
-            env.Alias('install',wd+'/bib') 
+#            env.Alias('install_gmcf',env.Install(wd+'/lib',glib))
     else:
             prog=env.Program(bin,sources,LIBS=libs,LIBPATH=LIBpaths,CPPPATH=INCpaths)
-            env.Install(wd+'/bin',prog)
-            env.Alias('install',wd+'/bin') 
+            env.Alias('install',env.Install(wd+'/bin',prog))
 

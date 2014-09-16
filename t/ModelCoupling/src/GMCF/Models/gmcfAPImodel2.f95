@@ -4,7 +4,8 @@ module gmcfAPImodel2
 
     implicit none
 
-    integer :: sync_done, has_packets, fifo_empty, t_sync
+    integer :: model2_id
+    integer :: sync_done, has_packets, fifo_empty, t_sync, t_model2
     integer, parameter :: GMCF_VAR_NAME_1=1,GMCF_VAR_NAME_2=2, DEST_1=1, DEST_2=2
     type(gmcfPacket) :: packet
 
@@ -12,38 +13,46 @@ module gmcfAPImodel2
 
 contains
 
-    subroutine gmcfSyncModel2(model_id, var_name_1, var_name_2, t)
-        integer , intent(In) :: model_id, t
+    subroutine gmcfInitModel2(sys,tile,m_id)
+        integer(8), intent(In) :: sys
+        integer(8), intent(In) :: tile
+        integer, intent(In) :: m_id
+        model2_id=m_id
+        call gmcfInitCoupler(sys,tile, model2_id)
+    end subroutine gmcfInitModel2
+
+    subroutine gmcfSyncModel2(t, var_name_1, var_name_2)
+        integer , intent(In) :: t
         real(kind=4), dimension(128), intent(In) :: var_name_1
         real(kind=4), dimension(128,128,128), intent(In) :: var_name_2
+        t_model2 = t
         t_sync = t
 
         if (gmcfStatus(DEST_1) /= FIN) then
 
         sync_done=0
         do while(sync_done == 0)
-            call gmcfSync(model_id,t_sync,sync_done)
+            call gmcfSync(model2_id,t_sync,sync_done)
             print *, "FORTRAN MODEL2 AFTER gmcfSync()"
 
             if (sync_done == 0) then
             print *, "FORTRAN MODEL2 SYNC NOT DONE!"
-                select case (gmcfDataRequests(model_id)%data_id) ! <code for the variable var_name, GMCF-style>
+                select case (gmcfDataRequests(model2_id)%data_id) ! <code for the variable var_name, GMCF-style>
                     case (GMCF_VAR_NAME_1)
-                        call gmcfSend1DFloatArray(model_id,var_name_1, shape(var_name_1), GMCF_VAR_NAME_1,gmcfDataRequests(model_id)%source,PRE,t_sync)
+                        call gmcfSend1DFloatArray(model2_id,var_name_1, shape(var_name_1), GMCF_VAR_NAME_1,gmcfDataRequests(model2_id)%source,PRE,t_sync)
                     case (GMCF_VAR_NAME_2)
-                        call gmcfSend3DFloatArray(model_id,var_name_2, shape(var_name_2), GMCF_VAR_NAME_2, gmcfDataRequests(model_id)%source,PRE,t_sync)
+                        call gmcfSend3DFloatArray(model2_id,var_name_2, shape(var_name_2), GMCF_VAR_NAME_2, gmcfDataRequests(model2_id)%source,PRE,t_sync)
                 end select
             end if
 
-            print *, "FORTRAN MODEL2", model_id," sync loop ",t,"..."
+            print *, "FORTRAN MODEL2", model2_id," sync loop ",t,"..."
         end do
-        print *, "FORTRAN MODEL2", model_id," syncing DONE for time step ",t
+        print *, "FORTRAN MODEL2", model2_id," syncing DONE for time step ",t
         end if ! FIN
 
     end subroutine gmcfSyncModel2
 
-    subroutine gmcfPreModel2(model_id, var_name_1)
-        integer , intent(In) :: model_id
+    subroutine gmcfPreModel2(var_name_1)
         real(kind=4), dimension(128), intent(In) :: var_name_1
 
         ! Now, it could be that FIN is reached here for DEST_1, so we should stop here
@@ -59,17 +68,17 @@ contains
         ! Wait for one pre data request
 
         print *,"FORTRAN MODEL2: WAITING FOR REQDATA (PRE) ..."
-        call gmcfWaitFor(model_id,REQDATA, DEST_1, 1)
+        call gmcfWaitFor(model2_id,REQDATA, DEST_1, 1)
         end if ! FIN
 
         if (gmcfStatus(DEST_1) /= FIN) then
-            call gmcfShiftPending(model_id,REQDATA,packet, fifo_empty)
+            call gmcfShiftPending(model2_id,REQDATA,packet, fifo_empty)
             print *,"FORTRAN MODEL2: GOT a REQDATA packet (PRE) from ",packet%source,'to',packet%destination
             select case (packet%data_id)
                 case (GMCF_VAR_NAME_1)
                     if (packet%pre_post == PRE) then
-                        print *,"FORTRAN MODEL2: SENDING RESPDATA (PRE) from",model_id,'to',packet%source,"SANITY:",sum(var_name_1)
-                        call gmcfSend1DFloatArray(model_id,var_name_1, shape(var_name_1), GMCF_VAR_NAME_1,packet%source,PRE,t_sync)
+                        print *,"FORTRAN MODEL2: SENDING RESPDATA (PRE) from",model2_id,'to',packet%source,"SANITY:",sum(var_name_1)
+                        call gmcfSend1DFloatArray(model2_id,var_name_1, shape(var_name_1), GMCF_VAR_NAME_1,packet%source,PRE,t_sync)
                     else
                         print *,'FORTRAN WARNING: request was for POST, this is PRE, deferring'
                     end if
@@ -79,8 +88,7 @@ contains
         end if ! FIN
     end subroutine gmcfPreModel2
 
-    subroutine gmcfPostModel2(model_id, var_name_2)
-        integer , intent(In) :: model_id
+    subroutine gmcfPostModel2(var_name_2)
         real(kind=4), dimension(128,128,128), intent(In) :: var_name_2
 
         if (gmcfStatus(DEST_1) /= FIN) then
@@ -89,18 +97,18 @@ contains
         ! The problem is, this should not happen if the consumer has finished. Problem is that this could happen
         ! while we are blocking. So we need a status to say "someone finished"
 
-        call gmcfWaitFor(model_id,REQDATA, DEST_1, 1)
+        call gmcfWaitFor(model2_id,REQDATA, DEST_1, 1)
         end if ! FIN
 
         if (gmcfStatus(DEST_1) /= FIN) then
-        call gmcfHasPackets(model_id,REQDATA,has_packets)
+        call gmcfHasPackets(model2_id,REQDATA,has_packets)
         if (has_packets==1) then
-        call gmcfShiftPending(model_id,REQDATA,packet,fifo_empty)
+        call gmcfShiftPending(model2_id,REQDATA,packet,fifo_empty)
         select case (packet%data_id)
             case (GMCF_VAR_NAME_2)
             if (packet%pre_post == POST) then
-                    print *,"FORTRAN MODEL2: SENDING RESPDATA (POST) from",model_id,'to',packet%source,"SANITY:",sum(var_name_2)
-                    call gmcfSend3DFloatArray(model_id,var_name_2, shape(var_name_2), GMCF_VAR_NAME_2,packet%source,POST,t_sync)
+                    print *,"FORTRAN MODEL2: SENDING RESPDATA (POST) from",model2_id,'to',packet%source,"SANITY:",sum(var_name_2)
+                    call gmcfSend3DFloatArray(model2_id,var_name_2, shape(var_name_2), GMCF_VAR_NAME_2,packet%source,POST,t_sync)
                 else
                     print *,'FORTRAN WARNING: request was for PRE, this is POST. Sending POST value!'
                 end if

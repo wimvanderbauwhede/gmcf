@@ -1,23 +1,27 @@
+#define MODEL_API
 ! This is the consumer of a producer/consumer coupled model example.
-subroutine main_routine1(sys, tile, model_id) ! This replaces 'program main'
+subroutine program_model1(sys, tile, model_id) ! This replaces 'program main'
 
     ! Lines marked with ! gmcf-coupler / ! end gmcf-coupler are additions for coupling
 
     ! gmcf-coupler
     use gmcfAPI
-
+#ifdef MODEL_API
+    use gmcfAPImodel1
+#endif
     integer(8) , intent(In) :: sys
     integer(8) , intent(In) :: tile
     integer , intent(In) :: model_id
     ! end gmcf-coupler
-
+#ifndef MODEL_API
     ! gmcf-coupler
     integer :: sync_done, has_packets, fifo_empty
+    integer ::  t_sync, t_sync_prev, t_sync_step, t_inter
     integer, parameter :: GMCF_VAR_NAME_1=1,GMCF_VAR_NAME_2=2, DEST_1=1, DEST_2=2
     type(gmcfPacket) :: packet
     ! end gmcf-coupler
-
-    integer :: t,t_start,t_stop,t_step, t_sync, t_sync_prev, t_sync_step, ii, jj, kk, can_interpolate
+#endif
+    integer :: t,t_start,t_stop,t_step, ii, jj, kk, can_interpolate
     real(kind=4) :: v1sum,v2sum
     real(kind=4), dimension(128) :: var_name_1_prev,var_name_1
 !    real(kind=4), pointer, dimension(:) :: var_name_1
@@ -36,7 +40,11 @@ subroutine main_routine1(sys, tile, model_id) ! This replaces 'program main'
 
     ! gmcf-coupler
     ! Init amongst other things gathers info about the time loops, maybe from a config file, need to work this out in detail:
+#ifdef MODEL_API
+         call gmcfInitModel1(sys,tile, model_id)
+#else
     call gmcfInitCoupler(sys,tile, model_id)
+#endif
     ! end gmcf-coupler
 
     print *, "FORTRAN MODEL1", model_id,"main routine called with pointers",sys,tile
@@ -50,68 +58,76 @@ subroutine main_routine1(sys, tile, model_id) ! This replaces 'program main'
         ! block if there is nothing there.
         ! You'll get requests and/or data. For every request, send data; keep going until you've sent data to all and received data from all.
         ! I don't think this will deadlock.
-
+#ifdef MODEL_API
+        call gmcfSyncModel1(t, var_name_1,var_name_2)
+        call gmcfPreModel1(var_name_1,var_name_1_prev,var_name_2,var_name_2_prev)
+#else
         t_sync = t / t_sync_step
         t_inter = mod(t,t_sync_step)
         ! Sync will synchronise simulation time steps but also handle any pending requests
         !$GMC sync(t)
         if (t_sync == t_sync_prev+1) then
-        t_sync_prev = t_sync
-        sync_done=0
-        do while(sync_done == 0)
-            call gmcfSync(model_id,t_sync,sync_done)
-            print *, "FORTRAN MODEL1 AFTER gmcfSync()"
-#ifdef WV_OK
-            ! if sync is not done, means we had to break out to send data for some request
-            if (sync_done == 0) then
-            print *, "FORTRAN MODEL1 SYNC NOT DONE!"
-                select case (gmcfDataRequests(model_id)%data_id) ! <code for the variable var_name, GMCF-style>
-                    case (GMCF_VAR_NAME_1)
-                        call gmcfSend1DFloatArray(model_id,var_name_1, shape(var_name_1), GMCF_VAR_NAME_1,gmcfDataRequests(model_id)%source,PRE,t_sync)
-                    case (GMCF_VAR_NAME_2)
-                        call gmcfSend3DFloatArray(model_id,var_name_2, shape(var_name_2), GMCF_VAR_NAME_2, gmcfDataRequests(model_id)%source,PRE,t_sync)
-                end select
-            end if
-#endif
-            print *, "FORTRAN MODEL1", model_id," sync loop ",t,"..."
-        end do
-        print *, "FORTRAN MODEL1", model_id," syncing DONE for time step ",t
-        ! So now we can do some work. Let's suppose model1 is the LES, and it requests data from model2, WRF.
-        ! First overwrite the *prev vars with the current vars
-         var_name_1_prev = var_name_1
-         var_name_2_prev = var_name_2
 
-        ! The data requested consists of 1-D and a 3-D array of floats
-        print *, "FORTRAN MODEL1: sending DREQ 1 from",model_id,'to',DEST_2
-        call gmcfRequestData(model_id,GMCF_VAR_NAME_1, size(var_name_1), DEST_2, PRE, t_sync) ! check if PRE/POST makes some sense here
-        print *, "FORTRAN MODEL1: sending DREQ 2 from",model_id,'to',DEST_2
-        call gmcfRequestData(model_id,GMCF_VAR_NAME_2, size(var_name_2), DEST_2, POST, t_sync)
+            sync_done=0
+            do while(sync_done == 0)
+                call gmcfSync(model_id,t_sync,sync_done)
+                print *, "FORTRAN MODEL1 AFTER gmcfSync()"
 
-        call gmcfWaitFor(model_id,RESPDATA, DEST_2, 2)
-                print *, "FORTRAN MODEL1: got 2 DRESPs ..."
+                ! if sync is not done, means we had to break out to send data for some request
+                if (sync_done == 0) then
+                print *, "FORTRAN MODEL1 SYNC NOT DONE!"
+                    select case (gmcfDataRequests(model_id)%data_id) ! <code for the variable var_name, GMCF-style>
+                        case (GMCF_VAR_NAME_1)
+                            call gmcfSend1DFloatArray(model_id,var_name_1, shape(var_name_1), GMCF_VAR_NAME_1,gmcfDataRequests(model_id)%source,PRE,t_sync)
+                        case (GMCF_VAR_NAME_2)
+                            call gmcfSend3DFloatArray(model_id,var_name_2, shape(var_name_2), GMCF_VAR_NAME_2, gmcfDataRequests(model_id)%source,PRE,t_sync)
+                    end select
+                end if
 
-        ! and then we read them
-        call gmcfHasPackets(model_id,RESPDATA,has_packets)
-        do while (has_packets==1)
-            call gmcfShiftPending(model_id,RESPDATA,packet,fifo_empty)
-            ! read a packet
-            select case (packet%data_id) ! <code for the variable var_name, GMCF-style>
-                case (GMCF_VAR_NAME_1)
-                    call gmcfRead1DFloatArray(var_name_1,shape(var_name_1), packet)
-                case (GMCF_VAR_NAME_2)
-                    call gmcfRead3DFloatArray(var_name_2,shape(var_name_2), packet)
-            end select
+                print *, "FORTRAN MODEL1", model_id," sync loop ",t,"..."
+            end do
+            print *, "FORTRAN MODEL1", model_id," syncing DONE for time step ",t
+            sync_done=2
+        end if ! t_sync
+!
+        if (t_sync == t_sync_prev+1) then
+!        if (sync_done==2) then
+            ! So now we can do some work. Let's suppose model1 is the LES, and it requests data from model2, WRF.
+            ! First overwrite the *prev vars with the current vars
+             var_name_1_prev = var_name_1
+             var_name_2_prev = var_name_2
+
+            ! The data requested consists of 1-D and a 3-D array of floats
+            print *, "FORTRAN MODEL1: sending DREQ 1 from",model_id,'to',DEST_2
+            call gmcfRequestData(model_id,GMCF_VAR_NAME_1, size(var_name_1), DEST_2, PRE, t_sync) ! check if PRE/POST makes some sense here
+            print *, "FORTRAN MODEL1: sending DREQ 2 from",model_id,'to',DEST_2
+            call gmcfRequestData(model_id,GMCF_VAR_NAME_2, size(var_name_2), DEST_2, POST, t_sync)
+
+            call gmcfWaitFor(model_id,RESPDATA, DEST_2, 2)
+                    print *, "FORTRAN MODEL1: got 2 DRESPs ..."
+
+            ! and then we read them
             call gmcfHasPackets(model_id,RESPDATA,has_packets)
-        end do
-        print *, "FORTRAN MODEL1: DONE reading DRESP into vars, ready to compute ..."
-
+            do while (has_packets==1)
+                call gmcfShiftPending(model_id,RESPDATA,packet,fifo_empty)
+                ! read a packet
+                select case (packet%data_id) ! <code for the variable var_name, GMCF-style>
+                    case (GMCF_VAR_NAME_1)
+                        call gmcfRead1DFloatArray(var_name_1,shape(var_name_1), packet)
+                    case (GMCF_VAR_NAME_2)
+                        call gmcfRead3DFloatArray(var_name_2,shape(var_name_2), packet)
+                end select
+                call gmcfHasPackets(model_id,RESPDATA,has_packets)
+            end do
+            print *, "FORTRAN MODEL1: DONE reading DRESP into vars, ready to compute ..."
+            t_sync_prev = t_sync
         end if ! of t_sync
 
-
+#endif
         ! WV: Another complication is that we might need to interpolate the received values.
         ! WV: This will always be the case if the consumer time step is smaller than the producer
         ! WV: And we know this from the configuration.
-        ! WV: In that case
+        ! WV: So a guard should be generated around the computation.
 
         if (can_interpolate == 0) then
             can_interpolate = 1
@@ -124,11 +140,11 @@ subroutine main_routine1(sys, tile, model_id) ! This replaces 'program main'
             v2sum=0.0
             do ii=1,128
                 v1sum = v1sum + (var_name_1_prev(ii)*t_inter + var_name_1(ii)*(t_sync_step-t_inter) )/t_sync_step
-            do jj=1,128
-            do kk=1,128
-                v2sum = v2sum + var_name_2(ii,jj,kk)
-            end do
-            end do
+                do jj=1,128
+                    do kk=1,128
+                        v2sum = v2sum + ( var_name_2_prev(ii,jj,kk)*t_inter +var_name_2(ii,jj,kk)*(t_sync_step-t_inter) )/t_sync_step
+                    end do
+                end do
             end do
             print *, "FORTRAN MODEL1", model_id,"WORK DONE:",v1sum,v2sum
         end if
@@ -137,5 +153,5 @@ subroutine main_routine1(sys, tile, model_id) ! This replaces 'program main'
     call gmcfFinished(model_id)
     print *, "FORTRAN MODEL1", model_id,"main routine finished after ",t_stop - t_start," time steps"
 
-end subroutine
+end subroutine program_model1
 

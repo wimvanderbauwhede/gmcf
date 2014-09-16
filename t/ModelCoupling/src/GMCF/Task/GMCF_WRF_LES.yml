@@ -15,7 +15,7 @@ System:
     model1: mn1.GMCF.GMCF.run_model1
     model2: mn2.GMCF.GMCF.run_model2
 
-  ModelLibPaths: ['libmodel1.a', 'libmodel2.a'] # if just a filename, should be in Models, else must be a full path
+#  ModelLibPaths: ['libmodel1.a', 'libmodel2.a'] # if just a filename, should be in Models, else must be a full path
 
 # I need a simple configuration
 # We must describe the model in terms of what it requires, what it provides, and the time frequency.
@@ -28,7 +28,7 @@ System:
 # Yet another complication is that we often will require a part of an array, so we need a way to describe exactly what we want.
 # This seems to lead us back to set comprehensions and even SAC, which is nice.  
   Models:    
-    model1:        
+    les_gmcf:        
         ModelId: 1
         SyncTimeStep: 1
         Provides: [ ]

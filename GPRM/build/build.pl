@@ -101,13 +101,19 @@ system('cp src/GMCF/Models/gmcfConfiguration.f95 gensrc/GMCF/Models/gmcfConfigur
 my @sclibs=@{ $config{'System'}{'Libraries'} };
 my $sclib=join(',',@sclibs);
 my $scons_sclib='sclib='.$sclib;
+# flibs is currently unused!
+#my @flibs = @{ $config{'System'}{'ModelLibPaths'} };
+#my $flibstr = join(',',@flibs);
+my $scons_flibs='';#'flibs='.$flibstr;
 
-my @flibs = @{ $config{'System'}{'ModelLibPaths'} };
-my $flibstr = join(',',@flibs);
-my $scons_flibs='flibs='.$flibstr;
-
-my $nmodels =  $config{'System'}{'NServiceNodes'} - 1; # This is actually NModels+1, 1 for the Ctrl node.
-my $scons_nmodels ="nmodels=$nmodels";
+my @model_names =  keys %{ $config{'System'}{'Models'} };
+my $models={};
+for my $model_name (@model_names) {
+ my $model_id = $config{'System'}{'Models'}{$model_name}{'ModelId'};
+ $models->{$model_id} = $model_name;
+}
+my $nmodels = scalar @model_names; 
+my $scons_nmodels ="nmodels=$nmodels"; #FIXME!
 
 my $cxx_gen_source_path="$wd/gensrc";
 my $cxx_source_path="$gannet_dir/GPRM/SBA";
@@ -146,7 +152,18 @@ if ($clean) {
 		print 'rm ./lib/libgmcf.a',"\n";
 		unlink  './lib/libgmcf.a';
 	}
-
+	if (-e './lib/libgmcfAPI.a') {
+		print 'rm ./lib/libgmcfAPI.a',"\n";
+		unlink  './lib/libgmcfAPI.a';
+	}
+	if (-e './lib/gmcfapi.mod') {
+		print 'rm ./lib/gmcfapi.mod',"\n";
+		unlink  './lib/gmcfapi.mod';
+	}
+			if (-e './lib/gmcfconfiguration.mod') {
+		print 'rm ./lib/gmcfconfiguration.mod',"\n";
+		unlink  './gmcfconfiguration.mod';
+	}
 } else {
 	if ($generate or $clean) {
 # 0. Generate .yml library configuration from kernel class(es)
@@ -157,7 +174,7 @@ if ($clean) {
         my $nclasses=@sclibs;
         
 		print "build.pl: generating GMCF wrapper\n"; 
-        WrapperGenerator::generateGMCF($nmodels);
+        WrapperGenerator::generateGMCF($models);
         
 		for my $class (@sclibs) {
             if ($class eq 'CoreServices') {$is_core=1};
@@ -191,13 +208,19 @@ if ($clean) {
 			print "cd $gprm_lib_path\n";
 			chdir "$gprm_lib_path";
 		}
-		print $run_scons_str,"\n";
-		system($run_scons_str);
+		print $run_scons_str,"libgmcfAPI.a\n";
+		system("$run_scons_str libgmcfAPI.a");
+		print $run_scons_str,"libgmcf.a\n";
+		system("$run_scons_str libgmcf.a");
 # 3. Install binary
         if (!$opts{'L'}) {
 			print "build.pl: installing binary\n";
-			print $run_scons_str," install\n";
-			system("$run_scons_str install");
+			print $run_scons_str," install_gmcfAPI\n";			
+#			system("$run_scons_str install_gmcfAPI");
+			system("cp $gannet_dir/GPRM/src/libgmcfAPI.a $wd/lib");
+			print $run_scons_str," install_gmcf\n";
+			system("cp $gannet_dir/GPRM/src/libgmcf.a $wd/lib");
+#			system("$run_scons_str install_gmcf");
         }
 	}
 }

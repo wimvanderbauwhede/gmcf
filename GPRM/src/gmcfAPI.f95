@@ -8,7 +8,7 @@
 ! According to http://stackoverflow.com/questions/23743716/simultaneous-calls-of-a-method-in-a-fortran-dll-with-module-variables-in-c-shar
 ! The variables in the module will be shared after all, so I need to keep the current approach.
 ! Seems to me that we could actually use this to make sharing easy ...
-#define GMCF_DEBUG
+!#define GMCF_DEBUG
 module gmcfAPI
     use gmcfConfiguration
 

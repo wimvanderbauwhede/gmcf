@@ -1,0 +1,10 @@
+build.pl -Y src/GMCF/Task/GMCF.yml -d -v -L -c
+cd src/LES_F95
+scons -f SConstruct.les_gmcf -c
+cd ../..
+cd src/WRFV3.4_gmcf
+#perl ./real_clean.pl
+./minimal_clean.sh
+cd ../..
+scons -c
+

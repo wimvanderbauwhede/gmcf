@@ -3,7 +3,7 @@
 #include "SBA/System.h"
 #include "SBA/Tile.h"
 #include "SBA/Packet.h"
-#define GMCF_DEBUG
+//#define GMCF_DEBUG
 /*
 Source == Return_to 16
 Dest = To 16
@@ -279,10 +279,10 @@ void gmcffloatarrayfromptrc_(int64_t* ptr,float* array1d, int* sz) {
 	// But that is very intrusive: regular Fortran arrays are not malloc'ed
 	// A slightly better way would be if we could specify exactly what to copy
 	// To make that work within Fortran's limitations, it means we need to express this as an array
-	array1d = tmp_array1d;
+//	array1d = tmp_array1d;
 	float sum=0.0;
 	for (int i =0;i< *sz;i++) {
-//		array1d[i]=tmp_array1d[i];
+		array1d[i]=tmp_array1d[i];
 		sum+=array1d[i];
 	}
 

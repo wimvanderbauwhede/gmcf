@@ -275,8 +275,10 @@ for my $method (sort keys%{$classes{$class}} ) {
 }
 } # END of gen_kernel_wrapper()
 
+# Maybe it would be better to pass the names of all models in order, rather than the number
 sub generateGMCF {
-   (my $nmodels) =@_;
+   (my $models) =@_;
+   
    if (not -e "$gen_src_path/GMCF/Models") {
      mkdir "$gen_src_path/GMCF";
      mkdir "$gen_src_path/GMCF/Models";
@@ -291,7 +293,8 @@ sub generateGMCF {
 class GMCF {
     public:
 ';    
-for my $i (1..$nmodels) {
+for my $i (keys %{$models}) {
+ my $model = $models->{$i};
 print $GWH "\t\t".'int64_t run_model'.$i.'(SBA::System* sba_sysptr, SBA::Tile* sba_tileptr, uint64_t);'."\n";
 }
 print $GWH '
@@ -305,8 +308,9 @@ print $GWH '
 #ifndef _GMCFMODELF_H_
 #define _GMCFMODELF_H_
 ';
-for my $i (1..$nmodels) {
- print $GWFH 'extern "C" void main_routine'.$i.'_(int64_t*,int64_t*, const int*);'."\n";
+for my $i (keys %{$models}) {
+ my $model = $models->{$i};
+ print $GWFH 'extern "C" void program_'.$model.'_(int64_t*,int64_t*, const int*);'."\n";
 }
 print $GWFH "#endif // _GMCFMODELF_H_\n";
 close $GWFH;
@@ -319,7 +323,8 @@ close $GWFH;
 #include "GMCFmodelF.h"
 
 ';
-for my $i (1 .. $nmodels) {
+for my $i (keys %{$models}) {
+ my $model = $models->{$i};
 print $GWCC ' 
 int64_t GMCF::run_model'.$i.'(SBA::System* sba_sysptr, SBA::Tile* sba_tileptr, uint64_t model_id) {
 #ifdef VERBOSE
@@ -350,12 +355,12 @@ print $GWCC '
 	int64_t tile_iv = (int64_t)tile_vp;
     int64_t* sba_tile_ivp = &tile_iv;
 #ifdef VERBOSE
-	std::cout << "CALLING Fortran main_routine1_" << std::endl;
+	std::cout << "CALLING Fortran program_'.$model.'_" << std::endl;
 #endif
 
     // Here we call the actual Fortran function
 ';    
-print $GWCC "    main_routine${i}_(sba_sys_ivp,sba_tile_ivp,&model);\n";
+print $GWCC "    program_${model}_(sba_sys_ivp,sba_tile_ivp,&model);\n";
 print $GWCC '
 #ifdef VERBOSE
 	std::cout << "LEAVING run_model'.$i.'" << std::endl;

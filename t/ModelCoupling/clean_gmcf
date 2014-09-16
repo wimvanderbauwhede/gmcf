@@ -1,0 +1,7 @@
+build.pl -Y src/GMCF/Task/GMCF.yml -d -v -L -c
+cd src/GMCF/Models
+scons -f SConstruct.model1 -c
+scons -f SConstruct.model2 -c
+cd ../../..
+scons -c
+rm lib/*
