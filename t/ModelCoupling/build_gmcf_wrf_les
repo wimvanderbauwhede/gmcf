@@ -1,9 +1,10 @@
 . ../../etc/gannetrc
-build.pl -Y src/GMCF/Task/GMCF_WRF_LES.yml  -v -d -L 
-cd src/LES_F95
-scons -f SConstruct.les_gmcf 
-cd ../..
+build.pl -Y src/GMCF/Task/GMCF_WRF_LES.yml -L 
+cd src/LES_OCL/RefactoredSources
+scons -f SConstruct.les_gmcf_ocl v=0 
+scons -f SConstruct.les_gmcf_ocl v=0 install
+cd ../../..
 cd src/WRFV3.4_gmcf
 ./compile wrf_gmcf
 cd ../..
-scons -f SConstruct.wrf_les models=les_gmcf,wrf_gmcf
+scons -f SConstruct.wrf_les_ocl models=les_gmcf_ocl,wrf_gmcf

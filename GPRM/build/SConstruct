@@ -16,6 +16,7 @@ from GannetBuilder import build
 GANNET_DIR=os.environ["GANNET_DIR"]
 
 wd=ARGUMENTS.get('wd','.')
+dbg=ARGUMENTS.get('dbg','0')
 
 def isLocal(libname):
     return os.path.exists(wd+'/gensrc/GMCF/Models/'+libname+'.cc')
@@ -52,7 +53,9 @@ for libname in flibsnames:
 print "WD:"+wd
 nmodels=ARGUMENTS.get('nmodels','')
 NMODELS_FLAG = '-DNMODELS='+nmodels
-DEBUG_FLAG='-DGMCF_DEBUG'
+DEBUG_FLAG=''
+if dbg == '1':
+	DEBUG_FLAG=' -O0 -g -DGMCF_DEBUG'
 FC=os.environ["FC"]
 CXX=os.environ["CXX"]
 

@@ -375,8 +375,16 @@ RECURSIVE SUBROUTINE integrate ( grid )
                CALL end_timing ( TRIM(message) )
             END IF
             CALL med_endup_step ( grid , config_flags )
-         END DO
+#ifdef USE_GMCF
+! WV: PROBLEM: I need the bounds for the arrays I'm passing in.
+            call gmcfCreateWindprofileWrf(grid%u_2,grid%v_2,grid%w_2)
 
+            call gmcfPostWrf
+#endif
+         END DO
+#ifdef USE_GMCF
+         call gmcfFinishedWrf
+#endif
          ! Accumulation calculation for DFI
          CALL dfi_accumulate ( grid )
 

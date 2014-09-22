@@ -8,9 +8,9 @@ Model Coupling is increasingly important in fields such as climate science: indi
 
 The aim of GMCF is to make Model Coupling easier and more suited to modern heterogeneous manycore architectures. Our approach is to use modern language, compiler and runtime technologies so that in the end the user only has to write a scenario to realise the coupling. This is a long-term goal (many years).
 
-# Current Prototype
+## Current Prototype
 
-The code in this repository is a Proof-of-Concept, in a very early stage: I created the Glasgow Model Coupling Framework (GMCF), and API and runtime, and used it to couple the [Weather Research and Forecasting Model](http://www2.mmm.ucar.edu/wrf/users/) with the [Large Eddy Simulator](https://github.com/wimvanderbauwhede/LES) developed at Kyoto University's Disaster Prevention Research Institute. The current coupling code works on a single multicore node with single-threaded WRF and LES. It should work with multithreaded code (WRF+OpenMP) and even e.g. OpenCL-based GPGPU code, but I have not tested that.
+The code in this repository is a Proof-of-Concept, in a very early stage: I created the Glasgow Model Coupling Framework (GMCF), and API and runtime, and used it to couple the [Weather Research and Forecasting Model](http://www2.mmm.ucar.edu/wrf/users/) with the [Large Eddy Simulator](https://github.com/wimvanderbauwhede/LES) developed at Kyoto University's Disaster Prevention Research Institute. The current coupling code works on a multicore/GPU node with OpenMP WRF and our OpenCL LES. I have tested the integration on a 12-core Intel Xeon E5-2640 host running CentOS 6.4, with an NVIDIA GeForce GTX 480.
 
 The GMCF is already very generic and can be used for coupling other models as well, but it is not yet easy to use.
 
@@ -56,11 +56,17 @@ The Fortran API is just a wrapper around the C++ API. This API is not really int
 
   $ ./clean_gmcf
 
-**NOTE: The WRF/LES source are not included, and need to be patched.**
+**NOTE: The WRF/LES sources are not included, and need to be patched.**
 
 - Get WRFV3.4 from http://www2.mmm.ucar.edu/wrf/users/wrfv3.4/updates-3.4.html. Put it anywhere but _not_ in `$GANNET_DIR/t/ModelCoupling/src/WRFV3.4_gmcf`.
 - Replace the original files with the modified ones from the GMCF repository, and move the folder to `$GANNET_DIR/t/ModelCoupling/src/WRFV3.4_gmcf`.
-- Do the same for LES: get it from https://github.com/wimvanderbauwhede/LES, patch it and put it under `$GANNET_DIR/t/ModelCoupling/src/LES_F95`.
+- Do the same for LES: get it from https://github.com/wimvanderbauwhede/LES, replace the original files with the modified ones from the GMCF repository and put it under `$GANNET_DIR/t/ModelCoupling/src/LES_F95` or  `$GANNET_DIR/t/ModelCoupling/src/LES_OCL` for the OpenCL version.
+- For the OpenCL version you also need to install my [OpenCL wrapper library](https://github.com/wimvanderbauwhede/OpenCLIntegration), and you need to symlink the `OpenCL` folder in `LES_OCL` into `ModelCoupling`:
+
+    $ pwd
+    $GANNET_DIR/t/ModelCoupling
+
+    $ ln -s src/LES_OCL/OpenCL .
 
 - To build the WRF/LES producer-consumer coupling example:
 
@@ -70,6 +76,16 @@ The Fortran API is just a wrapper around the C++ API. This API is not really int
 - And to clean:
 
     $ ./clean_gmcf_wrf_les
+
+- And similar for the OpenCL version, with ./build_gmcf_wrf_les_ocl
+
+- To run the WRF/LES integration:
+
+    $ cd run
+    $ ../gmcfCoupler
+
+- You might need to set `$OMP_STACKSIZE` and `$OMP_NUM_THREADS` to run WRF with OpenMP. 
+
 
 ## Making it work with other models
 

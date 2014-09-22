@@ -1,0 +1,65 @@
+# This file could be generated, or the list of model libraries could be a command line flag. Let's start with the latter.
+import os
+import platform
+# g++-mp-4.9 -std=c++11 -o gmcfCoupler -Wall -DWORDSZ=64 -DUSE_THREADS=1 -I$PWD/gensrc -I$GANNET_DIR/GPRM/src -I$GANNET_DIR/GPRM/src/SBA  -L$PWD/lib -L$PWD/src/GMCF/Models $GANNET_DIR/GPRM/src/gmcfCoupler.cc -lgmcf -lgmcfAPI -lgfortran -lmodel1 -lmodel2 
+models=ARGUMENTS.get('models','les_ocl_gmcf,wrf_gmcf')
+modellibs=models.split(',')
+
+CXX=os.environ['CXX']
+GANNET_DIR=os.environ['GANNET_DIR']
+wd= os.environ['PWD']
+os = platform.uname()[0]
+
+gmcfsources=[ GANNET_DIR+'/GPRM/src/gmcfCoupler.cc']
+LDFLAGS=[]
+OSX=0
+if os=='Darwin':
+	OSX=1
+	LDFLAGS=['-Wl,-stack_size,0x40000000']
+	
+LDFLAGS=LDFLAGS+['-pthread','-fopenmp'] # ['-fconvert=big-endian','-frecord-marker=4',]
+
+FFLAGS= [] # ['-fconvert=big-endian','-frecord-marker=4']
+CXXFLAGS=[ '-Wall',  '-std=c++11' ,  '-DWORDSZ=64', '-DUSE_THREADS=1']
+INCPATHS=[ GANNET_DIR+'/GPRM/src', GANNET_DIR+'/GPRM/src/SBA',  wd+'/gensrc']
+
+wrf_libs=Split("""
+wrflib
+fftpack
+io_grib1
+io_grib_share
+wrfio_int
+wrfio_nf 
+esmf_time 
+wrf_objs
+netcdff 
+netcdf
+""")
+
+
+
+les_ocl_libs = Split("""
+OclWrapper
+OclWrapperF
+OpenCL
+stdc++
+""")
+
+if OSX==1:
+            env.Append(FRAMEWORKS=['OpenCL'])
+else:
+            les_ocl_libs.append('OpenCL')  
+            
+
+LES_OCL_DIR=wd+'/src/LES_OCL/RefactoredSources'
+les_ocl_libpaths=[ LES_OCL_DIR ]
+
+WRF_DIR=wd+'/src/WRFV3.4_gmcf'
+wrf_libpaths=[ WRF_DIR+'/main', WRF_DIR+'/external/fftpack/fftpack5/', WRF_DIR+'/external/io_grib1/', WRF_DIR+'/external/io_grib_share/', WRF_DIR+'/external/io_int/', WRF_DIR+'/external/esmf_time_f90', WRF_DIR+'/external/io_netcdf', '/usr/local/lib' ] 
+
+LIBPATHS=[wd+'/lib', wd+'/src/GMCF/Models'] + wrf_libpaths + les_ocl_libpaths
+LIBS=['gmcf']+modellibs+wrf_libs+les_ocl_libs+['gmcfAPI','gfortran' ]
+env=Environment(LINK=CXX,LINKFLAGS=LDFLAGS,CXX=CXX,CXXFLAGS=CXXFLAGS,CPPPATH=INCPATHS,LIBPATH=LIBPATHS,FORTRANFLAGS=FFLAGS)
+env.Program('gmcfCoupler',gmcfsources,LIBS=LIBS) 
+
+

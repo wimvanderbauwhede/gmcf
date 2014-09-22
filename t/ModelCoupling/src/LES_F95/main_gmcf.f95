@@ -1,4 +1,4 @@
-#define DEBUG_LES
+!#define DEBUG_LES
 ! For code with debug statements, see revision 7752.
       subroutine program_les_gmcf(sys, tile, model_id)
 #ifdef USE_NETCDF_OUTPUT
@@ -15,20 +15,23 @@
       use module_set
       use module_anime
       use module_aveflow
+#if TIMSERIS_FIXED
       use module_timseris
+#endif
       use module_grid
       use module_ifdata
       use module_feedbf
       use common_sn
 
-    ! gmcf-coupler
+#ifdef USE_GMCF
     use gmcfAPI
     use gmcfAPIles
+#endif
 
     integer(8) , intent(In) :: sys
     integer(8) , intent(In) :: tile
     integer , intent(In) :: model_id
-    ! end gmcf-coupler
+
 
         real(kind=4) :: alpha
         real(kind=4), dimension(0:ip+1,0:jp+1,0:kp+1)  :: amask1
@@ -151,7 +154,9 @@
          real (kind=4), dimension(0:8) :: timestamp
 #endif
 ! -----------------------------------------------------------------------
+#ifdef USE_GMCF
      call gmcfInitLes(sys,tile, model_id)
+#endif
 ! -----------------------------------------------------------------------
 ! 
 #ifdef DEBUG_LES
@@ -199,7 +204,17 @@
       nmax=201
       do n = n0,nmax
         time = float(n-1)*dt
+#ifdef USE_GMCF
         call gmcfSyncLes
+
+        call gmcfPreLes
+
+        if (can_interpolate == 0) then
+            can_interpolate = 1
+        else
+
+        call gmcfInterpolateWindprofileLes(u,v,w)
+#endif
 !$ACC KernelWrapper(LES_kernel_wrapper)        
 ! -------calculate turbulent flow--------c
 #ifdef TIMINGS
@@ -214,7 +229,10 @@
 #ifdef TIMINGS
         call cpu_time(timestamp(1))
 #endif
-        call bondv1(jm,u,z2,dzn,v,w,km,n,im,dt,dxs)
+#ifndef USE_GMCF
+        call initial_wind_profile(u,v,w,jm,km,z2,dzn)
+#endif
+        call bondv1(u,v,w,dxs,dt,n,im,jm,km)
 #ifdef TIMINGS
         call cpu_time(timestamp(2))
 #endif
@@ -224,10 +242,12 @@
 #ifdef TIMINGS
         call cpu_time(timestamp(3))
 #endif
-        if(ifbf == 1) then
+
+#if IFBF == 1
         call feedbf(km,jm,im,usum,u,bmask1,vsum,v,cmask1,wsum,w,dmask1,alpha,dt,beta,fx,fy,fz,f,g, &
       h)
-        end if
+#endif
+
 #ifdef TIMINGS
         call cpu_time(timestamp(4))
 #endif
@@ -246,25 +266,34 @@
             do i=1, 7
                 print '("Time for state ",i2," = ",f6.3," s")',i,timestamp(i)-timestamp(i-1)
             end do
-
 #endif
 !$ACC End KernelWrapper
 ! -------data output ---------------------c
+#if TIMSERIS_FIXED
         call timseris(n,dt,u,v,w)
-
+#endif
         call aveflow(n,n1,km,jm,im,aveu,avev,avew,avep,avel,aveuu,avevv,aveww,avesm,avesmsm,uwfx, &
       avesu,avesv,avesw,avesuu,avesvv,avesww,u,v,w,p,sm,nmax,uwfxs,data10,time,data11)
         if(ianime == 1) then
         call anime(n,n0,nmax,km,jm,im,dxl,dx1,dyl,dy1,z2,data22,data23,u,w,v,amask1)
 
-        endif
-
+        end if
+#ifdef USE_GMCF
+        end if ! interpolate guard
+#endif
 ! 
         if(n == nmax) then
-        stop
+            goto 7188
         end if
 
       end do
+
+    7188 continue
+
+#ifdef USE_GMCF
+    call gmcfFinishedLes
+#endif
+
 #ifdef USE_NETCDF_OUTPUT
       call close_netcdf_file
 #endif

@@ -1,0 +1,1 @@
+This is a version of the DPRI OpenCL Large Eddy Simulator (https://github.com/wimvanderbauwhede/LES) modified for model coupling with WRF using GMCF.

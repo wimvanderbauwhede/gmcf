@@ -1,0 +1,2 @@
+. ../../etc/gannetrc
+build.pl -Y src/GMCF/Task/GMCF_WRF_LES.yml -L 

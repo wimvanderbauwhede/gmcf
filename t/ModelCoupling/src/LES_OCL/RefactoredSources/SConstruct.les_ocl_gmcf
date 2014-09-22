@@ -1,0 +1,216 @@
+# SCons build script for OpenCL-LES with GMCF integration 
+# This script first generates a kernel wrapper and a monolithic kernel, then builds the OclWrapper library and its Fortran version, then builds the actual LES code
+# The GMCF code is generated and built separately, see the build scripts in t/ModelCoupling
+
+use_gmcf = True
+WV_DEBUG = '' # '-DWV_DEBUG'    
+OCL_DEBUG = '' # '-DDEBUG' 
+external_wind_profile = True
+
+import os
+import commands
+import glob
+
+import OclBuilder
+# First build the OclWrapper library
+from OclBuilder import initOcl
+# Adding path to includes for kernels
+CWD= os.environ['PWD']
+
+OclBuilder.kopts='-cl-mad-enable -cl-fast-relaxed-math -I'+CWD+'/../OpenCL/Kernels/'
+
+from OclBuilder import getOpt
+
+OclBuilder.opts=Variables()
+
+envF=Environment(useF=1)
+    
+# Then build the rest of the code
+
+WITH_OCL=''
+with_ocl= getOpt('ocl','Use OpenCL','1')
+if with_ocl == '1':
+    WITH_OCL = '-D_OPENCL_LES_WV'
+    envF=initOcl(envF)
+    kernel_opts = envF['KERNEL_OPTS'] 
+else:
+    envF['F95']=os.environ['FC']
+    envF['LINK']=os.environ['FC']
+    verbose = getOpt('v','Verbose','0')
+    VERBOSE = ''
+    if verbose == '1':
+        VERBOSE = '-DVERBOSE'
+    other = getOpt('D','Other macro','')
+    TIMINGS=''
+    if other !='':
+        TIMINGS = '-D'+other
+        
+def genWrappers(macros):
+    print 'Generating Wrappers ...'
+    cwd = os.getcwd()
+    os.chdir( cwd+'/../OpenCL')
+    templs = glob.glob('WrapperTemplates/*');
+    for templ in templs:
+        cmd_gen='./oclgen -o '+templ
+        os.system(cmd_gen);
+    macros_str=''
+    for macro in macros:
+        macros_str+=' '+macro
+    print 'Generating Kernel Stub ...'
+    os.chdir( cwd+'/../OpenCL/KernelStubs')
+    cmd_cpp_stub = 'cpp -P -DEXT_DEFS '+macros_str+' -Wno-extra-tokens  LES_combined_kernel_PreCPP.f95 > LES_combined_kernel.f95'        
+    status_cpp_stub = os.system(cmd_cpp_stub)
+    print 'Generating Kernel Wrapper ...'        
+    os.chdir( cwd+'/../OpenCL')
+    cmd_cpp = 'cpp -P -I'+CWD+'../OpenCL/Kernels/ -DEXT_DEFS '+macros_str+' -Wno-extra-tokens   ./module_LES_combined_ocl_TEMPL_V2.f95 > module_LES_combined_ocl_TEMPL_V2_PostCPP.f95'         
+    status_cpp = os.system(cmd_cpp)
+    cmd_gen_comb='./oclgen module_LES_combined_ocl_TEMPL_V2_PostCPP.f95 > Wrappers/module_LES_combined_ocl.f95'
+    status = os.system(cmd_gen_comb)
+    os.chdir(cwd)
+    return status
+
+def genMonolithicKernel(kernel_opts, status):
+    print 'Generating Monolithic Kernel with options'
+    cwd = os.getcwd()
+    print kernel_opts
+    kernel_opts_str=''
+    for opt in kernel_opts:
+        kernel_opts_str+=' '+opt
+    cmd_cpp = 'cpp -P -I'+CWD+'../OpenCL/Kernels/ -DEXT_DEFS '+kernel_opts_str+' -Wno-extra-tokens  Kernels/LES_combined_kernel.cl > Kernels/LES_combined_kernel_mono_RAW.cl'
+    cmd_fix_name = "perl -e 'while(<>) {/^\s*$/ && next;s/LES_combined_kernel/LES_combined_kernel_mono/;print $_;}' < Kernels/LES_combined_kernel_mono_RAW.cl > Kernels/LES_combined_kernel_mono.cl"
+    os.chdir( cwd+'/../OpenCL')
+    status_cpp = os.system(cmd_cpp)
+    status_pl = os.system(cmd_fix_name)
+    os.chdir(cwd)
+    return status*status_cpp*status_pl
+
+TEST_SMALL_DOMAIN = 0
+USE_NETCDF_OUTPUT = 0
+MAX_REL_ERROR = '-DMAX_REL_ERROR=0.001'
+NO_FILE_IO='-DNO_FILE_IO'
+ICAL = '-DICAL=0'
+IFBF='-DIFBF=1'
+IANIME='-DIANIME=0'
+IADAM='-DIADAM=0'
+TIMSERIS_FIXED='' #  '-DTIMSERIS_FIXED'
+
+sor_max_iters = getOpt('nmaxsor','SOR max iters','50') 
+SOR_MAX_ITERS = '-DSOR_MAX_ITERS ='+sor_max_iters
+
+FFLAGS  = [ WITH_OCL, TIMSERIS_FIXED, NO_FILE_IO, ICAL, IFBF,IANIME, IADAM] 
+if USE_NETCDF_OUTPUT == 1:
+    FFLAGS  += ['-DUSE_NETCDF_OUTPUT']
+if TEST_SMALL_DOMAIN == 1:
+    FFLAGS  += ['-DTEST_SMALL_DOMAIN']
+if external_wind_profile:
+    FFLAGS  += ['-DEXTERNAL_WIND_PROFILE']
+if use_gmcf:
+	FFLAGS+=['-DUSE_GMCF']
+    
+status=0
+if with_ocl=='1':
+    macros = envF['MACROS']+FFLAGS
+    status = genWrappers(macros)
+    status = genMonolithicKernel(kernel_opts, status)    
+envF['STATUS'] = status
+        
+
+if with_ocl == '0':
+    FFLAGS += ['-cpp','-Ofast', '-m64', '-Wall','-ffree-form', '-fconvert=big-endian', VERBOSE,TIMINGS]
+    
+fsources = Split("""
+./anime.f95
+./aveflow.f95
+./bondFG.f95
+./bondv1.f95
+./boundp.f95
+./boundsm.f95
+./vel2.f95
+./velFG.f95
+./feedbf.f95
+./feedbfm.f95
+./les.f95
+./grid.f95
+./ifdata.f95
+./init.f95
+./les_ocl_gmcf.f95
+./set.f95
+./timdata.f95
+./common_sn.f95
+params_common_sn.f95
+""")
+if external_wind_profile:
+	fsources.append('./initial_wind_profile.f95')
+
+if use_gmcf:
+	if external_wind_profile:
+		fsources+=['./gmcfAPIlesOcl.f95']
+	else:
+		raise Exception('GMCF requires external wind profile.')
+	
+		
+if TIMSERIS_FIXED != '':
+    fsources.append('./timseris.f95')
+
+if USE_NETCDF_OUTPUT == 1:
+    fsources += ['../OpenCL/module_LES_write_netcdf.f95']
+
+if with_ocl == '1':
+    fsources = fsources+['../OpenCL/module_LES_tests.f95','../OpenCL/module_LES_conversions.f95','../OpenCL/Wrappers/module_LES_combined_ocl.f95','./oclWrapper.o']
+else:
+    fsources = fsources+['./adam.f95','./press.f95','./velnw.f95']
+    if external_wind_profile:
+    	fsources.append('./bondv1_ext_wind_profile.f95')
+
+cwd = os.getcwd()
+
+# Basically, it's Linux unless it's OS X
+if os.uname()[0] == "Darwin":
+        OSX=1
+        OSFLAG='-DOSX'
+else:       
+        OSX=0
+        OSFLAG='-D__LINUX__'
+
+if with_ocl == '1':        
+    # Linker flags for OclWrapper		 
+    OPENCL_DIR=os.environ['OPENCL_DIR']
+    OCL_LDFLAGS =  ['-L.','-L'+OPENCL_DIR+'/OpenCLIntegration']
+else:
+    OCL_LDFLAGS =  []
+
+if OSX == 1:
+    INCLPATH = '/opt/local/include' 
+    LIBPATH = '/opt/local/lib'
+else:    
+# test for devtoolset-2 ... so better use a var $DEVTOOLSETROOT?
+    if os.path.exists('/opt/rh/devtoolset-2'): 
+        INCLPATH = '/opt/rh/devtoolset-2/root/usr/include' 
+        LIBPATH = '/opt/rh/devtoolset-2/root/usr/lib'
+    else:
+# reasonable default ...
+        INCLPATH = '/usr/local/include' 
+        LIBPATH = '/usr/local/lib'
+    
+envF.Append(F95FLAGS=FFLAGS)
+
+
+envF.Append(F95PATH=['.','../../../lib',INCLPATH])
+
+
+envF.Append(LIBS=['gmcfAPI','m'])
+
+if USE_NETCDF_OUTPUT == 1:
+    envF.Append(LIBS=['netcdff','netcdf'])
+
+envF.Append(LIBPATH=['../../../lib','.',LIBPATH])
+    
+if with_ocl == '1': 
+    envF.Append(LIBS=['OclWrapperF','stdc++','OclWrapper'])
+    if OSX==1:
+            envF.Append(FRAMEWORKS=['OpenCL'])
+    else:
+            envF.Append(LIBS=['OpenCL'])   
+
+gmcflib = envF.Library('les_ocl_gmcf',fsources)
+envF.Alias('install',envF.Install('../../GMCF/Models/',gmcflib))

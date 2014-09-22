@@ -77,8 +77,8 @@ wrf_gmcf : framework_only
 	if [ $(WRF_EM_CORE) -eq 1 ]    ; then $(MAKE) MODULE_DIRS="$(ALL_MODULES)" em_core ; fi
 	if [ $(WRF_NMM_CORE) -eq 1 ]   ; then $(MAKE) MODULE_DIRS="$(ALL_MODULES)" nmm_core ; fi
 	if [ $(WRF_EXP_CORE) -eq 1 ]   ; then $(MAKE) MODULE_DIRS="$(ALL_MODULES)" exp_core ; fi
-	@echo "WV: $(MAKE) MODULE_DIRS=\"$(ALL_MODULES)\" SOLVER=em libwrf_gmcf.a"
-	( cd main ; $(MAKE) MODULE_DIRS="$(ALL_MODULES)" SOLVER=em libwrf_gmcf.a )
+	@echo "WV: $(MAKE) MODULE_DIRS=\"$(ALL_MODULES)\" SOLVER=em em_wrf_gmcf"
+	( cd main ; $(MAKE) MODULE_DIRS="$(ALL_MODULES)" SOLVER=em libwrf_objs.a ;  $(MAKE) MODULE_DIRS="$(ALL_MODULES)" SOLVER=em libwrf_gmcf.a  )
 #	( cd run ; /bin/rm -f wrf_gmcf.exe ; ln -s ../main/wrf_gmcf.exe . )
 #	if [ $(ESMF_COUPLING) -eq 1 ] ; then \
 #	  ( cd main ; $(MAKE) MODULE_DIRS="$(ALL_MODULES)" SOLVER=em em_wrf_SST_ESMF ) ; \

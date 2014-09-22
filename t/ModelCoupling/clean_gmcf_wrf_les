@@ -1,6 +1,8 @@
-build.pl -Y src/GMCF/Task/GMCF.yml -d -v -L -c
+rm lib/*.mod
+build.pl -Y src/GMCF/Task/GMCF.yml -L -c
 cd src/LES_F95
 scons -f SConstruct.les_gmcf -c
+scons -f SConstruct.les_gmcf install -c
 cd ../..
 cd src/WRFV3.4_gmcf
 #perl ./real_clean.pl

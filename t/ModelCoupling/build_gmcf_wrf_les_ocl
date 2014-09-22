@@ -1,0 +1,10 @@
+. ../../etc/gannetrc
+build.pl -Y src/GMCF/Task/GMCF_WRF_LES_OCL.yml -L 
+cd src/LES_F95
+scons -f SConstruct.les_gmcf dev=GPU kernel=2 v=0 nth=128
+scons -f SConstruct.les_gmcf dev=GPU kernel=2 v=0 nth=128 install
+cd ../..
+cd src/WRFV3.4_gmcf
+./compile wrf_gmcf
+cd ../..
+scons -f SConstruct.wrf_les models=les_gmcf,wrf_gmcf

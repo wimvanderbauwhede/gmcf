@@ -1,0 +1,12 @@
+rm lib/*.mod
+build.pl -Y src/GMCF/Task/GMCF.yml -L -c
+cd src/LES_OCL/RefactoredSources
+scons -f SConstruct.les_ocl_gmcf -c
+scons -f SConstruct.les_ocl_gmcf install -c
+cd ../../..
+cd src/WRFV3.4_gmcf
+perl ./real_clean.pl
+#./minimal_clean.sh
+cd ../..
+scons -c
+

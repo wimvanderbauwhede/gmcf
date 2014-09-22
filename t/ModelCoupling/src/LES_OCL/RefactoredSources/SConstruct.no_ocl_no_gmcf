@@ -1,0 +1,28 @@
+DEBUG = '' # '-DWV_DEBUG'
+
+import OclBuilder 
+OclBuilder.opts=Variables()
+from OclBuilder import getOpt
+verbose=getOpt('v','Verbose','1')
+    
+# Generated build script for refactored FLEXPART source code
+# Wed Jun 19 16:57:22 2013
+import os
+#import os.path
+#NETCDF=os.environ.get('NETCDF')
+FC=os.environ.get('FC')
+
+fsources = ['./adam.f95','./anime.f95','./aveflow.f95','./bondFG.f95','./bondv1.f95','./boundp.f95','./boundsm.f95','./feedbf.f95','./feedbfm.f95','./grid.f95','./ifdata.f95','./init.f95','./les.f95','./main.f95','./press.f95','./set.f95','./timdata.f95','./timseris.f95','./vel2.f95','./velFG.f95','./velnw.f95','common_sn.f95','params_common_sn.f95'] #,'../OpenCL/module_LES_write_netcdf.f95']
+
+LDFLAGS= [] # '-fopenmp'] # ['-Wl,-stack_size,0x40000000']
+#FFLAGS  = ['-cpp','-Ofast','-floop-parallelize-all','-ftree-parallelize-loops=24', '-m64', '-Wall','-ffree-form', '-fconvert=big-endian'] #,'-fopenmp','-pthread']
+FFLAGS  = ['-cpp','-Ofast', '-m64', '-Wall','-ffree-form', '-fconvert=big-endian']
+FFLAGS+=[DEBUG]
+if verbose == '1':
+    FFLAGS+=['-DVERBOSE'] 
+FFLAGS+=['-DIFBF=1','-DICAL=0','-DIADAM=0'] #,'-DTIMINGS'] 
+
+#FFLAGS+=['-DUSE_NETCDF_OUTPUT','-DNO_IO'] 
+
+envF=Environment(F95=FC,LINK=FC,LINKFLAGS=LDFLAGS,F95FLAGS=FFLAGS,F95PATH=['.','../OpenCL','/opt/local/include','/usr/local/include'])
+envF.Program('les_main',fsources,LIBS=['m'],LIBPATH=['.','/opt/local/lib','/usr/local/lib'])
