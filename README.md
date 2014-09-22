@@ -10,7 +10,7 @@ The aim of GMCF is to make Model Coupling easier and more suited to modern heter
 
 ## Current Prototype
 
-The code in this repository is a Proof-of-Concept, in a very early stage: I created the Glasgow Model Coupling Framework (GMCF), and API and runtime, and used it to couple the [Weather Research and Forecasting Model](http://www2.mmm.ucar.edu/wrf/users/) with the [Large Eddy Simulator](https://github.com/wimvanderbauwhede/LES) developed at Kyoto University's Disaster Prevention Research Institute. The current coupling code works on a multicore/GPU node with OpenMP WRF and our OpenCL LES. I have tested the integration on a 12-core Intel Xeon E5-2640 host running CentOS 6.4, with an NVIDIA GeForce GTX 480.
+The code in this repository is a Proof-of-Concept, in a very early stage: I created the Glasgow Model Coupling Framework (GMCF), an API and runtime, and used it to couple the [Weather Research and Forecasting Model](http://www2.mmm.ucar.edu/wrf/users/) with the [Large Eddy Simulator](https://github.com/wimvanderbauwhede/LES) developed at Kyoto University's Disaster Prevention Research Institute. The current coupling code works on a multicore/GPU node with OpenMP WRF and our OpenCL LES. I have tested the integration on a 12-core Intel Xeon E5-2640 host running CentOS 6.4, with an NVIDIA GeForce GTX 480.
 
 The GMCF is already very generic and can be used for coupling other models as well, but it is not yet easy to use.
 
@@ -40,12 +40,14 @@ The Fortran API is just a wrapper around the C++ API. This API is not really int
 - You need a C++11- capable C++ compiler, I use g++ 4.8 or 4.9
 - You need a moder Fortran compiler, I use gfortran 4.8 or 4.9 but recent Intel Fortran or Portland Group Fortran compilers will work too; you may need to change the options in the build scripts.
 - The build scripts use Perl, Ruby and Python, and in particular SCons v2.3 so it's best to use Python 2.7 although 2.6.6 works fine.
+- You need a compiler with OpenMP support and OpenCL for the device you want to use. I have used gcc's OpenMP, NVIDIA's OpenCL for GPU and Intel's OpenCL for the CPU.
 
 ## Installation
 
-- You need to set the environment GANNET_DIR to the path of the gmcf folder, e.g. `$HOME/gmcf`.
-- In the gmcf folder, you need to source the etc/gannetrc file: `. etc/gannetrc`
+- You need to set the environment variable `$GANNET_DIR` to the path of the gmcf folder, e.g. `$HOME/gmcf`.
+- In the gmcf folder, you need to source the etc/gannetrc file: `. etc/gannetrc` (or put it in your `.bashrc` or equivalent)
 - You need to set the $CC, $FC and $CXX environment variables for the C, Fortran and C++ compilers.
+- If you use OpenCL, you need to install (my OclWrapper library)[https://github.com/wimvanderbauwhede/OpenCLIntegration].
 
 - To build the model1/model2 producer-consumer coupling example:
 
@@ -54,7 +56,7 @@ The Fortran API is just a wrapper around the C++ API. This API is not really int
 
 - And to clean:
 
-  $ ./clean_gmcf
+  $ ./clean_gmcf  
 
 **NOTE: The WRF/LES sources are not included, and need to be patched.**
 
