@@ -16,7 +16,7 @@ module gmcfAPIles
     save
 
 contains
-
+!$GMCF Init(timesteps=20) !if >1 it means we need to interpolate otherwise not
     subroutine gmcfInitLes(sys,tile,m_id)
         integer(8), intent(In) :: sys
         integer(8), intent(In) :: tile

@@ -1,0 +1,31 @@
+Runtime:
+# Runtime can have a different organisation from VM
+# The service name here can actually be "virtual"
+# e.g. there is no 'io' service
+# The actual names are in Runtime_Aliases
+# WV19052009: we need entries for the specific runtimes as well
+  Classes:
+    lambda: Function
+    if: Cond
+    alu: ALU
+    apply: Function
+    begin: Block
+    io: StreamIO
+    let: Block
+    count: NONE
+    call: NONE
+    stream: Buffer     
+  Aliases:
+    buffer: stream    
+    fifo: stream    
+    peek: stream    
+    loop: stream    
+    iter: stream    
+    get: stream   
+    eos: stream 
+    rnd: alu    
+    display: io    
+    ioread: io    
+    iowrite: io    
+    fopen: io    
+    fclose: io    

@@ -1,0 +1,16 @@
+Name: Gannet
+Version: 0.3
+Cabal-Version: >= 1.2
+Build-Type: Simple
+License: GPL
+License-file: ../LICENSE
+Author: Wim Vanderbauwhede
+Maintainer: Wim.Vanderbauwhede@gmail.com
+Category: Compilers
+Description: Gannet is a functional language for parallel task compostion in manycore systems. The compiler generates the bytecode for the Gannet machine, a parallel reduction machine.
+Synopsis: Compiler for the Gannet Intermediate Representation language
+
+Executable gannetc
+    Build-Depends: mtl, base, containers, parsec, HsSyck >= 0.45, directory, bytestring
+    Main-is: Main.hs
+    Hs-Source-Dirs: .

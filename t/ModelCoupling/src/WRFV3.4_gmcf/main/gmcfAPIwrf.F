@@ -28,10 +28,6 @@ contains
 
 
     subroutine gmcfSyncWrf ! (var_name_1, var_name_2)
-!        real(4), dimension(128,128), intent(In)  :: wind_profile ! AD-HOC!
-!        real(kind=4), dimension(128), intent(In) :: var_name_1
-!        real(kind=4), dimension(128,128,128), intent(In) :: var_name_2
-
         t_sync = t_wrf
         t_wrf = t_wrf + 1
         if (gmcfStatus(DEST_1) /= FIN) then
