@@ -232,6 +232,19 @@ contains
         call gmcfsendarrayc(sba_sys, sba_tile(model_id), data_id, model_id, destination, pre_post,  time, sz1d,array)
     end subroutine gmcfSend1DFloatArray
 
+    subroutine gmcfSend2DFloatArray(model_id, array, sz, data_id, destination, pre_post,time)
+        integer, dimension(2), intent(In):: sz
+        integer,intent(In) :: data_id
+        real,dimension(sz(1), sz(2)), intent(In) :: array
+        integer, intent(In) :: model_id, destination,pre_post,time
+        integer(8) :: sz1d
+        sz1d = size(array)
+#ifdef GMCF_DEBUG
+        print *, "FORTRAN API gmcfSend2DFloatArray: SANITY:",sum(array)
+#endif
+        call gmcfsendarrayc(sba_sys, sba_tile(model_id), data_id, model_id, destination, pre_post,  time, sz1d,array)
+    end subroutine gmcfSend2DFloatArray
+
     subroutine gmcfSend3DFloatArray(model_id, array, sz, data_id, destination, pre_post,time)
         integer, dimension(3), intent(In):: sz
         integer,intent(In) :: data_id
@@ -244,6 +257,7 @@ contains
 #endif
         call gmcfsendarrayc(sba_sys, sba_tile(model_id), data_id, model_id, destination, pre_post,  time, sz1d,array)
     end subroutine gmcfSend3DFloatArray
+
 
    subroutine gmcfRead1DFloatArray(array, sz, packet) ! This will have to be a wrapper around a C function
         ! read data packets from the data fifo and update the variables
