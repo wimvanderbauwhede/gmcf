@@ -295,6 +295,36 @@ contains
 #endif
     end subroutine
 
+    subroutine gmcfRead2DFloatArray(array, sz, packet)
+        type(gmcfPacket) :: packet
+        integer(8):: ptr, ptr_sz
+        integer(8) :: sz1d
+        integer, dimension(2):: sz
+        real,dimension(sz(1), sz(2)) :: array
+        real, dimension(size(array)):: array1d
+!
+!        real, pointer, dimension(:,:,:) :: array
+!        real, pointer, dimension(:) :: array1d
+        sz1d = size(array1d) ! product(sz)
+        ptr = packet%data_ptr
+        ptr_sz = packet%data_sz
+        if (ptr_sz /= sz1d) then
+            print *, 'WARNING: size of read array',ptr_sz,'does not match size of target', sz1d
+        end if
+#ifdef GMCF_DEBUG
+        print *, "FORTRAN API gmcfRead3DFloatArray: PTR:",ptr
+#endif
+        call gmcffloatarrayfromptrc(ptr,array1d,sz1d) ! This ugly function will simply cast the ptr and return it as the array1d
+#ifdef GMCF_DEBUG
+        print *, "FORTRAN API gmcfRead2DFloatArray: SANITY:",array1d(1)
+        print *, "FORTRAN API gmcfRead2DFloatArray: SANITY:",sum(array1d)
+#endif
+        array = reshape(array1d,shape(array))
+#ifdef GMCF_DEBUG
+        print *, "FORTRAN API gmcfRead2DFloatArray: SANITY:",sum(array)
+#endif
+    end subroutine gmcfRead2DFloatArray
+
     subroutine gmcfRead3DFloatArray(array, sz, packet)
         type(gmcfPacket) :: packet
         integer(8):: ptr, ptr_sz
