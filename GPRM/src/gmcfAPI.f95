@@ -354,6 +354,13 @@ contains
         print *, "FORTRAN API gmcfRead3DFloatArray: SANITY:",sum(array)
 #endif
     end subroutine
+    
+    subroutine gmcfGetTileId(tile, tile_id)
+        implicit none
+        integer(8), intent(in) :: tile
+        integer, intent(out) :: tile_id
+        call gmcfgettileidc(tile, tile_id)
+    end subroutine gmcfGetTileId
 
     subroutine gmcfFinished(model_id)
         integer, intent(In) :: model_id

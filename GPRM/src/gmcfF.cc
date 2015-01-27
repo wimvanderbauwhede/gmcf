@@ -328,3 +328,10 @@ void gmcfcheckfifoc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,int* packet_type,
 		cerr << "Only Data/Time Req/Resp supported\n";
 	};
 }
+
+void gmcfgettileidc_(int64_t* ivp_tileptr, int* tile_id) {
+	int64_t ivp = *ivp_tileptr;
+	void* vp=(void*)ivp;
+	SBA::Tile* tileptr = (SBA::Tile*)vp;
+	*tile_id = tileptr->address;
+}
