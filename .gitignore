@@ -1,1 +1,9 @@
 *~
+*.mod
+*.o
+*.a
+*.dblite
+*.pyc
+._CHECK_CHANGE_*
+gensrc/
+gmcfCoupler
