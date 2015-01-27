@@ -59,7 +59,7 @@ contains
         integer :: dest,requester, recvfrom, recvtime, fifo_empty, sync_irq
 
         type(gmcfPacket) :: packet
-        sync_counter = NMODELS-1
+        sync_counter(model_id) = NMODELS-1
         ! Send requests for timestamps to all others
         do dest=1,NMODELS
             sync_status(model_id,dest)=0
