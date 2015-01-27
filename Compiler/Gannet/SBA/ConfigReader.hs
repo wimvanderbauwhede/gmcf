@@ -278,10 +278,10 @@ libraryYMapToList m = getYStr m
 servicenodeYMapToList = ymlMapToList servicenodeYMapToList_helper
 servicenodeYMapToList_helper (mk,mv)  =  
     let
-            snn=getYStr mk
+        snn=getYStr mk
         snid_yn:scs_yn:[]=getYSeq mv
         snid = read (getYStr snid_yn)::Integer
-            serviceclasses= map getYStr (getYSeq scs_yn)
+        serviceclasses= map getYStr (getYSeq scs_yn)
     in        
         (snn,(snid,serviceclasses))
 -- [(serviceclass,[wrapper, scid, ctrl]] ->  [(serviceclass, (scid, ctrl))]
@@ -309,9 +309,9 @@ newinterfaceYMapToList_helper (sctype,smvl)  = (getYStr sctype, map getYStr (get
 serviceYMapToList = ymlMapToList serviceYMapToList_helper
 serviceYMapToList_helper (mk,mv)  =  
     let
-            sid=read (getYStr mk)::Integer
+        sid=read (getYStr mk)::Integer
         scids=getServiceCoreIdsH mv
-            sids=replicate (length scids) sid
+        sids=replicate (length scids) sid
         snames=getServiceNamesH mv
         stypes=getServiceTypesH mv        
     in        
