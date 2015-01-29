@@ -112,8 +112,11 @@ for my $model_name (@model_names) {
  my $model_id = $config{'System'}{'Models'}{$model_name}{'ModelId'};
  $models->{$model_id} = $model_name;
 }
-my $nmodels = scalar @model_names; 
-my $scons_nmodels ="nmodels=$nmodels"; #FIXME!
+#my $nmodels = scalar @model_names; # WRONG: only works if each model is used only once
+my $n_cfg=$config{'System'}{'NServiceNodes'};
+my $n_actual=scalar keys %{ $config{'System'}{'ServiceNodes'} };
+my $nmodels =  ($n_actual < $n_cfg)? $n_cfg-1 : $n_actual-1; # FIXME: Assumes only 1 extra thread for BEGIN
+my $scons_nmodels ="nmodels=$nmodels";
 
 my $cxx_gen_source_path="$wd/gensrc";
 my $cxx_source_path="$gannet_dir/GPRM/SBA";
