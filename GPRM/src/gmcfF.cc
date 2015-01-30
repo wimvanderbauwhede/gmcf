@@ -126,6 +126,8 @@ is implemented as:
 		} else if (SBA::getPacket_type(p) == P_FIN && SBA::getReturn_to(p) == *sender) {
 			pending_packets=0;
 			break;
+		} else {
+		    std::cout << tileptr->address << " received an unexpected packet from " << SBA::getReturn_to(p) << " it is of type " << SBA::getPacket_type(p) << std::endl;
 		}
 		tileptr->service_manager.demux_packets_by_type(p);
 	}
@@ -163,6 +165,8 @@ call gmcfwaitfornpacketsc_ with packet_type = REQDATA and npackets = 3.
 		} else if (SBA::getPacket_type(p) == P_FIN) {
 			pending_packets=0;
 			break;
+		} else {
+		    std::cout << tileptr->address << " received an unexpected packet from " << SBA::getReturn_to(p) << " it is of type " << SBA::getPacket_type(p) << std::endl;
 		}
 		tileptr->service_manager.demux_packets_by_type(p);
 	}
