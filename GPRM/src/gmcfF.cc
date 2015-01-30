@@ -118,6 +118,19 @@ is implemented as:
 	std::cout << "FORTRAN API C++ gmcfwaitforpacketsc_: Tile address (sanity): <" << tileptr->address <<">\n";
 #endif
 	int pending_packets=*npackets;
+	Packet_Fifo alreadyReceived = tileptr->service_manager.dreq_fifo;
+	int packetsReceived = alreadyReceived.size();
+	int i=0;
+	while(i < packetsReceived) {
+        SBA::Packet_t p = alreadyReceived.pop_front();
+        if (SBA::getPacket_type(p) == *packet_type && SBA::getReturn_to(p) == *sender) {
+            --pending_packets;
+            tileptr->service_manager.demux_packets_by_type(p);
+        } else {
+            alreadyReceived.push_back(p);
+    	}
+        i++;
+	}
 	while(pending_packets!=0) {
 		tileptr->transceiver->rx_fifo.wait_for_packets();
 		SBA::Packet_t  p = tileptr->transceiver->rx_fifo.pop_front();
