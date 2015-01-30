@@ -179,17 +179,6 @@ contains
         ! After this, packets will be in their respective queues, with the packet_type queue guaranteed containing at least one packet
     end subroutine
 
-    subroutine gmcfWaitForN(model_id,packet_type, npackets)
-        integer, intent(In) :: model_id,packet_type, npackets
-        ! What we do here is listen for packets and demux them, probably using a C function
-        ! We do this until there is a packet in the fifo for packet_type
-#ifdef GMCF_DEBUG
-        print *,"FORTRAN API: gmcfWaitForN(",packet_type,npackets,")"
-#endif
-        call gmcfwaitfornpacketsc(sba_sys, sba_tile(model_id), packet_type, npackets)
-        ! After this, packets will be in their respective queues, with the packet_type queue guaranteed containing at least one packet
-    end subroutine
-
     subroutine gmcfHasPackets(model_id, packet_type, has_packets)
         integer, intent(In) :: model_id, packet_type
         integer, intent(Out) :: has_packets
