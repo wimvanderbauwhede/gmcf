@@ -132,6 +132,43 @@ is implemented as:
 
 }
 
+void gmcfwaitfornpacketsc_(
+		int64_t* ivp_sysptr, int64_t* ivp_tileptr,
+		int* packet_type, int* npackets
+		) {
+/*
+gmcfwaitforpacketsc_ (gmcfF.cc)
+If it receives a packet type that was unexpected, for instance if gmcfWaitFor
+was called for one REQDATA from sender i-1 but before hand a REQDATA was
+received from sender i+1 then the i+1 packet will be demuxed (fine) but if a
+second call to gmcfWaitFor occurs for a REQDATA from i+1 it will block forever
+even though it has been received.
+
+To resolve this, this function doesn't care for who the sender was, just the
+type and the number. So if you are expecting, say, 3 boundary requests, you can
+call gmcfwaitfornpacketsc_ with packet_type = REQDATA and npackets = 3.
+*/
+	int64_t ivp = *ivp_tileptr;
+	void* vp=(void*)ivp;
+	SBA::Tile* tileptr = (SBA::Tile*)vp;
+#ifdef GMCF_DEBUG
+	std::cout << "FORTRAN API C++ gmcfwaitforpacketsc_: Tile address (sanity): <" << tileptr->address <<">\n";
+#endif
+	int pending_packets=*npackets;
+	while(pending_packets!=0) {
+		tileptr->transceiver->rx_fifo.wait_for_packets();
+		SBA::Packet_t  p = tileptr->transceiver->rx_fifo.pop_front();
+		if (SBA::getPacket_type(p) == *packet_type) {
+			--pending_packets;
+		} else if (SBA::getPacket_type(p) == P_FIN) {
+			pending_packets=0;
+			break;
+		}
+		tileptr->service_manager.demux_packets_by_type(p);
+	}
+
+}
+
 // ! call gmcfshiftpendingc(sba_sys, sba_tile(model_id), packet_type, source, destination, timestamp, pre_post, data_id, data_sz, data_ptr, fifo_empty)
 void gmcfshiftpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		int* packet_type,
