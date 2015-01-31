@@ -136,7 +136,7 @@ is implemented as:
      
     int packetsReceived = alreadyReceived.size();
     int i=0;
-    while(i < packetsReceived) {
+    while(i < packetsReceived && pending_packets > 0) {
         SBA::Packet_t p = alreadyReceived.pop_front();
         if (SBA::getPacket_type(p) == *packet_type && SBA::getReturn_to(p) == *sender) {
             --pending_packets;
@@ -146,14 +146,14 @@ is implemented as:
     	}
         i++;
 	}
-	while(pending_packets!=0) {
+	while(pending_packets > 0) {
 		tileptr->transceiver->rx_fifo.wait_for_packets();
 		SBA::Packet_t  p = tileptr->transceiver->rx_fifo.pop_front();
 		if (SBA::getPacket_type(p) == *packet_type && SBA::getReturn_to(p) == *sender) {
 			--pending_packets;
 		} else if (SBA::getPacket_type(p) == P_FIN && SBA::getReturn_to(p) == *sender) {
 			pending_packets=0;
-			break;
+			break; // GR: We'll lose this P_FIN packet though? Is this okay?
 		} else {
 		    std::cout << tileptr->address << " received an unexpected packet from " << SBA::getReturn_to(p) << " it is of type " << SBA::getPacket_type(p) << std::endl;
 		}
