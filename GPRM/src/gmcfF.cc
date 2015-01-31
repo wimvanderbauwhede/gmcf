@@ -140,10 +140,8 @@ is implemented as:
         SBA::Packet_t p = alreadyReceived.pop_front();
         if (SBA::getPacket_type(p) == *packet_type && SBA::getReturn_to(p) == *sender) {
             --pending_packets;
-            tileptr->service_manager.demux_packets_by_type(p);
-        } else {
-            alreadyReceived.push_back(p);
-    	}
+        }    
+    	alreadyReceived.push_back(p);
         i++;
 	}
 	while(pending_packets > 0) {
