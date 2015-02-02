@@ -151,8 +151,6 @@ is implemented as:
 		} else if (SBA::getPacket_type(p) == P_FIN && SBA::getReturn_to(p) == *sender) {
 			pending_packets=0;
 			break; // GR: We'll lose this P_FIN packet though? Is this okay?
-		} else {
-		    std::cout << tileptr->address << " received an unexpected packet from " << SBA::getReturn_to(p) << " it is of type " << SBA::getPacket_type(p) << std::endl;
 		}
 		tileptr->service_manager.demux_packets_by_type(p);
 	}

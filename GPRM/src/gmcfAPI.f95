@@ -221,7 +221,7 @@ contains
     subroutine gmcfSend1DFloatArray(model_id, array, sz, data_id, destination, pre_post,time)
         integer, dimension(1), intent(In):: sz
         integer,intent(In) :: data_id
-        real,dimension(sz(1)), intent(In) :: array
+        real(kind=4),dimension(sz(1)), intent(In) :: array
 
         integer, intent(In) :: model_id, destination,pre_post,time
         integer(8) :: sz1d
@@ -235,7 +235,7 @@ contains
     subroutine gmcfSend2DFloatArray(model_id, array, sz, data_id, destination, pre_post,time)
         integer, dimension(2), intent(In):: sz
         integer,intent(In) :: data_id
-        real,dimension(sz(1), sz(2)), intent(In) :: array
+        real(kind=4),dimension(sz(1), sz(2)), intent(In) :: array
         integer, intent(In) :: model_id, destination,pre_post,time
         integer(8) :: sz1d
         sz1d = size(array)
@@ -248,7 +248,7 @@ contains
     subroutine gmcfSend3DFloatArray(model_id, array, sz, data_id, destination, pre_post,time)
         integer, dimension(3), intent(In):: sz
         integer,intent(In) :: data_id
-        real,dimension(sz(1), sz(2), sz(3)), intent(In) :: array
+        real(kind=4),dimension(sz(1), sz(2), sz(3)), intent(In) :: array
         integer, intent(In) :: model_id, destination,pre_post,time
         integer(8) :: sz1d
         sz1d = size(array)
@@ -280,8 +280,8 @@ contains
         integer(8):: ptr, ptr_sz
         integer(8) :: sz1d
         integer, dimension(1):: sz
-       real, dimension(sz(1)) :: array
-       real, dimension(size(array)):: array1d
+       real(kind=4), dimension(sz(1)) :: array
+       real(kind=4), dimension(size(array)):: array1d
 !        real, pointer, dimension(:) :: array
 !        real, pointer, dimension(:) :: array1d
 
@@ -313,8 +313,8 @@ contains
         integer(8):: ptr, ptr_sz
         integer(8) :: sz1d
         integer, dimension(2):: sz
-        real,dimension(sz(1), sz(2)) :: array
-        real, dimension(size(array)):: array1d
+        real(kind=4),dimension(sz(1), sz(2)) :: array
+        real(kind=4), dimension(size(array)):: array1d
 !
 !        real, pointer, dimension(:,:,:) :: array
 !        real, pointer, dimension(:) :: array1d
@@ -343,8 +343,8 @@ contains
         integer(8):: ptr, ptr_sz
         integer(8) :: sz1d
         integer, dimension(3):: sz
-        real,dimension(sz(1), sz(2), sz(3)) :: array
-        real, dimension(size(array)):: array1d
+        real(kind=4),dimension(sz(1), sz(2), sz(3)) :: array
+        real(kind=4), dimension(size(array)):: array1d
 !
 !        real, pointer, dimension(:,:,:) :: array
 !        real, pointer, dimension(:) :: array1d
@@ -399,7 +399,6 @@ contains
     end subroutine
     
     subroutine gmcfGetTileId(tile, tile_id)
-        implicit none
         integer(8), intent(in) :: tile
         integer, intent(out) :: tile_id
         call gmcfgettileidc(tile, tile_id)
