@@ -135,14 +135,13 @@ is implemented as:
 	}
      
     int packetsReceived = alreadyReceived.size();
-    int i=0;
-    while(i < packetsReceived && pending_packets > 0) {
+    while(packetsReceived > 0 && pending_packets > 0) {
         SBA::Packet_t p = alreadyReceived.pop_front();
         if (SBA::getPacket_type(p) == *packet_type && SBA::getReturn_to(p) == *sender) {
             --pending_packets;
         }    
     	alreadyReceived.push_back(p);
-        i++;
+        --packetsReceived;
 	}
 	while(pending_packets > 0) {
 		tileptr->transceiver->rx_fifo.wait_for_packets();

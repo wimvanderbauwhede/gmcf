@@ -258,6 +258,19 @@ contains
         call gmcfsendarrayc(sba_sys, sba_tile(model_id), data_id, model_id, destination, pre_post,  time, sz1d,array)
     end subroutine gmcfSend3DFloatArray
 
+    subroutine gmcfSend3DIntegerArray(model_id, array, sz, data_id, destination, pre_post,time)
+        integer, dimension(3), intent(In):: sz
+        integer,intent(In) :: data_id
+        integer,dimension(sz(1), sz(2), sz(3)), intent(In) :: array
+        integer, intent(In) :: model_id, destination,pre_post,time
+        integer(8) :: sz1d
+        sz1d = size(array)
+#ifdef GMCF_DEBUG
+        print *, "FORTRAN API gmcfSend3DFloatArray: SANITY:",sum(array)
+#endif
+        call gmcfsendarrayc(sba_sys, sba_tile(model_id), data_id, model_id, destination, pre_post,  time, sz1d,array)
+    end subroutine gmcfSend3DIntegerArray
+
 
    subroutine gmcfRead1DFloatArray(array, sz, packet) ! This will have to be a wrapper around a C function
         ! read data packets from the data fifo and update the variables
@@ -332,6 +345,36 @@ contains
         integer, dimension(3):: sz
         real,dimension(sz(1), sz(2), sz(3)) :: array
         real, dimension(size(array)):: array1d
+!
+!        real, pointer, dimension(:,:,:) :: array
+!        real, pointer, dimension(:) :: array1d
+        sz1d = size(array1d) ! product(sz)
+        ptr = packet%data_ptr
+        ptr_sz = packet%data_sz
+        if (ptr_sz /= sz1d) then
+            print *, 'WARNING: size of read array',ptr_sz,'does not match size of target', sz1d
+        end if
+#ifdef GMCF_DEBUG
+        print *, "FORTRAN API gmcfRead3DFloatArray: PTR:",ptr
+#endif
+        call gmcffloatarrayfromptrc(ptr,array1d,sz1d) ! This ugly function will simply cast the ptr and return it as the array1d
+#ifdef GMCF_DEBUG
+        print *, "FORTRAN API gmcfRead3DFloatArray: SANITY:",array1d(1)
+        print *, "FORTRAN API gmcfRead3DFloatArray: SANITY:",sum(array1d)
+#endif
+        array = reshape(array1d,shape(array))
+#ifdef GMCF_DEBUG
+        print *, "FORTRAN API gmcfRead3DFloatArray: SANITY:",sum(array)
+#endif
+    end subroutine
+   
+       subroutine gmcfRead3DIntegerArray(array, sz, packet)
+        type(gmcfPacket) :: packet
+        integer(8):: ptr, ptr_sz
+        integer(8) :: sz1d
+        integer, dimension(3):: sz
+        integer,dimension(sz(1), sz(2), sz(3)) :: array
+        integer, dimension(size(array)):: array1d
 !
 !        real, pointer, dimension(:,:,:) :: array
 !        real, pointer, dimension(:) :: array1d
