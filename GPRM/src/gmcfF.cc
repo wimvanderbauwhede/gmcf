@@ -271,6 +271,13 @@ void gmcfsendarrayc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		int* data_id, int* source, int* destination, int* pre_post, int* time, int64_t* sz1d,
 		float* array
 		) {
+#ifdef GMCF_DEBUG
+    float sum = 0.0;
+    for (int i=0; i < *sz1d;  i++) {
+        sum += array[i];
+    }
+    std::cout << "FORTRAN API C++ gmcfsendarrayc_: SANITY: " << sum << std::endl; 
+#endif
 	// So we take the float* array pointer and cast it to a uint64_t which we then pass as a pointer into gmcfsendpacketc_:
 	void* fvp = (void*)array;
 	int64_t fivp = (int64_t)fvp;
@@ -313,8 +320,8 @@ void gmcffloatarrayfromptrc_(int64_t* ptr,float* array1d, int* sz) {
 
 #ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: SANITY:" << sum <<"\n";
-//	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: " << tmp_array1d[0] <<"\n";
-//	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: " << array1d[0] <<"\n";
+  	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: " << tmp_array1d[0] <<"\n";
+  	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: " << array1d[0] <<"\n";
 #endif
 	// So in C space, I can access array1d, but when it gets to Fortran, it segfaults.
 }
