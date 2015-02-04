@@ -11,7 +11,7 @@ wd= os.environ['PWD']
 
 gmcfsources=[ GANNET_DIR+'/GPRM/src/gmcfCoupler.cc']
 LDFLAGS=['-pthread']
-FFLAGS=['-std=c++11','-Wall', '-DWORDSZ=64', '-DUSE_THREADS=1']
+FFLAGS=['-std=c++11','-Wall', '-DWORDSZ=64', '-DUSE_THREADS=1', '-O0', '-g']
 CXXFLAGS=[ '-Wall',  '-std=c++11' ,  '-DWORDSZ=64', '-DUSE_THREADS=1']
 INCPATHS=[ GANNET_DIR+'/GPRM/src', GANNET_DIR+'/GPRM/src/SBA',  wd+'/gensrc']
 LIBPATHS=[wd+'/lib', wd+'/src/GMCF/Models']
