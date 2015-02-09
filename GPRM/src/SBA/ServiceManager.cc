@@ -195,6 +195,14 @@ using namespace SBA;
 			 dresp_fifo.push_back(packet);
 		   break;
 		  }
+		  case P_DACK :
+		  {
+#ifdef VERBOSE
+			 cout << service << " P_DACK\n";
+#endif // VERBOSE
+			 dack_fifo.push_back(packet);
+		   break;
+		  }
 		  case P_TRESP :
 		  {
 #ifdef VERBOSE

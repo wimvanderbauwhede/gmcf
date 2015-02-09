@@ -132,6 +132,9 @@ is implemented as:
 	case P_TRESP:
 	    alreadyReceived = tileptr->service_manager.tresp_fifo;
 	    break;
+	case P_DACK:
+	    alreadyReceived = tileptr->service_manager.dack_fifo;
+	    break;
 	}
      
     int packetsReceived = alreadyReceived.size();

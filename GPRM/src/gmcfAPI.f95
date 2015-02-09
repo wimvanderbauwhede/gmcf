@@ -18,7 +18,7 @@ module gmcfAPI
     integer(8), dimension(NMODELS) :: sba_tile ! I think this needs to be an array
 
     integer, parameter :: PRE = 0,POST = 1, BLOCKING=1, NON_BLOCKING=0
-    integer, parameter :: REQDATA=6, REQTIME=7, RESPDATA=8, RESPTIME=9, FIN=10
+    integer, parameter :: REQDATA=6, REQTIME=7, RESPDATA=8, RESPTIME=9, FIN=10, ACKDATA=11
     integer(8), parameter :: ONE = 1
 !    integer, parameter :: NMODELS = 2 ! FIXME: use MACRO. In GPRM NSERVICES is a const UINT but I can easily change that.
 
@@ -358,6 +358,7 @@ contains
         print *, "FORTRAN API gmcfRead3DFloatArray: PTR:",ptr
 #endif
         call gmcffloatarrayfromptrc(ptr,array1d,sz1d) ! This ugly function will simply cast the ptr and return it as the array1d
+        ! FIXME: send ACKDATA for packet%data_id to packet%source
 #ifdef GMCF_DEBUG
         print *, "FORTRAN API gmcfRead3DFloatArray: SANITY:",array1d(1)
         print *, "FORTRAN API gmcfRead3DFloatArray: SANITY:",sum(array1d)
