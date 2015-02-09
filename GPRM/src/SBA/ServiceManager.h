@@ -49,6 +49,7 @@ class ServiceManager {
 	Packet_Fifo treq_fifo;
 	Packet_Fifo dresp_fifo;
 	Packet_Fifo tresp_fifo;
+	Packet_Fifo dack_fifo;
 	Packet_Fifo fin_fifo;
 
 	Subtasks     pending_subtasks_fifo;

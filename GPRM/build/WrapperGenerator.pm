@@ -331,7 +331,8 @@ int64_t GMCF::run_model'.$i.'(SBA::System* sba_sysptr, SBA::Tile* sba_tileptr, u
 	std::cout << "INSIDE run_model'.$i.'" << std::endl;
 #endif
 ';
-print $GWCC "	const int model = $i;\n";
+#print $GWCC "	const int model = $i;\n";
+print $GWCC "	int model = (int)model_id;\n";
 print $GWCC '
     // Cast void* to int64_t
     // We need to cast to int64_t and then pass the address rather than casting to uint64_t* I think
