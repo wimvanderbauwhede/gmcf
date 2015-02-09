@@ -297,7 +297,7 @@ contains
         print *, "FORTRAN API gmcfRead1DFloatArray: PTR:",ptr
 #endif
         call gmcffloatarrayfromptrc(ptr,array1d,sz1d)
-
+        call gmcfsendpacketc(sba_sys, sba_tile(packet%destination), packet%destination, packet%source, ACKDATA, packet%data_id, PRE, -1 ,ONE, 0)
 #ifdef GMCF_DEBUG
         print *, "FORTRAN API gmcfRead1DFloatArray: SANITY:" , array1d(1)
         print *, "FORTRAN API gmcfRead1DFloatArray: SANITY:" , sum(array1d)
@@ -328,6 +328,7 @@ contains
         print *, "FORTRAN API gmcfRead3DFloatArray: PTR:",ptr
 #endif
         call gmcffloatarrayfromptrc(ptr,array1d,sz1d) ! This ugly function will simply cast the ptr and return it as the array1d
+        call gmcfsendpacketc(sba_sys, sba_tile(packet%destination), packet%destination, packet%source, ACKDATA, packet%data_id, PRE, -1 ,ONE, 0)
 #ifdef GMCF_DEBUG
         print *, "FORTRAN API gmcfRead2DFloatArray: SANITY:",array1d(1)
         print *, "FORTRAN API gmcfRead2DFloatArray: SANITY:",sum(array1d)
@@ -358,7 +359,7 @@ contains
         print *, "FORTRAN API gmcfRead3DFloatArray: PTR:",ptr
 #endif
         call gmcffloatarrayfromptrc(ptr,array1d,sz1d) ! This ugly function will simply cast the ptr and return it as the array1d
-        ! FIXME: send ACKDATA for packet%data_id to packet%source
+        call gmcfsendpacketc(sba_sys, sba_tile(packet%destination), packet%destination, packet%source, ACKDATA, packet%data_id, PRE, -1 ,ONE, 0)
 #ifdef GMCF_DEBUG
         print *, "FORTRAN API gmcfRead3DFloatArray: SANITY:",array1d(1)
         print *, "FORTRAN API gmcfRead3DFloatArray: SANITY:",sum(array1d)
@@ -389,6 +390,7 @@ contains
         print *, "FORTRAN API gmcfRead3DIntegerArray: PTR:",ptr
 #endif
         call gmcfintegerarrayfromptrc(ptr,array1d,sz1d) ! This ugly function will simply cast the ptr and return it as the array1d
+        call gmcfsendpacketc(sba_sys, sba_tile(packet%destination), packet%destination, packet%source, ACKDATA, packet%data_id, PRE, -1 ,ONE, 0)
 #ifdef GMCF_DEBUG
         print *, "FORTRAN API gmcfRead3DIntegerArray: SANITY:",array1d(1)
         print *, "FORTRAN API gmcfRead3DIntegerArray: SANITY:",sum(array1d)
