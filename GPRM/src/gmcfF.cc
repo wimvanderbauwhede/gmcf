@@ -409,7 +409,8 @@ void gmcfcheckfifoc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,int* packet_type,
 		if (tileptr->service_manager.dack_fifo.size()>0) {
 			*has_packets=1;
 		}
-		break;	default:
+		break;
+	default:
 		cerr << "Only Data/Time Req/Resp supported\n";
 	};
 }
@@ -420,3 +421,4 @@ void gmcfgettileidc_(int64_t* ivp_tileptr, int* tile_id) {
 	SBA::Tile* tileptr = (SBA::Tile*)vp;
 	*tile_id = tileptr->address;
 }
+
