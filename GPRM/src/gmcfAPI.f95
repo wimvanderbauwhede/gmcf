@@ -385,16 +385,16 @@ contains
             print *, 'WARNING: size of read array',ptr_sz,'does not match size of target', sz1d
         end if
 #ifdef GMCF_DEBUG
-        print *, "FORTRAN API gmcfRead3DFloatArray: PTR:",ptr
+        print *, "FORTRAN API gmcfRead3DIntegerArray: PTR:",ptr
 #endif
-        call gmcffloatarrayfromptrc(ptr,array1d,sz1d) ! This ugly function will simply cast the ptr and return it as the array1d
+        call gmcfintegerarrayfromptrc(ptr,array1d,sz1d) ! This ugly function will simply cast the ptr and return it as the array1d
 #ifdef GMCF_DEBUG
-        print *, "FORTRAN API gmcfRead3DFloatArray: SANITY:",array1d(1)
-        print *, "FORTRAN API gmcfRead3DFloatArray: SANITY:",sum(array1d)
+        print *, "FORTRAN API gmcfRead3DIntegerArray: SANITY:",array1d(1)
+        print *, "FORTRAN API gmcfRead3DIntegerArray: SANITY:",sum(array1d)
 #endif
         array = reshape(array1d,shape(array))
 #ifdef GMCF_DEBUG
-        print *, "FORTRAN API gmcfRead3DFloatArray: SANITY:",sum(array)
+        print *, "FORTRAN API gmcfRead3DIntegerArray: SANITY:",sum(array)
 #endif
     end subroutine
     

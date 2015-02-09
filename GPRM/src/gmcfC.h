@@ -41,6 +41,8 @@ void gmcfsendarrayc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 
 void gmcffloatarrayfromptrc_(int64_t* ptr,float* array1d, int* sz);
 
+void gmcfintegerarrayfromptrc_(int64_t* ptr,int* array1d, int* sz);
+
 void gmcfcheckfifoc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,int* packet_type, int* has_packets);
 
 void gmcfgettileidc_(int64_t* ivp_tileptr, int* tile_id);

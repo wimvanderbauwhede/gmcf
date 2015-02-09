@@ -326,6 +326,41 @@ void gmcffloatarrayfromptrc_(int64_t* ptr,float* array1d, int* sz) {
 	// So in C space, I can access array1d, but when it gets to Fortran, it segfaults.
 }
 
+
+void gmcfintegerarrayfromptrc_(int64_t* ptr,int* array1d, int* sz) {
+	int64_t ivp = *ptr;
+#ifdef GMCF_DEBUG
+	std::cout << "FORTRAN API C++ gmcfintegerarrayfromptrc_: ivp: " << ivp << " 0x" <<std::hex << ivp << std::dec<< "\n";
+#endif
+	void* vp=(void*)ivp;
+#ifdef GMCF_DEBUG
+	std::cout << "FORTRAN API C++ gmcfintegerarrayfromptrc_: vp:" << vp <<"\n";
+#endif
+//	float* array1d = (float*)vp;
+	int* tmp_array1d = (int*)vp;
+#ifdef GMCF_DEBUG
+	std::cout << "FORTRAN API C++ gmcfintegerarrayfromptrc_: SZ:" << *sz <<"\n";
+#endif
+	// This is an expensive copy operation. I wish I could simply overwrite the pointer, but it does not work!
+	// Maybe it would work if the variable was malloc'ed
+	// But that is very intrusive: regular Fortran arrays are not malloc'ed
+	// A slightly better way would be if we could specify exactly what to copy
+	// To make that work within Fortran's limitations, it means we need to express this as an array
+//	array1d = tmp_array1d;
+	int sum=0;
+	for (int i =0;i< *sz;i++) {
+		array1d[i]=tmp_array1d[i];
+		sum+=array1d[i];
+	}
+
+#ifdef GMCF_DEBUG
+	std::cout << "FORTRAN API C++ gmcfintegerarrayfromptrc_: SANITY:" << sum <<"\n";
+  	std::cout << "FORTRAN API C++ gmcfintegerarrayfromptrc_: " << tmp_array1d[0] <<"\n";
+  	std::cout << "FORTRAN API C++ gmcfintegerarrayfromptrc_: " << array1d[0] <<"\n";
+#endif
+	// So in C space, I can access array1d, but when it gets to Fortran, it segfaults.
+}
+
 void gmcfcheckfifoc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,int* packet_type, int* has_packets) {
 
 	int64_t ivp = *ivp_tileptr;
