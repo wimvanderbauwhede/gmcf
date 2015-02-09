@@ -271,7 +271,6 @@ contains
         call gmcfsendarrayc(sba_sys, sba_tile(model_id), data_id, model_id, destination, pre_post,  time, sz1d,array)
     end subroutine gmcfSend3DIntegerArray
 
-
    subroutine gmcfRead1DFloatArray(array, sz, packet) ! This will have to be a wrapper around a C function
         ! read data packets from the data fifo and update the variables
         ! We do the same as in OpenCL

@@ -200,6 +200,12 @@ void gmcfshiftpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		*fifo_empty = 1 - tileptr->service_manager.tresp_fifo.size();
 		}
 		break;
+	case P_DACK:
+		if (tileptr->service_manager.dack_fifo.size()>0) {
+		p = tileptr->service_manager.dack_fifo.shift();
+		*fifo_empty = 1 - tileptr->service_manager.dack_fifo.size();
+		}
+		break;
 	default:
 		cerr << "Only Data/Time Req/Resp supported\n";
 	};
@@ -260,6 +266,11 @@ void gmcfpushpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 	case P_TRESP:
 		if (tileptr->service_manager.tresp_fifo.size()>0) {
 			tileptr->service_manager.tresp_fifo.push(p);
+		}
+		break;
+	case P_DACK:
+		if (tileptr->service_manager.dack_fifo.size()>0) {
+			tileptr->service_manager.dack_fifo.push(p);
 		}
 		break;
 	default:
@@ -394,7 +405,11 @@ void gmcfcheckfifoc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,int* packet_type,
 			*has_packets=1;
 		}
 		break;
-	default:
+	case P_DACK:
+		if (tileptr->service_manager.dack_fifo.size()>0) {
+			*has_packets=1;
+		}
+		break;	default:
 		cerr << "Only Data/Time Req/Resp supported\n";
 	};
 }
