@@ -19,29 +19,6 @@ RequestTime == P_mm 6
 RespTime == P_fragment 7
 Any == P_error 0
  * */
- 
-Packet_Fifo getPacketFifoForType(SBA::Tile* tileptr, int *packet_type) {
-    Packet_Fifo result;
-    switch (*packet_type) {
-	case P_DREQ:
-	    result = tileptr->service_manager.dreq_fifo;
-	    break;
-	case P_TREQ:
-	    result = tileptr->service_manager.treq_fifo;
-	    break;
-	case P_DRESP:
-	    result = tileptr->service_manager.dresp_fifo;
-	    break;
-	case P_TRESP:
-	    result = tileptr->service_manager.tresp_fifo;
-	    break;
-	case P_DACK:
-	    result = tileptr->service_manager.dack_fifo;
-	    break;
-	}
-	return result;
-} 
- 
 // This doesn't need sysptr, but it could be I will have to use sysptr + address rather than tileptr
 //! sba_sys, sba_tile(model_id), source, destination, packet_type, timestamp, pre_post, data_id, data_sz, data_ptr, fifo_empty
 void gmcfreadfromfifoc_(
@@ -141,7 +118,24 @@ is implemented as:
 	std::cout << "FORTRAN API C++ gmcfwaitforpacketsc_: Tile address (sanity): <" << tileptr->address <<">\n";
 #endif
     int pending_packets=*npackets;
-    Packet_Fifo alreadyReceived = getPacketFifoForType(tileptr, packet_type);
+    Packet_Fifo alreadyReceived;
+    switch (*packet_type) {
+	case P_DREQ:
+	    alreadyReceived = tileptr->service_manager.dreq_fifo;
+	    break;
+	case P_TREQ:
+	    alreadyReceived = tileptr->service_manager.treq_fifo;
+	    break;
+	case P_DRESP:
+	    alreadyReceived = tileptr->service_manager.dresp_fifo;
+	    break;
+	case P_TRESP:
+	    alreadyReceived = tileptr->service_manager.tresp_fifo;
+	    break;
+	case P_DACK:
+	    alreadyReceived = tileptr->service_manager.dack_fifo;
+	    break;
+	}
      
     int packetsReceived = alreadyReceived.size();
     while(packetsReceived > 0 && pending_packets > 0) {
