@@ -22,6 +22,7 @@ void gmcfwaitforpacketsc_(
 		int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		int* packet_type, int* sender, int* npackets
 		);
+
 void gmcfshiftpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		int* packet_type,
 		int* source, int* destination, int* timestamp, int* pre_post, int* data_id, int64_t* data_sz, int64_t* data_ptr,
@@ -40,6 +41,10 @@ void gmcfsendarrayc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 
 void gmcffloatarrayfromptrc_(int64_t* ptr,float* array1d, int* sz);
 
+void gmcfintegerarrayfromptrc_(int64_t* ptr,int* array1d, int* sz);
+
 void gmcfcheckfifoc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,int* packet_type, int* has_packets);
+
+void gmcfgettileidc_(int64_t* ivp_tileptr, int* tile_id);
 
 #endif // _GMCF_C_H_

@@ -117,15 +117,43 @@ is implemented as:
 #ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcfwaitforpacketsc_: Tile address (sanity): <" << tileptr->address <<">\n";
 #endif
-	int pending_packets=*npackets;
-	while(pending_packets!=0) {
+    int pending_packets=*npackets;
+    Packet_Fifo alreadyReceived;
+    switch (*packet_type) {
+	case P_DREQ:
+	    alreadyReceived = tileptr->service_manager.dreq_fifo;
+	    break;
+	case P_TREQ:
+	    alreadyReceived = tileptr->service_manager.treq_fifo;
+	    break;
+	case P_DRESP:
+	    alreadyReceived = tileptr->service_manager.dresp_fifo;
+	    break;
+	case P_TRESP:
+	    alreadyReceived = tileptr->service_manager.tresp_fifo;
+	    break;
+	case P_DACK:
+	    alreadyReceived = tileptr->service_manager.dack_fifo;
+	    break;
+	}
+     
+    int packetsReceived = alreadyReceived.size();
+    while(packetsReceived > 0 && pending_packets > 0) {
+        SBA::Packet_t p = alreadyReceived.pop_front();
+        if (SBA::getPacket_type(p) == *packet_type && SBA::getReturn_to(p) == *sender) {
+            --pending_packets;
+        }    
+    	alreadyReceived.push_back(p);
+        --packetsReceived;
+	}
+	while(pending_packets > 0) {
 		tileptr->transceiver->rx_fifo.wait_for_packets();
 		SBA::Packet_t  p = tileptr->transceiver->rx_fifo.pop_front();
 		if (SBA::getPacket_type(p) == *packet_type && SBA::getReturn_to(p) == *sender) {
 			--pending_packets;
 		} else if (SBA::getPacket_type(p) == P_FIN && SBA::getReturn_to(p) == *sender) {
 			pending_packets=0;
-			break;
+			break; // GR: We'll lose this P_FIN packet though? Is this okay?
 		}
 		tileptr->service_manager.demux_packets_by_type(p);
 	}
@@ -170,6 +198,12 @@ void gmcfshiftpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		if (tileptr->service_manager.tresp_fifo.size()>0) {
 		p = tileptr->service_manager.tresp_fifo.shift();
 		*fifo_empty = 1 - tileptr->service_manager.tresp_fifo.size();
+		}
+		break;
+	case P_DACK:
+		if (tileptr->service_manager.dack_fifo.size()>0) {
+		p = tileptr->service_manager.dack_fifo.shift();
+		*fifo_empty = 1 - tileptr->service_manager.dack_fifo.size();
 		}
 		break;
 	default:
@@ -234,6 +268,11 @@ void gmcfpushpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 			tileptr->service_manager.tresp_fifo.push(p);
 		}
 		break;
+	case P_DACK:
+		if (tileptr->service_manager.dack_fifo.size()>0) {
+			tileptr->service_manager.dack_fifo.push(p);
+		}
+		break;
 	default:
 		cerr << "Only Data/Time Req/Resp supported\n";
 	};
@@ -246,6 +285,13 @@ void gmcfsendarrayc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		int* data_id, int* source, int* destination, int* pre_post, int* time, int64_t* sz1d,
 		float* array
 		) {
+#ifdef GMCF_DEBUG
+    float sum = 0.0;
+    for (int i=0; i < *sz1d;  i++) {
+        sum += array[i];
+    }
+    std::cout << "FORTRAN API C++ gmcfsendarrayc_: SANITY: " << sum << std::endl; 
+#endif
 	// So we take the float* array pointer and cast it to a uint64_t which we then pass as a pointer into gmcfsendpacketc_:
 	void* fvp = (void*)array;
 	int64_t fivp = (int64_t)fvp;
@@ -288,8 +334,43 @@ void gmcffloatarrayfromptrc_(int64_t* ptr,float* array1d, int* sz) {
 
 #ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: SANITY:" << sum <<"\n";
-//	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: " << tmp_array1d[0] <<"\n";
-//	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: " << array1d[0] <<"\n";
+  	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: " << tmp_array1d[0] <<"\n";
+  	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: " << array1d[0] <<"\n";
+#endif
+	// So in C space, I can access array1d, but when it gets to Fortran, it segfaults.
+}
+
+
+void gmcfintegerarrayfromptrc_(int64_t* ptr,int* array1d, int* sz) {
+	int64_t ivp = *ptr;
+#ifdef GMCF_DEBUG
+	std::cout << "FORTRAN API C++ gmcfintegerarrayfromptrc_: ivp: " << ivp << " 0x" <<std::hex << ivp << std::dec<< "\n";
+#endif
+	void* vp=(void*)ivp;
+#ifdef GMCF_DEBUG
+	std::cout << "FORTRAN API C++ gmcfintegerarrayfromptrc_: vp:" << vp <<"\n";
+#endif
+//	float* array1d = (float*)vp;
+	int* tmp_array1d = (int*)vp;
+#ifdef GMCF_DEBUG
+	std::cout << "FORTRAN API C++ gmcfintegerarrayfromptrc_: SZ:" << *sz <<"\n";
+#endif
+	// This is an expensive copy operation. I wish I could simply overwrite the pointer, but it does not work!
+	// Maybe it would work if the variable was malloc'ed
+	// But that is very intrusive: regular Fortran arrays are not malloc'ed
+	// A slightly better way would be if we could specify exactly what to copy
+	// To make that work within Fortran's limitations, it means we need to express this as an array
+//	array1d = tmp_array1d;
+	int sum=0;
+	for (int i =0;i< *sz;i++) {
+		array1d[i]=tmp_array1d[i];
+		sum+=array1d[i];
+	}
+
+#ifdef GMCF_DEBUG
+	std::cout << "FORTRAN API C++ gmcfintegerarrayfromptrc_: SANITY:" << sum <<"\n";
+  	std::cout << "FORTRAN API C++ gmcfintegerarrayfromptrc_: " << tmp_array1d[0] <<"\n";
+  	std::cout << "FORTRAN API C++ gmcfintegerarrayfromptrc_: " << array1d[0] <<"\n";
 #endif
 	// So in C space, I can access array1d, but when it gets to Fortran, it segfaults.
 }
@@ -324,7 +405,20 @@ void gmcfcheckfifoc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,int* packet_type,
 			*has_packets=1;
 		}
 		break;
+	case P_DACK:
+		if (tileptr->service_manager.dack_fifo.size()>0) {
+			*has_packets=1;
+		}
+		break;
 	default:
 		cerr << "Only Data/Time Req/Resp supported\n";
 	};
 }
+
+void gmcfgettileidc_(int64_t* ivp_tileptr, int* tile_id) {
+	int64_t ivp = *ivp_tileptr;
+	void* vp=(void*)ivp;
+	SBA::Tile* tileptr = (SBA::Tile*)vp;
+	*tile_id = tileptr->address;
+}
+

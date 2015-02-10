@@ -221,7 +221,7 @@ contains
     subroutine gmcfSend1DFloatArray(model_id, array, sz, data_id, destination, pre_post,time)
         integer, dimension(1), intent(In):: sz
         integer,intent(In) :: data_id
-        real,dimension(sz(1)), intent(In) :: array
+        real(kind=4),dimension(sz(1)), intent(In) :: array
 
         integer, intent(In) :: model_id, destination,pre_post,time
         integer(8) :: sz1d
@@ -232,10 +232,23 @@ contains
         call gmcfsendarrayc(sba_sys, sba_tile(model_id), data_id, model_id, destination, pre_post,  time, sz1d,array)
     end subroutine gmcfSend1DFloatArray
 
+    subroutine gmcfSend2DFloatArray(model_id, array, sz, data_id, destination, pre_post,time)
+        integer, dimension(2), intent(In):: sz
+        integer,intent(In) :: data_id
+        real(kind=4),dimension(sz(1), sz(2)), intent(In) :: array
+        integer, intent(In) :: model_id, destination,pre_post,time
+        integer(8) :: sz1d
+        sz1d = size(array)
+#ifdef GMCF_DEBUG
+        print *, "FORTRAN API gmcfSend2DFloatArray: SANITY:",sum(array)
+#endif
+        call gmcfsendarrayc(sba_sys, sba_tile(model_id), data_id, model_id, destination, pre_post,  time, sz1d,array)
+    end subroutine gmcfSend2DFloatArray
+
     subroutine gmcfSend3DFloatArray(model_id, array, sz, data_id, destination, pre_post,time)
         integer, dimension(3), intent(In):: sz
         integer,intent(In) :: data_id
-        real,dimension(sz(1), sz(2), sz(3)), intent(In) :: array
+        real(kind=4),dimension(sz(1), sz(2), sz(3)), intent(In) :: array
         integer, intent(In) :: model_id, destination,pre_post,time
         integer(8) :: sz1d
         sz1d = size(array)
@@ -245,6 +258,19 @@ contains
         call gmcfsendarrayc(sba_sys, sba_tile(model_id), data_id, model_id, destination, pre_post,  time, sz1d,array)
     end subroutine gmcfSend3DFloatArray
 
+    subroutine gmcfSend3DIntegerArray(model_id, array, sz, data_id, destination, pre_post,time)
+        integer, dimension(3), intent(In):: sz
+        integer,intent(In) :: data_id
+        integer,dimension(sz(1), sz(2), sz(3)), intent(In) :: array
+        integer, intent(In) :: model_id, destination,pre_post,time
+        integer(8) :: sz1d
+        sz1d = size(array)
+#ifdef GMCF_DEBUG
+        print *, "FORTRAN API gmcfSend3DFloatArray: SANITY:",sum(array)
+#endif
+        call gmcfsendarrayc(sba_sys, sba_tile(model_id), data_id, model_id, destination, pre_post,  time, sz1d,array)
+    end subroutine gmcfSend3DIntegerArray
+
    subroutine gmcfRead1DFloatArray(array, sz, packet) ! This will have to be a wrapper around a C function
         ! read data packets from the data fifo and update the variables
         ! We do the same as in OpenCL
@@ -253,8 +279,8 @@ contains
         integer(8):: ptr, ptr_sz
         integer(8) :: sz1d
         integer, dimension(1):: sz
-       real, dimension(sz(1)) :: array
-       real, dimension(size(array)):: array1d
+       real(kind=4), dimension(sz(1)) :: array
+       real(kind=4), dimension(size(array)):: array1d
 !        real, pointer, dimension(:) :: array
 !        real, pointer, dimension(:) :: array1d
 
@@ -270,7 +296,7 @@ contains
         print *, "FORTRAN API gmcfRead1DFloatArray: PTR:",ptr
 #endif
         call gmcffloatarrayfromptrc(ptr,array1d,sz1d)
-
+        call gmcfsendpacketc(sba_sys, sba_tile(packet%destination), packet%destination, packet%source, ACKDATA, packet%data_id, PRE, -1 ,ONE, 0)
 #ifdef GMCF_DEBUG
         print *, "FORTRAN API gmcfRead1DFloatArray: SANITY:" , array1d(1)
         print *, "FORTRAN API gmcfRead1DFloatArray: SANITY:" , sum(array1d)
@@ -281,13 +307,13 @@ contains
 #endif
     end subroutine
 
-    subroutine gmcfRead3DFloatArray(array, sz, packet)
+    subroutine gmcfRead2DFloatArray(array, sz, packet)
         type(gmcfPacket) :: packet
         integer(8):: ptr, ptr_sz
         integer(8) :: sz1d
-        integer, dimension(3):: sz
-        real,dimension(sz(1), sz(2), sz(3)) :: array
-        real, dimension(size(array)):: array1d
+        integer, dimension(2):: sz
+        real(kind=4),dimension(sz(1), sz(2)) :: array
+        real(kind=4), dimension(size(array)):: array1d
 !
 !        real, pointer, dimension(:,:,:) :: array
 !        real, pointer, dimension(:) :: array1d
@@ -301,7 +327,38 @@ contains
         print *, "FORTRAN API gmcfRead3DFloatArray: PTR:",ptr
 #endif
         call gmcffloatarrayfromptrc(ptr,array1d,sz1d) ! This ugly function will simply cast the ptr and return it as the array1d
-        ! FIXME: send ACKDATA for packet%data_id to packet%source
+        call gmcfsendpacketc(sba_sys, sba_tile(packet%destination), packet%destination, packet%source, ACKDATA, packet%data_id, PRE, -1 ,ONE, 0)
+#ifdef GMCF_DEBUG
+        print *, "FORTRAN API gmcfRead2DFloatArray: SANITY:",array1d(1)
+        print *, "FORTRAN API gmcfRead2DFloatArray: SANITY:",sum(array1d)
+#endif
+        array = reshape(array1d,shape(array))
+#ifdef GMCF_DEBUG
+        print *, "FORTRAN API gmcfRead2DFloatArray: SANITY:",sum(array)
+#endif
+    end subroutine gmcfRead2DFloatArray
+
+    subroutine gmcfRead3DFloatArray(array, sz, packet)
+        type(gmcfPacket) :: packet
+        integer(8):: ptr, ptr_sz
+        integer(8) :: sz1d
+        integer, dimension(3):: sz
+        real(kind=4),dimension(sz(1), sz(2), sz(3)) :: array
+        real(kind=4), dimension(size(array)):: array1d
+!
+!        real, pointer, dimension(:,:,:) :: array
+!        real, pointer, dimension(:) :: array1d
+        sz1d = size(array1d) ! product(sz)
+        ptr = packet%data_ptr
+        ptr_sz = packet%data_sz
+        if (ptr_sz /= sz1d) then
+            print *, 'WARNING: size of read array',ptr_sz,'does not match size of target', sz1d
+        end if
+#ifdef GMCF_DEBUG
+        print *, "FORTRAN API gmcfRead3DFloatArray: PTR:",ptr
+#endif
+        call gmcffloatarrayfromptrc(ptr,array1d,sz1d) ! This ugly function will simply cast the ptr and return it as the array1d
+        call gmcfsendpacketc(sba_sys, sba_tile(packet%destination), packet%destination, packet%source, ACKDATA, packet%data_id, PRE, -1 ,ONE, 0)
 #ifdef GMCF_DEBUG
         print *, "FORTRAN API gmcfRead3DFloatArray: SANITY:",array1d(1)
         print *, "FORTRAN API gmcfRead3DFloatArray: SANITY:",sum(array1d)
@@ -311,6 +368,43 @@ contains
         print *, "FORTRAN API gmcfRead3DFloatArray: SANITY:",sum(array)
 #endif
     end subroutine
+   
+       subroutine gmcfRead3DIntegerArray(array, sz, packet)
+        type(gmcfPacket) :: packet
+        integer(8):: ptr, ptr_sz
+        integer(8) :: sz1d
+        integer, dimension(3):: sz
+        integer,dimension(sz(1), sz(2), sz(3)) :: array
+        integer, dimension(size(array)):: array1d
+!
+!        real, pointer, dimension(:,:,:) :: array
+!        real, pointer, dimension(:) :: array1d
+        sz1d = size(array1d) ! product(sz)
+        ptr = packet%data_ptr
+        ptr_sz = packet%data_sz
+        if (ptr_sz /= sz1d) then
+            print *, 'WARNING: size of read array',ptr_sz,'does not match size of target', sz1d
+        end if
+#ifdef GMCF_DEBUG
+        print *, "FORTRAN API gmcfRead3DIntegerArray: PTR:",ptr
+#endif
+        call gmcfintegerarrayfromptrc(ptr,array1d,sz1d) ! This ugly function will simply cast the ptr and return it as the array1d
+        call gmcfsendpacketc(sba_sys, sba_tile(packet%destination), packet%destination, packet%source, ACKDATA, packet%data_id, PRE, -1 ,ONE, 0)
+#ifdef GMCF_DEBUG
+        print *, "FORTRAN API gmcfRead3DIntegerArray: SANITY:",array1d(1)
+        print *, "FORTRAN API gmcfRead3DIntegerArray: SANITY:",sum(array1d)
+#endif
+        array = reshape(array1d,shape(array))
+#ifdef GMCF_DEBUG
+        print *, "FORTRAN API gmcfRead3DIntegerArray: SANITY:",sum(array)
+#endif
+    end subroutine
+    
+    subroutine gmcfGetTileId(tile, tile_id)
+        integer(8), intent(in) :: tile
+        integer, intent(out) :: tile_id
+        call gmcfgettileidc(tile, tile_id)
+    end subroutine gmcfGetTileId
 
     subroutine gmcfFinished(model_id)
         integer, intent(In) :: model_id
