@@ -47,4 +47,6 @@ void gmcfcheckfifoc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,int* packet_type,
 
 void gmcfgettileidc_(int64_t* ivp_tileptr, int* tile_id);
 
+void gmcfgetpthreadidc_(int *id);
+
 #endif // _GMCF_C_H_

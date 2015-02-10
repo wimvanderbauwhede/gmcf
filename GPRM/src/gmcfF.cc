@@ -422,3 +422,6 @@ void gmcfgettileidc_(int64_t* ivp_tileptr, int* tile_id) {
 	*tile_id = tileptr->address;
 }
 
+void gmcfgetpthreadidc_(int *id) {
+    *id = pthread_self();
+}
