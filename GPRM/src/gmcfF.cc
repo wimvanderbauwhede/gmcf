@@ -121,19 +121,19 @@ is implemented as:
     Packet_Fifo alreadyReceived;
     switch (*packet_type) {
 	case P_DREQ:
-	    alreadyReceived = tileptr->service_manager.dreq_fifo;
+	    alreadyReceived = tileptr->service_manager.dreq_fifo_tbl[*sender];
 	    break;
 	case P_TREQ:
-	    alreadyReceived = tileptr->service_manager.treq_fifo;
+	    alreadyReceived = tileptr->service_manager.treq_fifo_tbl[*sender];
 	    break;
 	case P_DRESP:
-	    alreadyReceived = tileptr->service_manager.dresp_fifo;
+	    alreadyReceived = tileptr->service_manager.dresp_fifo_tbl[*sender];
 	    break;
 	case P_TRESP:
-	    alreadyReceived = tileptr->service_manager.tresp_fifo;
+	    alreadyReceived = tileptr->service_manager.tresp_fifo_tbl[*sender];
 	    break;
 	case P_DACK:
-	    alreadyReceived = tileptr->service_manager.dack_fifo;
+	    alreadyReceived = tileptr->service_manager.dack_fifo_tbl[*sender];
 	    break;
 	}
      
@@ -177,33 +177,33 @@ void gmcfshiftpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 	SBA::Packet_t  p;
 	switch (*packet_type) {
 	case P_DREQ:
-		if (tileptr->service_manager.dreq_fifo.size()>0) {
-		p = tileptr->service_manager.dreq_fifo.shift();
-		*fifo_empty = 1 - tileptr->service_manager.dreq_fifo.size();
+		if (tileptr->service_manager.dreq_fifo_tbl[*source].size()>0) {
+		p = tileptr->service_manager.dreq_fifo_tbl[*source].shift();
+		*fifo_empty = 1 - tileptr->service_manager.dreq_fifo_tbl[*source].size();
 		}
 		break;
 	case P_TREQ:
-		if (tileptr->service_manager.treq_fifo.size()>0) {
-		p = tileptr->service_manager.treq_fifo.shift();
-		*fifo_empty = 1 - tileptr->service_manager.treq_fifo.size();
+		if (tileptr->service_manager.treq_fifo_tbl[*source].size()>0) {
+		p = tileptr->service_manager.treq_fifo_tbl[*source].shift();
+		*fifo_empty = 1 - tileptr->service_manager.treq_fifo_tbl[*source].size();
 		}
 		break;
 	case P_DRESP:
-		if (tileptr->service_manager.dresp_fifo.size()>0) {
-		p = tileptr->service_manager.dresp_fifo.shift();
-		*fifo_empty = 1 - tileptr->service_manager.dresp_fifo.size();
+		if (tileptr->service_manager.dresp_fifo_tbl[*source].size()>0) {
+		p = tileptr->service_manager.dresp_fifo_tbl[*source].shift();
+		*fifo_empty = 1 - tileptr->service_manager.dresp_fifo_tbl[*source].size();
 		}
 		break;
 	case P_TRESP:
-		if (tileptr->service_manager.tresp_fifo.size()>0) {
-		p = tileptr->service_manager.tresp_fifo.shift();
-		*fifo_empty = 1 - tileptr->service_manager.tresp_fifo.size();
+		if (tileptr->service_manager.tresp_fifo_tbl[*source].size()>0) {
+		p = tileptr->service_manager.tresp_fifo_tbl[*source].shift();
+		*fifo_empty = 1 - tileptr->service_manager.tresp_fifo_tbl[*source].size();
 		}
 		break;
 	case P_DACK:
-		if (tileptr->service_manager.dack_fifo.size()>0) {
-		p = tileptr->service_manager.dack_fifo.shift();
-		*fifo_empty = 1 - tileptr->service_manager.dack_fifo.size();
+		if (tileptr->service_manager.dack_fifo_tbl[*source].size()>0) {
+		p = tileptr->service_manager.dack_fifo_tbl[*source].shift();
+		*fifo_empty = 1 - tileptr->service_manager.dack_fifo_tbl[*source].size();
 		}
 		break;
 	default:
@@ -249,29 +249,19 @@ void gmcfpushpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 
 	switch (*packet_type) {
 	case P_DREQ:
-		if (tileptr->service_manager.dreq_fifo.size()>0) {
-			tileptr->service_manager.dreq_fifo.push(p);
-		}
+		tileptr->service_manager.dreq_fifo_tbl[*source].push(p);
 		break;
 	case P_TREQ:
-		if (tileptr->service_manager.treq_fifo.size()>0) {
-			tileptr->service_manager.treq_fifo.push(p);
-		}
+		tileptr->service_manager.treq_fifo_tbl[*source].push(p);
 		break;
 	case P_DRESP:
-		if (tileptr->service_manager.dresp_fifo.size()>0) {
-			tileptr->service_manager.dresp_fifo.push(p);
-		}
+		tileptr->service_manager.dresp_fifo_tbl[*source].push(p);
 		break;
 	case P_TRESP:
-		if (tileptr->service_manager.tresp_fifo.size()>0) {
-			tileptr->service_manager.tresp_fifo.push(p);
-		}
+		tileptr->service_manager.tresp_fifo_tbl[*source].push(p);
 		break;
 	case P_DACK:
-		if (tileptr->service_manager.dack_fifo.size()>0) {
-			tileptr->service_manager.dack_fifo.push(p);
-		}
+		tileptr->service_manager.dack_fifo_tbl[*source].push(p);
 		break;
 	default:
 		cerr << "Only Data/Time Req/Resp supported\n";
@@ -375,7 +365,7 @@ void gmcfintegerarrayfromptrc_(int64_t* ptr,int* array1d, int* sz) {
 	// So in C space, I can access array1d, but when it gets to Fortran, it segfaults.
 }
 
-void gmcfcheckfifoc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,int* packet_type, int* has_packets) {
+void gmcfcheckfifoc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,int* packet_type, int* source, int* has_packets) {
 
 	int64_t ivp = *ivp_tileptr;
 	void* vp=(void*)ivp;
@@ -386,27 +376,27 @@ void gmcfcheckfifoc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,int* packet_type,
 	*has_packets=0;
 	switch (*packet_type) {
 	case P_DREQ:
-		if (tileptr->service_manager.dreq_fifo.size()>0) {
+		if (tileptr->service_manager.dreq_fifo_tbl[*source].size()>0) {
 			*has_packets=1;
 		}
 		break;
 	case P_TREQ:
-		if (tileptr->service_manager.treq_fifo.size()>0) {
+		if (tileptr->service_manager.treq_fifo_tbl[*source].size()>0) {
 			*has_packets=1;
 		}
 		break;
 	case P_DRESP:
-		if (tileptr->service_manager.dresp_fifo.size()>0) {
+		if (tileptr->service_manager.dresp_fifo_tbl[*source].size()>0) {
 			*has_packets=1;
 		}
 		break;
 	case P_TRESP:
-		if (tileptr->service_manager.tresp_fifo.size()>0) {
+		if (tileptr->service_manager.tresp_fifo_tbl[*source].size()>0) {
 			*has_packets=1;
 		}
 		break;
 	case P_DACK:
-		if (tileptr->service_manager.dack_fifo.size()>0) {
+		if (tileptr->service_manager.dack_fifo_tbl[*source].size()>0) {
 			*has_packets=1;
 		}
 		break;

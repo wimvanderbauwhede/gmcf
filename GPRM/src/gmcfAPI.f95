@@ -182,7 +182,7 @@ contains
     subroutine gmcfHasPackets(model_id, packet_type, has_packets)
         integer, intent(In) :: model_id, packet_type
         integer, intent(Out) :: has_packets
-        call gmcfcheckfifoc(sba_sys, sba_tile(model_id),packet_type,has_packets);
+        call gmcfcheckfifoc(sba_sys, sba_tile(model_id),packet_type,model_id,has_packets);
     end subroutine gmcfHasPackets
 
     subroutine gmcfShiftPending(model_id, packet_type,packet,fifo_empty)
