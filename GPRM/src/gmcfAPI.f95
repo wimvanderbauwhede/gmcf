@@ -179,20 +179,20 @@ contains
         ! After this, packets will be in their respective queues, with the packet_type queue guaranteed containing at least one packet
     end subroutine
 
-    subroutine gmcfHasPackets(model_id, packet_type, has_packets)
-        integer, intent(In) :: model_id, packet_type
+    subroutine gmcfHasPackets(model_id, src_model_id, packet_type, has_packets)
+        integer, intent(In) :: model_id, src_model_id, packet_type
         integer, intent(Out) :: has_packets
-        call gmcfcheckfifoc(sba_sys, sba_tile(model_id),packet_type,model_id,has_packets);
+        call gmcfcheckfifoc(sba_sys, sba_tile(model_id),src_model_id, packet_type,has_packets);
     end subroutine gmcfHasPackets
 
-    subroutine gmcfShiftPending(model_id, packet_type,packet,fifo_empty)
-        integer, intent(In) :: model_id, packet_type
+    subroutine gmcfShiftPending(model_id, src_model_id, packet_type,packet,fifo_empty)
+        integer, intent(In) :: model_id, src_model_id, packet_type
         type(gmcfPacket), intent(Out) :: packet
         integer, intent(Out) :: fifo_empty
         integer :: source, destination, timestamp, pre_post, data_id
         integer(8) :: data_sz, data_ptr
 
-        call gmcfshiftpendingc(sba_sys, sba_tile(model_id), packet_type,source, destination, timestamp, pre_post, data_id, data_sz, data_ptr, fifo_empty)
+        call gmcfshiftpendingc(sba_sys, sba_tile(model_id), src_model_id, packet_type,source, destination, timestamp, pre_post, data_id, data_sz, data_ptr, fifo_empty)
         packet%type=packet_type
         packet%source=source
         packet%destination=destination

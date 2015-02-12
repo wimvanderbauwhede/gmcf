@@ -162,6 +162,7 @@ is implemented as:
 
 // ! call gmcfshiftpendingc(sba_sys, sba_tile(model_id), packet_type, source, destination, timestamp, pre_post, data_id, data_sz, data_ptr, fifo_empty)
 void gmcfshiftpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
+		int* src_model_id,
 		int* packet_type,
 		int* source, int* destination, int* timestamp, int* pre_post, int* data_id, int64_t* data_sz, int64_t* data_ptr,
 		int *fifo_empty
@@ -177,33 +178,33 @@ void gmcfshiftpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 	SBA::Packet_t  p;
 	switch (*packet_type) {
 	case P_DREQ:
-		if (tileptr->service_manager.dreq_fifo_tbl[*source].size()>0) {
-		p = tileptr->service_manager.dreq_fifo_tbl[*source].shift();
-		*fifo_empty = 1 - tileptr->service_manager.dreq_fifo_tbl[*source].size();
+		if (tileptr->service_manager.dreq_fifo_tbl[*src_model_id].size()>0) {
+		p = tileptr->service_manager.dreq_fifo_tbl[*src_model_id].shift();
+		*fifo_empty = 1 - tileptr->service_manager.dreq_fifo_tbl[*src_model_id].size();
 		}
 		break;
 	case P_TREQ:
-		if (tileptr->service_manager.treq_fifo_tbl[*source].size()>0) {
-		p = tileptr->service_manager.treq_fifo_tbl[*source].shift();
-		*fifo_empty = 1 - tileptr->service_manager.treq_fifo_tbl[*source].size();
+		if (tileptr->service_manager.treq_fifo_tbl[*src_model_id].size()>0) {
+		p = tileptr->service_manager.treq_fifo_tbl[*src_model_id].shift();
+		*fifo_empty = 1 - tileptr->service_manager.treq_fifo_tbl[*src_model_id].size();
 		}
 		break;
 	case P_DRESP:
-		if (tileptr->service_manager.dresp_fifo_tbl[*source].size()>0) {
-		p = tileptr->service_manager.dresp_fifo_tbl[*source].shift();
-		*fifo_empty = 1 - tileptr->service_manager.dresp_fifo_tbl[*source].size();
+		if (tileptr->service_manager.dresp_fifo_tbl[*src_model_id].size()>0) {
+		p = tileptr->service_manager.dresp_fifo_tbl[*src_model_id].shift();
+		*fifo_empty = 1 - tileptr->service_manager.dresp_fifo_tbl[*src_model_id].size();
 		}
 		break;
 	case P_TRESP:
-		if (tileptr->service_manager.tresp_fifo_tbl[*source].size()>0) {
-		p = tileptr->service_manager.tresp_fifo_tbl[*source].shift();
-		*fifo_empty = 1 - tileptr->service_manager.tresp_fifo_tbl[*source].size();
+		if (tileptr->service_manager.tresp_fifo_tbl[*src_model_id].size()>0) {
+		p = tileptr->service_manager.tresp_fifo_tbl[*src_model_id].shift();
+		*fifo_empty = 1 - tileptr->service_manager.tresp_fifo_tbl[*src_model_id].size();
 		}
 		break;
 	case P_DACK:
-		if (tileptr->service_manager.dack_fifo_tbl[*source].size()>0) {
-		p = tileptr->service_manager.dack_fifo_tbl[*source].shift();
-		*fifo_empty = 1 - tileptr->service_manager.dack_fifo_tbl[*source].size();
+		if (tileptr->service_manager.dack_fifo_tbl[*src_model_id].size()>0) {
+		p = tileptr->service_manager.dack_fifo_tbl[*src_model_id].shift();
+		*fifo_empty = 1 - tileptr->service_manager.dack_fifo_tbl[*src_model_id].size();
 		}
 		break;
 	default:
@@ -365,7 +366,7 @@ void gmcfintegerarrayfromptrc_(int64_t* ptr,int* array1d, int* sz) {
 	// So in C space, I can access array1d, but when it gets to Fortran, it segfaults.
 }
 
-void gmcfcheckfifoc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,int* packet_type, int* source, int* has_packets) {
+void gmcfcheckfifoc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr, int* source, int* packet_type,  int* has_packets) {
 
 	int64_t ivp = *ivp_tileptr;
 	void* vp=(void*)ivp;
