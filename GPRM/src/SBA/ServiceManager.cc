@@ -140,6 +140,7 @@ using namespace SBA;
 
  void ServiceManager::demux_packets_by_type(Packet_t& packet) {
         Packet_type_t packet_type=getType(getHeader(packet));
+        int src = (int)getReturn_to(getHeader(packet));
 #ifdef VERBOSE
         if (debug_all or service==debug_service){
                 cout << service <<" demux_packets_by_type(): Got packet of type "<<(int)packet_type<<"\n";
@@ -176,6 +177,7 @@ using namespace SBA;
 #ifdef VERBOSE
 			 cout << service << " P_DREQ\n";
 #endif // VERBOSE
+			 Packet_Fifo& dreq_fifo = dreq_fifo_tbl[src];
 			 dreq_fifo.push_back(packet);
 		   break;
 		  }
@@ -184,6 +186,7 @@ using namespace SBA;
 #ifdef VERBOSE
 			 cout << service << " P_TREQ\n";
 #endif // VERBOSE
+			 Packet_Fifo& treq_fifo = treq_fifo_tbl[src];
 			 treq_fifo.push_back(packet);
 		   break;
 		  }
@@ -192,6 +195,7 @@ using namespace SBA;
 #ifdef VERBOSE
 			 cout << service << " P_DRESP\n";
 #endif // VERBOSE
+			 Packet_Fifo& dresp_fifo = dresp_fifo_tbl[src];
 			 dresp_fifo.push_back(packet);
 		   break;
 		  }
@@ -200,6 +204,7 @@ using namespace SBA;
 #ifdef VERBOSE
 			 cout << service << " P_DACK\n";
 #endif // VERBOSE
+			 Packet_Fifo& dack_fifo = dack_fifo_tbl[src];
 			 dack_fifo.push_back(packet);
 		   break;
 		  }
@@ -208,6 +213,7 @@ using namespace SBA;
 #ifdef VERBOSE
 			 cout << service << " P_TRESP\n";
 #endif // VERBOSE
+			 Packet_Fifo& tresp_fifo = tresp_fifo_tbl[src];
 			 tresp_fifo.push_back(packet);
 		   break;
 		  }

@@ -45,12 +45,18 @@ class ServiceManager {
 	Packet_Fifo subtask_code_fifo;
 	Packet_Fifo tx_fifo;
 	// For GMCF
-	Packet_Fifo dreq_fifo;
-	Packet_Fifo treq_fifo;
-	Packet_Fifo dresp_fifo;
-	Packet_Fifo tresp_fifo;
-	Packet_Fifo dack_fifo;
+	// Rather than packet fifos, we have tables of packet fifos per source
+//	Packet_Fifo dreq_fifo;
+//	Packet_Fifo treq_fifo;
+//	Packet_Fifo dresp_fifo;
+//	Packet_Fifo tresp_fifo;
+//	Packet_Fifo dack_fifo;
 	Packet_Fifo fin_fifo;
+	Packet_Fifo_Table dreq_fifo_tbl;
+	Packet_Fifo_Table dresp_fifo_tbl;
+	Packet_Fifo_Table dack_fifo_tbl;
+	Packet_Fifo_Table treq_fifo_tbl;
+	Packet_Fifo_Table tresp_fifo_tbl;
 
 	Subtasks     pending_subtasks_fifo;
 	Subtask_List     subtask_list;

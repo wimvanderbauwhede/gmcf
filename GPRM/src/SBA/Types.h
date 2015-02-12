@@ -767,7 +767,8 @@ public:
 	//typedef Fifo<Packet_t,PACKET_FIFO_SZ> Packet_Fifo;
 	typedef Fifo<Packet_t> Packet_Fifo;
 	typedef Packet_Fifo TX_Packet_Fifo;
-
+	// For GMCF
+	typedef unordered_map< int, Packet_Fifo > Packet_Fifo_Table;
 
 #if USE_THREADS==0
 	typedef Packet_Fifo TRX_Packet_Fifo;
