@@ -469,3 +469,34 @@ void gmcfgettileidc_(int64_t* ivp_tileptr, int* tile_id) {
 	*tile_id = tileptr->address;
 }
 
+void gmcfaddtosetc_(int64_t* ivp_tileptr, int* set_id, int* model_id) {
+	int64_t ivp = *ivp_tileptr;
+	void* vp=(void*)ivp;
+	SBA::Tile* tileptr = (SBA::Tile*)vp;
+	tileptr->incl_set_tbl.add(*set_id,*model_id);
+}
+void gmcfremovefromsetc_(int64_t* ivp_tileptr, int* set_id, int* model_id) {
+	int64_t ivp = *ivp_tileptr;
+	void* vp=(void*)ivp;
+	SBA::Tile* tileptr = (SBA::Tile*)vp;
+	tileptr->incl_set_tbl.remove(*set_id,*model_id);
+}
+void gmcfsetisemptyc_(int64_t* ivp_tileptr, int* set_id, int* is_empty) {
+	int64_t ivp = *ivp_tileptr;
+	void* vp=(void*)ivp;
+	SBA::Tile* tileptr = (SBA::Tile*)vp;
+	*is_empty = tileptr->incl_set_tbl.size(*set_id)==0 ? 1 : 0;
+}
+void gmcfsetcontainsc_(int64_t* ivp_tileptr, int* set_id, int* model_id, int* contains) { // returns #entries for model_id
+	int64_t ivp = *ivp_tileptr;
+	void* vp=(void*)ivp;
+	SBA::Tile* tileptr = (SBA::Tile*)vp;
+	*contains = tileptr->incl_set_tbl.count(*set_id,*model_id);
+}
+
+void gmcfsetsizec_(int* set_id, int* set_size)  {
+	int64_t ivp = *ivp_tileptr;
+	void* vp=(void*)ivp;
+	SBA::Tile* tileptr = (SBA::Tile*)vp;
+	*set_size = tileptr->incl_set_tbl.size(*set_id);
+}

@@ -1135,6 +1135,5 @@ template <class OType> Word_List putObject(OType t) {
 	return wl;
 }
 
-
 } // SBA
 #endif /*_SBA_TYPES_H_*/

@@ -48,6 +48,7 @@ class Tile : public Base::Tile {
         LookupTable lookup_table;
 		Services service_core;
 		bool finished;
+		InclusionSetTable incl_set_tbl;
 	Tile(Base::System* sba_s_, Service& s_, ServiceAddress addr_)
 	: sba_system_ptr(sba_s_), service(s_), address(addr_),
 	status(false),

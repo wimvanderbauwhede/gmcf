@@ -49,4 +49,10 @@ void gmcfcheckfifosc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,int* packet_type
 
 void gmcfgettileidc_(int64_t* ivp_tileptr, int* tile_id);
 
+void gmcfaddtosetc_(int64_t* ivp_tileptr, int* set_id, int* model_id);
+void gmcfremovefromsetc_(int64_t* ivp_tileptr, int* set_id, int* model_id);
+void gmcfsetisemptyc_(int64_t* ivp_tileptr, int* set_id, int* is_empty);
+void gmcfsetcontainsc_(int64_t* ivp_tileptr, int* set_id, int* model_id, int* contains); // returns #entries for model_id
+void gmcfsetsizec_(int64_t* ivp_tileptr, int* set_id, int* set_size);
+
 #endif // _GMCF_C_H_
