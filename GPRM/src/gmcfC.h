@@ -45,6 +45,8 @@ void gmcfintegerarrayfromptrc_(int64_t* ptr,int* array1d, int* sz);
 
 void gmcfcheckfifoc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,int* packet_type,int* source, int* has_packets);
 
+void gmcfcheckfifosc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,int* packet_type, int* has_packets);
+
 void gmcfgettileidc_(int64_t* ivp_tileptr, int* tile_id);
 
 #endif // _GMCF_C_H_

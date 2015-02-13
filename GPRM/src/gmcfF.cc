@@ -406,6 +406,62 @@ void gmcfcheckfifoc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr, int* source, int
 	};
 }
 
+
+void gmcfcheckfifosc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr, int* packet_type,  int* has_packets) {
+
+	int64_t ivp = *ivp_tileptr;
+	void* vp=(void*)ivp;
+	SBA::Tile* tileptr = (SBA::Tile*)vp;
+#ifdef GMCF_DEBUG
+	std::cout << "FORTRAN API C++ gmcfcheckfifoc_: Tile address (sanity): <" << tileptr->address <<">\n";
+#endif
+	*has_packets=0;
+	switch (*packet_type) {
+	case P_DREQ:
+		for(auto iter = m.begin(); iterator != m.end(); iterator++) {
+			if (tileptr->service_manager.dreq_fifo_tbl->first.size()>0) {
+				*has_packets=1;
+				break;
+			}
+		}
+		break;
+	case P_TREQ:
+		for(auto iter = m.begin(); iterator != m.end(); iterator++) {
+			if (tileptr->service_manager.treq_fifo_tbl->first.size()>0) {
+				*has_packets=1;
+				break;
+			}
+		}
+		break;
+	case P_DRESP:
+		for(auto iter = m.begin(); iterator != m.end(); iterator++) {
+			if (tileptr->service_manager.dresp_fifo_tbl->first.size()>0) {
+				*has_packets=1;
+				break;
+			}
+		}
+		break;
+	case P_TRESP:
+		for(auto iter = m.begin(); iterator != m.end(); iterator++) {
+			if (tileptr->service_manager.tresp_fifo_tbl->first.size()>0) {
+				*has_packets=1;
+				break;
+			}
+		}
+		break;
+	case P_DACK:
+		for(auto iter = m.begin(); iterator != m.end(); iterator++) {
+			if (tileptr->service_manager.dack_fifo_tbl->first.size()>0) {
+				*has_packets=1;
+				break;
+			}
+		}
+		break;
+	default:
+		cerr << "Only Data/Time Req/Resp supported\n";
+	};
+}
+
 void gmcfgettileidc_(int64_t* ivp_tileptr, int* tile_id) {
 	int64_t ivp = *ivp_tileptr;
 	void* vp=(void*)ivp;

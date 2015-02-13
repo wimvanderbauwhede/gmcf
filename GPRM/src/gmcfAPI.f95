@@ -178,12 +178,19 @@ contains
         call gmcfwaitforpacketsc(sba_sys, sba_tile(model_id), packet_type,sender, npackets)
         ! After this, packets will be in their respective queues, with the packet_type queue guaranteed containing at least one packet
     end subroutine
-
-    subroutine gmcfHasPackets(model_id, src_model_id, packet_type, has_packets)
+    ! This checks if there are any packets of a given type from a given source
+    subroutine gmcfHasPacketsFrom(model_id, src_model_id, packet_type, has_packets)
         integer, intent(In) :: model_id, src_model_id, packet_type
         integer, intent(Out) :: has_packets
         call gmcfcheckfifoc(sba_sys, sba_tile(model_id),src_model_id, packet_type,has_packets);
     end subroutine gmcfHasPackets
+! This checks if there are any packets of a given type from any source
+    subroutine gmcfHasPackets(model_id, packet_type, has_packets)
+        integer, intent(In) :: model_id, src_model_id, packet_type
+        integer, intent(Out) :: has_packets
+        call gmcfcheckfifosc(sba_sys, sba_tile(model_id), packet_type,has_packets);
+    end subroutine gmcfHasPackets
+
 
     subroutine gmcfShiftPending(model_id, src_model_id, packet_type,packet,fifo_empty)
         integer, intent(In) :: model_id, src_model_id, packet_type
