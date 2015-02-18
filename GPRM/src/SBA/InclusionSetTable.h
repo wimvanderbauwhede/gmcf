@@ -15,7 +15,6 @@ class InclusionSetTable {
     // WV: not sure about this, but since I allocated the InclusionSets with new() I need to de-allocate them somewhere.
     ~InclusionSetTable() {
         for (auto iter=_set_tbl.begin();iter!=_set_tbl.end();iter++) {
-//                const int& k = iter->first;
                 _set_tbl.erase(iter); // I think at this point the pointer to InclusionSet still needs to be freed
                 delete iter->second; 
         }

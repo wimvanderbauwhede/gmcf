@@ -499,4 +499,7 @@ void gmcfsetsizec_(int* set_id, int* set_size)  {
 	void* vp=(void*)ivp;
 	SBA::Tile* tileptr = (SBA::Tile*)vp;
 	*set_size = tileptr->incl_set_tbl.size(*set_id);
+
+void gmcfgetpthreadidc_(int *id) {
+    *id = pthread_self();
 }

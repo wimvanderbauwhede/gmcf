@@ -39,9 +39,9 @@ while (my $line=<$TD>) {
 		if (-e "./$maybe_yml_file") {
 			print "Found YAML-file $maybe_yml_file\n";
 			$ymlfile="./$maybe_yml_file";
-		} elsif (-e "./src/GPRM/Task/$maybe_yml_file") {
+		} elsif (-e "./src/GMCF/Task/$maybe_yml_file") {
 			print "Found YAML-file $maybe_yml_file\n";
-			$ymlfile="./src/GPRM/Task/$maybe_yml_file";
+			$ymlfile="./src/GMCF/Task/$maybe_yml_file";
 		} elsif (-e "$GANNET_DIR/SystemConfigurations/$maybe_yml_file") {
 			print "Found YAML-file $maybe_yml_file\n";
 			$ymlfile="$GANNET_DIR/SystemConfigurations/$maybe_yml_file";
