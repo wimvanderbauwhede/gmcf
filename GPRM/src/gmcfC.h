@@ -55,4 +55,6 @@ void gmcfsetisemptyc_(int64_t* ivp_tileptr, int* set_id, int* is_empty);
 void gmcfsetcontainsc_(int64_t* ivp_tileptr, int* set_id, int* model_id, int* contains); // returns #entries for model_id
 void gmcfsetsizec_(int64_t* ivp_tileptr, int* set_id, int* set_size);
 
+void gmcfgetpthreadidc_(int *id);
+
 #endif // _GMCF_C_H_
