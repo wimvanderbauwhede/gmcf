@@ -86,6 +86,7 @@ Transceiver.cc
 System.cc
 Runtime.cc
 Timings.cc
+InclusionSetTable.cc
 """)
 
 sbasources = [GANNET_DIR+'/GPRM/src/SBA/'+s for s in sbasources]

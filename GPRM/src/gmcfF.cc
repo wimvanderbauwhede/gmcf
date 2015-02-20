@@ -418,40 +418,40 @@ void gmcfcheckfifosc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr, int* packet_typ
 	*has_packets=0;
 	switch (*packet_type) {
 	case P_DREQ:
-		for(auto iter = m.begin(); iterator != m.end(); iterator++) {
-			if (tileptr->service_manager.dreq_fifo_tbl->first.size()>0) {
+		for(auto iter = tileptr->service_manager.dreq_fifo_tbl.begin(); iter != tileptr->service_manager.dreq_fifo_tbl.end(); iter++) {
+			if (iter->second.size()>0) {
 				*has_packets=1;
 				break;
 			}
 		}
 		break;
 	case P_TREQ:
-		for(auto iter = m.begin(); iterator != m.end(); iterator++) {
-			if (tileptr->service_manager.treq_fifo_tbl->first.size()>0) {
+		for(auto iter = tileptr->service_manager.treq_fifo_tbl.begin(); iter != tileptr->service_manager.treq_fifo_tbl.end(); iter++) {
+			if (iter->second.size()>0) {
 				*has_packets=1;
 				break;
 			}
 		}
 		break;
 	case P_DRESP:
-		for(auto iter = m.begin(); iterator != m.end(); iterator++) {
-			if (tileptr->service_manager.dresp_fifo_tbl->first.size()>0) {
+		for(auto iter = tileptr->service_manager.dresp_fifo_tbl.begin(); iter != tileptr->service_manager.dresp_fifo_tbl.end(); iter++) {
+			if (iter->second.size()>0) {
 				*has_packets=1;
 				break;
 			}
 		}
 		break;
 	case P_TRESP:
-		for(auto iter = m.begin(); iterator != m.end(); iterator++) {
-			if (tileptr->service_manager.tresp_fifo_tbl->first.size()>0) {
+		for(auto iter = tileptr->service_manager.tresp_fifo_tbl.begin(); iter != tileptr->service_manager.tresp_fifo_tbl.end(); iter++) {
+			if (iter->second.size()>0) {
 				*has_packets=1;
 				break;
 			}
 		}
 		break;
 	case P_DACK:
-		for(auto iter = m.begin(); iterator != m.end(); iterator++) {
-			if (tileptr->service_manager.dack_fifo_tbl->first.size()>0) {
+		for(auto iter = tileptr->service_manager.dack_fifo_tbl.begin(); iter != tileptr->service_manager.dack_fifo_tbl.end(); iter++) {
+			if (iter->second.size()>0) {
 				*has_packets=1;
 				break;
 			}
@@ -494,12 +494,28 @@ void gmcfsetcontainsc_(int64_t* ivp_tileptr, int* set_id, int* model_id, int* co
 	*contains = tileptr->incl_set_tbl.count(*set_id,*model_id);
 }
 
-void gmcfsetsizec_(int* set_id, int* set_size)  {
+void gmcfsetsizec_(int64_t* ivp_tileptr, int* set_id, int* set_size)  {
 	int64_t ivp = *ivp_tileptr;
 	void* vp=(void*)ivp;
 	SBA::Tile* tileptr = (SBA::Tile*)vp;
 	*set_size = tileptr->incl_set_tbl.size(*set_id);
-
-void gmcfgetpthreadidc_(int *id) {
-    *id = pthread_self();
 }
+
+void gmcfgetpthreadidc_(int64_t*id) {
+    *id = (int64_t)pthread_self();
+}
+
+void gmcfwriteregc_(int64_t* ivp_sysptr, int* model_id, int* regno, int64_t* word) {
+	int64_t ivp = *ivp_sysptr;
+	void* vp=(void*)ivp;
+	SBA::System* sysptr = (SBA::System*)vp;
+	sysptr->regs.at((*model_id)*REGS_PER_THREAD+(*regno))=*word;
+
+}
+void gmcfreadregc_(int64_t* ivp_sysptr, int* model_id, int* regno, int64_t* word) {
+	int64_t ivp = *ivp_sysptr;
+	void* vp=(void*)ivp;
+	SBA::System* sysptr = (SBA::System*)vp;
+	*word = sysptr->regs.at((*model_id)*REGS_PER_THREAD+(*regno));
+}
+

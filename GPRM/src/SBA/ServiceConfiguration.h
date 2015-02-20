@@ -79,7 +79,8 @@ enum Packet_Type { // >7, so needs at least 4 bits. We have 8 bits.
         P_DRESP=8, // "what is the address of service n?", with n a number => 1-elt list of uint64
         P_TRESP=9, //
         P_FIN=10, // "my address is n", with n a number => 1-elt list of uint64
-        P_DACK=11
+        P_DACK=11, // data ack, to signal it's OK to de-allocate memory
+        P_RRDY=12 // register ready for access by another thread
     };
 
 enum Core_Status {
@@ -158,7 +159,9 @@ enum Mode {
 #define SBA_BRIDGE_HW_FIFO_SZ 64
 // WV17082008: the TX fifo in the Gateway must store all packets for a task, can be large
 #define PACKET_FIFO_SZ 64
-#define MAX_REGISTERFILE_SZ 1024
+#define MAX_REGISTERFILE_SZ 32768
+// WV20150220 this is for GMCF: each model thread can use this many entries in the register file
+#define REGS_PER_THREAD 32
 //ifdef STATIC_ALLOC
 
 #if DISTR==0

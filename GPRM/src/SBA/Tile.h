@@ -19,6 +19,7 @@
 #include "./ServiceManager.h"
 #include "./Memory.h"
 #include "./LookupTable.h"
+#include "./InclusionSetTable.h"
 #include "Services.h"
 #include "Base/Tile.h"
 #include "Base/System.h"

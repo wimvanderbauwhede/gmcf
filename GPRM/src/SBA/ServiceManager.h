@@ -57,6 +57,7 @@ class ServiceManager {
 	Packet_Fifo_Table dack_fifo_tbl;
 	Packet_Fifo_Table treq_fifo_tbl;
 	Packet_Fifo_Table tresp_fifo_tbl;
+	Packet_Fifo_Table regrdy_fifo_tbl;
 
 	Subtasks     pending_subtasks_fifo;
 	Subtask_List     subtask_list;

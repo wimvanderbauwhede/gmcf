@@ -11,7 +11,13 @@
 
 
 #include "System.h"
+#ifndef DARWIN
+#define _GNU_SOURCE
+#include <sched.h>
+#include <pthread.h>
+#endif
 #include "Tile.h"
+
 // The SBA Tile is the interface between the Service Manager and the Network.
 // It transfers data from the Network tx_fifo to a local rx_fifo
 // and from the local tx_fifo to the Network rx_fifo
@@ -66,6 +72,15 @@ void Tile::run() {
         pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
         pthread_create(&tid, &attr, SBA::run_tile_loop, (void*)this);
         //cout << "Thread ID: " << pthread_self() << endl;
+#ifndef DARWIN
+		cpu_set_t cpuset;
+		CPU_ZERO(&cpuset);
+		CPU_SET(service, &cpuset);
+		int st = pthread_setaffinity_np(tid, sizeof(cpu_set_t), &cpuset);
+		if (st != 0) {
+		  std::cerr <<"Could not set affinity on thread " << tid << "\n";
+		}
+#endif
         //printf("Thread ID:   %ld  Created on the Tile Adress: %d \n", tid, address);
     }
 #endif // USE_THREADS==1

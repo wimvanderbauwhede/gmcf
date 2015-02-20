@@ -18,7 +18,7 @@ module gmcfAPI
     integer(8), dimension(NMODELS) :: sba_tile ! I think this needs to be an array
 
     integer, parameter :: PRE = 0,POST = 1, BLOCKING=1, NON_BLOCKING=0
-    integer, parameter :: REQDATA=6, REQTIME=7, RESPDATA=8, RESPTIME=9, FIN=10, ACKDATA=11
+    integer, parameter :: REQDATA=6, REQTIME=7, RESPDATA=8, RESPTIME=9, FIN=10, ACKDATA=11, REGREADY=12
     integer(8), parameter :: ONE = 1
 !    integer, parameter :: NMODELS = 2 ! FIXME: use MACRO. In GPRM NSERVICES is a const UINT but I can easily change that.
 
@@ -185,10 +185,10 @@ contains
         integer, intent(In) :: model_id, src_model_id, packet_type
         integer, intent(Out) :: has_packets
         call gmcfcheckfifoc(sba_sys, sba_tile(model_id),src_model_id, packet_type,has_packets);
-    end subroutine gmcfHasPackets
+    end subroutine gmcfHasPacketsFrom
 ! This checks if there are any packets of a given type from any source
     subroutine gmcfHasPackets(model_id, packet_type, has_packets)
-        integer, intent(In) :: model_id, src_model_id, packet_type
+        integer, intent(In) :: model_id, packet_type
         integer, intent(Out) :: has_packets
         call gmcfcheckfifosc(sba_sys, sba_tile(model_id), packet_type,has_packets);
     end subroutine gmcfHasPackets
@@ -446,27 +446,27 @@ contains
 
     subroutine gmcfAddToSet(model_id,set_id,src_model_id)
         integer, intent(In) :: model_id, set_id, src_model_id
-        gmcfaddtosetc_(sba_tile(model_id), set_id, src_model_id);
+        call gmcfaddtosetc_(sba_tile(model_id), set_id, src_model_id);
     end subroutine gmcfAddToSet
 
     subroutine gmcfRemoveFromSet(model_id,set_id,src_model_id)
         integer, intent(In) :: model_id, set_id, src_model_id
-        gmcfremovefromsetc_(sba_tile(model_id), set_id, src_model_id);
+        call gmcfremovefromsetc_(sba_tile(model_id), set_id, src_model_id);
     end subroutine gmcfRemoveFromSet
 
     subroutine gmcfSetIsEmpty(model_id,set_id, is_empty)
         integer, intent(In) :: model_id, set_id, is_empty
-        gmcfsetisemptyc_(sba_tile(model_id), set_id, is_empty);
+        call gmcfsetisemptyc_(sba_tile(model_id), set_id, is_empty);
     end subroutine gmcfSetIsEmpty
 
     subroutine gmcfSetContains(model_id,set_id,src_model_id, contains)
         integer, intent(In) :: model_id, set_id, src_model_id, contains
-        gmcfsetcontainsc_(sba_tile(model_id), set_id, model_id, contains); !returns #entries for model_id
+        call gmcfsetcontainsc_(sba_tile(model_id), set_id, src_model_id, contains); !returns #entries for model_id
     end subroutine gmcfSetContains
 
     subroutine gmcfSetSize(model_id,set_id,set_size)
         integer, intent(In) :: model_id, set_id, set_size
-        gmcfsetsizec_(sba_tile(model_id), set_id, set_size);
+        call gmcfsetsizec_(sba_tile(model_id), set_id, set_size);
     end subroutine gmcfSetSize
 
 end module gmcfAPI
