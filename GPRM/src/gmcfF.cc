@@ -3,6 +3,7 @@
 #include "SBA/System.h"
 #include "SBA/Tile.h"
 #include "SBA/Packet.h"
+#include <cstring>
 //#define GMCF_DEBUG
 /*
 Source == Return_to 16
@@ -317,12 +318,19 @@ void gmcffloatarrayfromptrc_(int64_t* ptr,float* array1d, int* sz) {
 	// A slightly better way would be if we could specify exactly what to copy
 	// To make that work within Fortran's limitations, it means we need to express this as an array
 //	array1d = tmp_array1d;
+
+#ifdef GMCF_DEBUG
 	float sum=0.0;
+#endif
+/*
 	for (int i =0;i< *sz;i++) {
 		array1d[i]=tmp_array1d[i];
+#ifdef GMCF_DEBUG
 		sum+=array1d[i];
+#endif
 	}
-
+*/
+	 memcpy ( array1d, tmp_array1d, sizeof(float) );
 #ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: SANITY:" << sum <<"\n";
   	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: " << tmp_array1d[0] <<"\n";
@@ -353,11 +361,13 @@ void gmcfintegerarrayfromptrc_(int64_t* ptr,int* array1d, int* sz) {
 	// To make that work within Fortran's limitations, it means we need to express this as an array
 //	array1d = tmp_array1d;
 	int sum=0;
+	/*
 	for (int i =0;i< *sz;i++) {
 		array1d[i]=tmp_array1d[i];
 		sum+=array1d[i];
 	}
-
+	*/
+	 memcpy ( array1d, tmp_array1d, sizeof(int) );
 #ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcfintegerarrayfromptrc_: SANITY:" << sum <<"\n";
   	std::cout << "FORTRAN API C++ gmcfintegerarrayfromptrc_: " << tmp_array1d[0] <<"\n";
