@@ -77,6 +77,8 @@ Base/CoreServices.cc
 Memory.cc
 LookupTable.cc
 TaskDescription.cc
+InclusionSet.cc
+InclusionSetTable.cc
 Tile.cc
 ServiceManager.cc
 GatewayTile.cc
@@ -86,7 +88,6 @@ Transceiver.cc
 System.cc
 Runtime.cc
 Timings.cc
-InclusionSetTable.cc
 """)
 
 sbasources = [GANNET_DIR+'/GPRM/src/SBA/'+s for s in sbasources]

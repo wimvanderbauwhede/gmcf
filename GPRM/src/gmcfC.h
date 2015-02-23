@@ -23,7 +23,7 @@ void gmcfwaitforpacketsc_(
 		int* packet_type, int* sender, int* npackets
 		);
 
-void gmcfshiftpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
+void gmcfshiftpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr, int* src_model_id,
 		int* packet_type,
 		int* source, int* destination, int* timestamp, int* pre_post, int* data_id, int64_t* data_sz, int64_t* data_ptr,
 		int *fifo_empty

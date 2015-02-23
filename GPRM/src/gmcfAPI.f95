@@ -446,27 +446,27 @@ contains
 
     subroutine gmcfAddToSet(model_id,set_id,src_model_id)
         integer, intent(In) :: model_id, set_id, src_model_id
-        call gmcfaddtosetc_(sba_tile(model_id), set_id, src_model_id);
+        call gmcfaddtosetc(sba_tile(model_id), set_id, src_model_id);
     end subroutine gmcfAddToSet
 
     subroutine gmcfRemoveFromSet(model_id,set_id,src_model_id)
         integer, intent(In) :: model_id, set_id, src_model_id
-        call gmcfremovefromsetc_(sba_tile(model_id), set_id, src_model_id);
+        call gmcfremovefromsetc(sba_tile(model_id), set_id, src_model_id);
     end subroutine gmcfRemoveFromSet
 
     subroutine gmcfSetIsEmpty(model_id,set_id, is_empty)
         integer, intent(In) :: model_id, set_id, is_empty
-        call gmcfsetisemptyc_(sba_tile(model_id), set_id, is_empty);
+        call gmcfsetisemptyc(sba_tile(model_id), set_id, is_empty);
     end subroutine gmcfSetIsEmpty
 
     subroutine gmcfSetContains(model_id,set_id,src_model_id, contains)
         integer, intent(In) :: model_id, set_id, src_model_id, contains
-        call gmcfsetcontainsc_(sba_tile(model_id), set_id, src_model_id, contains); !returns #entries for model_id
+        call gmcfsetcontainsc(sba_tile(model_id), set_id, src_model_id, contains); !returns #entries for model_id
     end subroutine gmcfSetContains
 
     subroutine gmcfSetSize(model_id,set_id,set_size)
         integer, intent(In) :: model_id, set_id, set_size
-        call gmcfsetsizec_(sba_tile(model_id), set_id, set_size);
+        call gmcfsetsizec(sba_tile(model_id), set_id, set_size);
     end subroutine gmcfSetSize
 
 end module gmcfAPI
