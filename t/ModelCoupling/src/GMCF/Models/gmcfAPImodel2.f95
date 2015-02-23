@@ -72,7 +72,7 @@ contains
         end if ! FIN
 
         if (gmcfStatus(DEST_1) /= FIN) then
-            call gmcfShiftPending(model2_id,REQDATA,DEST_1,packet, fifo_empty)
+            call gmcfShiftPending(model2_id,DEST_1,REQDATA,packet, fifo_empty)
             print *,"FORTRAN MODEL2: GOT a REQDATA packet (PRE) from ",packet%source,'to',packet%destination
             select case (packet%data_id)
                 case (GMCF_VAR_NAME_1)
@@ -103,7 +103,7 @@ contains
         if (gmcfStatus(DEST_1) /= FIN) then
         call gmcfHasPackets(model2_id,REQDATA,has_packets)
         if (has_packets==1) then
-        call gmcfShiftPending(model2_id,REQDATA,DEST_1,packet,fifo_empty)
+        call gmcfShiftPending(model2_id,DEST_1,REQDATA,packet,fifo_empty)
         select case (packet%data_id)
             case (GMCF_VAR_NAME_2)
             if (packet%pre_post == POST) then

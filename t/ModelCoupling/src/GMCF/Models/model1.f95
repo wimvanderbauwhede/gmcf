@@ -109,7 +109,7 @@ subroutine program_model1(sys, tile, model_id) ! This replaces 'program main'
             ! and then we read them
             call gmcfHasPackets(model_id,RESPDATA,has_packets)
             do while (has_packets==1)
-                call gmcfShiftPending(model_id,RESPDATA,packet,fifo_empty)
+                call gmcfShiftPending(model_id,DEST_2,RESPDATA,packet,fifo_empty)
                 ! read a packet
                 select case (packet%data_id) ! <code for the variable var_name, GMCF-style>
                     case (GMCF_VAR_NAME_1)
