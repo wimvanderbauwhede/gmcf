@@ -39,7 +39,7 @@ module gmcfAPI
     ! Need to define status. I can think of init, working, finished, error
     integer, dimension(NMODELS) :: gmcfStatus = 0
     integer, dimension(NMODELS) :: sync_counter = NMODELS-1
-    integer, dimension(NMODELS) :: pthread_ids = 0
+    integer(kind=8), dimension(NMODELS) :: pthread_ids = 0
 
     save
 
@@ -427,13 +427,14 @@ contains
     end subroutine gmcfGetTileId
 
     subroutine gmcfGetPThreadID(id)
-        integer, intent(out) :: id
+        integer(kind=8), intent(out) :: id
         call gmcfgetpthreadidc(id)
     end subroutine gmcfGetPThreadID
 
     subroutine gmcfGetModelId(id)
         integer, intent(out) :: id
-        integer :: pthread_id, i
+        integer(kind=8) :: pthread_id
+        integer :: i
         call gmcfGetPThreadId(pthread_id)
         do i=1, NMODELS
             if (pthread_ids(i) .eq. pthread_id) then
