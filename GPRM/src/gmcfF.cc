@@ -519,7 +519,7 @@ void gmcfgetpthreadidc_(int64_t*id) {
     *id = (int64_t)pthread_self();
 }
 
-void gmcfwriteregc_(int64_t* ivp_sysptr, int* model_id, int* regno, int64_t* word) {
+void gmcfwritereg(int64_t* ivp_sysptr, int* model_id, int* regno, int64_t* word) {
 	int64_t ivp = *ivp_sysptr;
 	void* vp=(void*)ivp;
 	SBA::System* sysptr = (SBA::System*)vp;
@@ -548,7 +548,7 @@ void gmcfunlockregc_(int64_t* ivp_sysptr, int* model_id) {
 }
 
 
-void gmcfreadregc_(int64_t* ivp_sysptr, int* model_id, int* regno, int64_t* word) {
+void gmcfreadreg(int64_t* ivp_sysptr, int* model_id, int* regno, int64_t* word) {
 	int64_t ivp = *ivp_sysptr;
 	void* vp=(void*)ivp;
 	SBA::System* sysptr = (SBA::System*)vp;
