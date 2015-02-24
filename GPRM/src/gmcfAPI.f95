@@ -178,6 +178,7 @@ contains
         print *,"FORTRAN API: gmcfWaitFor(",packet_type,npackets,")"
 #endif
         call gmcfwaitforpacketsc(sba_sys, sba_tile(model_id), packet_type,sender, npackets)
+        call gmcfAddToSet(model_id,packet_type,sender,npackets)
         ! After this, packets will be in their respective queues, with the packet_type queue guaranteed containing at least one packet
     end subroutine
     ! This checks if there are any packets of a given type from a given source
@@ -193,6 +194,14 @@ contains
         call gmcfcheckfifosc(sba_sys, sba_tile(model_id), packet_type,has_packets);
     end subroutine gmcfHasPackets
 
+    subroutine gmcfShiftPendingFromInclusionSet(model_id, packet_type,packet,fifo_empty)
+        integer, intent(In) :: model_id, packet_type
+        type(gmcfPacket), intent(Out) :: packet
+        integer, intent(Out) :: fifo_empty
+        integer :: src_model_id
+        call gmcfSetTakeFirst(model_id, packet_type, src_model_id)
+        call gmcfShiftPending(model_id, src_model_id, packet_type, packet, fifo_empty)
+    end subroutine gmcfShiftPendingFromInclusionSet
 
     subroutine gmcfShiftPending(model_id, src_model_id, packet_type,packet,fifo_empty)
         integer, intent(In) :: model_id, src_model_id, packet_type
@@ -202,6 +211,7 @@ contains
         integer(8) :: data_sz, data_ptr
 
         call gmcfshiftpendingc(sba_sys, sba_tile(model_id), src_model_id, packet_type,source, destination, timestamp, pre_post, data_id, data_sz, data_ptr, fifo_empty)
+        call gmcfRemoveFromSet(model_id,packet_type,src_model_id)
         packet%type=packet_type
         packet%source=source
         packet%destination=destination
@@ -215,6 +225,7 @@ contains
     subroutine gmcfPushPending(model_id, packet)
         integer, intent(In) :: model_id
         type(gmcfPacket), intent(In) :: packet
+        call gmcfAddOneToSet(model_id, packet%data_id, packet%source)
         call gmcfpushpendingc(sba_sys, sba_tile(model_id), packet%type,packet%source, packet%destination, packet%timestamp, packet%pre_post, packet%data_id, packet%data_sz, packet%data_ptr)
     end subroutine gmcfPushPending
 
@@ -444,9 +455,14 @@ contains
         end do
     end subroutine gmcfFinished
 
-    subroutine gmcfAddToSet(model_id,set_id,src_model_id)
+    subroutine gmcfAddOneToSet(model_id,set_id,src_model_id)
         integer, intent(In) :: model_id, set_id, src_model_id
-        call gmcfaddtosetc(sba_tile(model_id), set_id, src_model_id);
+        call gmcfaddtosetc(sba_tile(model_id), set_id, src_model_id,1);
+    end subroutine gmcfAddOneToSet
+
+    subroutine gmcfAddToSet(model_id,set_id,src_model_id,value_to_add)
+        integer, intent(In) :: model_id, set_id, src_model_id, value_to_add
+        call gmcfaddtosetc(sba_tile(model_id), set_id, src_model_id,value_to_add);
     end subroutine gmcfAddToSet
 
     subroutine gmcfRemoveFromSet(model_id,set_id,src_model_id)
@@ -468,5 +484,11 @@ contains
         integer, intent(In) :: model_id, set_id, set_size
         call gmcfsetsizec(sba_tile(model_id), set_id, set_size);
     end subroutine gmcfSetSize
+
+    subroutine gmcfSetTakeFirst(model_id, set_id, src_model_id)
+        integer, intent(In) :: model_id, set_id
+        integer, intent(Out) :: src_model_id
+        call gmcfsettakefirstc(sba_tile(model_id), set_id, src_model_id)
+    end subroutine gmcfSetTakeFirst
 
 end module gmcfAPI

@@ -49,11 +49,12 @@ void gmcfcheckfifosc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,int* packet_type
 
 void gmcfgettileidc_(int64_t* ivp_tileptr, int* tile_id);
 
-void gmcfaddtosetc_(int64_t* ivp_tileptr, int* set_id, int* model_id);
+void gmcfaddtosetc_(int64_t* ivp_tileptr, int* set_id, int* model_id, int* value_to_add);
 void gmcfremovefromsetc_(int64_t* ivp_tileptr, int* set_id, int* model_id);
 void gmcfsetisemptyc_(int64_t* ivp_tileptr, int* set_id, int* is_empty);
 void gmcfsetcontainsc_(int64_t* ivp_tileptr, int* set_id, int* model_id, int* contains); // returns #entries for model_id
 void gmcfsetsizec_(int64_t* ivp_tileptr, int* set_id, int* set_size);
+void gmcfsettakefirstc_(int64_t* ivp_tileptr, int* set_id, int* model_id);
 
 void gmcfgetpthreadidc_(int64_t*id);
 

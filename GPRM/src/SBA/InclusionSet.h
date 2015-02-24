@@ -10,9 +10,11 @@ class InclusionSet {
 	public:
     InclusionSet() : _size(0) {}
 	void add(unsigned int);
+	void add(unsigned int,unsigned int);
 	void remove(unsigned int);
 	unsigned int size();
 	unsigned int count(unsigned int);
+	unsigned int takefirst();
 };
 
 }
