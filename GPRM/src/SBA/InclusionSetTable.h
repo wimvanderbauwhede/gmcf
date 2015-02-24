@@ -11,6 +11,7 @@ class InclusionSetTable {
 	void add(unsigned int,unsigned int);
 	void remove(unsigned int,unsigned int);
 	unsigned int size(unsigned int);
+	const std::vector<unsigned int>& elts(unsigned int);
 	unsigned int count(unsigned int,unsigned int);
     // WV: not sure about this, but since I allocated the InclusionSets with new() I need to de-allocate them somewhere.
     ~InclusionSetTable() {

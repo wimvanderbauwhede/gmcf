@@ -469,4 +469,31 @@ contains
         call gmcfsetsizec(sba_tile(model_id), set_id, set_size);
     end subroutine gmcfSetSize
 
+    subroutine gmcfWriteReg(model_id, regno, word)
+        integer, intent(In) :: model_id, regno
+        integer(8), intent(In) ::word
+        call gmcfwriteregc(sba_sys, model_id, regno, word);
+    end subroutine gmcfWriteReg
+
+    subroutine gmcfReadReg(model_id, regno, word)
+        integer, intent(In) :: model_id, regno
+        integer(8), intent(Out) :: word
+        call gmcfreadregc(sba_sys, model_id, regno, word);
+    end subroutine gmcfReadReg
+
+    subroutine gmcfLockReg(model_id)
+        integer, intent(In) :: model_id
+        call gmcflockregc(sba_sys, model_id);
+    end subroutine gmcfLockReg
+
+    subroutine gmcfUnlockReg(model_id)
+        integer, intent(In) :: model_id
+        call gmcfunlockregc(sba_sys, model_id);
+    end subroutine gmcfUnlockReg
+
+    subroutine gmcfWaitForRegs(model_id)
+        integer, intent(In) :: model_id
+        call gmcfwaitforregsc(sba_sys, sba_tile(model_id),model_id);
+    end subroutine gmcfWaitForRegs
+
 end module gmcfAPI

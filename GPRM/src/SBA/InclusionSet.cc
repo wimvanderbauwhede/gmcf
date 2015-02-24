@@ -24,3 +24,10 @@ unsigned int InclusionSet::count(unsigned int elt) {
     return _set.count(elt);
 }
 
+const std::vector<unsigned int>& InclusionSet::elts() {
+	std::vector<unsigned int> elts;
+	for (auto _iter : _set) {
+		elts.push_back( _iter.first );
+	}
+	return elts;
+}

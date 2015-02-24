@@ -31,3 +31,7 @@ unsigned int InclusionSetTable::count(unsigned int set_id,unsigned int elt) {
     }
 }
 
+const std::vector<unsigned int>& InclusionSetTable::elts(unsigned int set_id) {
+        return _set_tbl[set_id]->elts();
+}
+

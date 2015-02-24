@@ -35,6 +35,8 @@ class System : public Base::System {
 	Bytecode     bytecode;
 	vector<void*> args;
 	vector<Word> regs;
+	vector<pthread_mutex_t> reg_locks;
+	vector<pthread_cond_t> reg_conds;
 	void* result;
 	uint io_mech;
 	uint multi_ip;
@@ -50,6 +52,8 @@ class System : public Base::System {
 		// allocate some space for args and regs
 		for (int regno = 0; regno< MAX_REGISTERFILE_SZ; regno++) {
 			regs.push_back((Word)0);
+			pthread_mutex_init(&(reg_locks[regno]), NULL);
+			pthread_cond_init(&(reg_conds[regno]), NULL);
 		}
 		//Services
 		nservicenodes=NSERVICES;
