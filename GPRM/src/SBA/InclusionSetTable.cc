@@ -39,3 +39,7 @@ unsigned int InclusionSetTable::takefirst(unsigned int set_id) {
     }
 }
 
+const std::vector<unsigned int>& InclusionSetTable::elts(unsigned int set_id) {
+        return _set_tbl[set_id]->elts();
+}
+

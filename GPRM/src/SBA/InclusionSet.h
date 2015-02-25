@@ -2,6 +2,8 @@
 #define _SBA_INCLUSION_SET_
 
 #include <unordered_map>
+#include <vector>
+
 namespace SBA {
 class InclusionSet {
     private:
@@ -15,6 +17,7 @@ class InclusionSet {
 	unsigned int size();
 	unsigned int count(unsigned int);
 	unsigned int takefirst();
+	const std::vector<unsigned int>& elts();
 };
 
 }

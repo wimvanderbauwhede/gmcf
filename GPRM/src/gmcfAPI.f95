@@ -43,6 +43,26 @@ module gmcfAPI
 
     save
 
+    interface
+        subroutine gmcfWriteReg(sba_sys, model_id, regno, word) bind(C)
+            use, intrinsic :: ISO_C_BINDING
+            implicit none
+            type(*), intent(In) :: sba_sys
+            type(*), intent(In) :: model_id, regno
+            type(*), intent(In) :: word
+        end subroutine gmcfWriteReg
+    end interface
+
+    interface
+        subroutine gmcfReadReg(sba_sys, model_id, regno, word) bind(C)
+            use, intrinsic :: ISO_C_BINDING
+            implicit none
+            type(*), intent(In) :: sba_sys
+            type(*), intent(In) :: model_id, regno
+            type(*), intent(InOut) :: word
+        end subroutine gmcfReadReg
+    end interface
+
 contains
 
     subroutine gmcfInitCoupler(sysptr,tileptr,model_id)
@@ -485,6 +505,33 @@ contains
         integer, intent(In) :: model_id, set_id, set_size
         call gmcfsetsizec(sba_tile(model_id), set_id, set_size);
     end subroutine gmcfSetSize
+!
+!    subroutine gmcfWriteReg(model_id, regno, word)
+!        integer, intent(In) :: model_id, regno
+!        integer(8), intent(In) ::word
+!        call gmcfwriteregc(sba_sys, model_id, regno, word);
+!    end subroutine gmcfWriteReg
+
+!    subroutine gmcfReadReg(model_id, regno, word)
+!        integer, intent(In) :: model_id, regno
+!        integer(8), intent(InOut) :: word
+!        call gmcfreadregc(sba_sys, model_id, regno, word);
+!    end subroutine gmcfReadReg
+
+    subroutine gmcfLockReg(model_id)
+        integer, intent(In) :: model_id
+        call gmcflockregc(sba_sys, model_id);
+    end subroutine gmcfLockReg
+
+    subroutine gmcfUnlockReg(model_id)
+        integer, intent(In) :: model_id
+        call gmcfunlockregc(sba_sys, model_id);
+    end subroutine gmcfUnlockReg
+
+    subroutine gmcfWaitForRegs(model_id)
+        integer, intent(In) :: model_id
+        call gmcfwaitforregsc(sba_sys, sba_tile(model_id),model_id);
+    end subroutine gmcfWaitForRegs
 
     subroutine gmcfSetTakeFirst(model_id, set_id, src_model_id)
         integer, intent(In) :: model_id, set_id

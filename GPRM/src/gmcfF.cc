@@ -4,6 +4,8 @@
 #include "SBA/Tile.h"
 #include "SBA/Packet.h"
 #include <cstring>
+#include <pthread.h>
+
 //#define GMCF_DEBUG
 /*
 Source == Return_to 16
@@ -360,7 +362,9 @@ void gmcfintegerarrayfromptrc_(int64_t* ptr,int* array1d, int* sz) {
 	// A slightly better way would be if we could specify exactly what to copy
 	// To make that work within Fortran's limitations, it means we need to express this as an array
 //	array1d = tmp_array1d;
+#ifdef GMCF_DEBUG
 	int sum=0;
+#endif
 	/*
 	for (int i =0;i< *sz;i++) {
 		array1d[i]=tmp_array1d[i];
@@ -522,17 +526,63 @@ void gmcfgetpthreadidc_(int64_t*id) {
     *id = (int64_t)pthread_self();
 }
 
-void gmcfwriteregc_(int64_t* ivp_sysptr, int* model_id, int* regno, int64_t* word) {
+void gmcfwritereg(int64_t* ivp_sysptr, int* model_id, int* regno, int64_t* word) {
 	int64_t ivp = *ivp_sysptr;
 	void* vp=(void*)ivp;
 	SBA::System* sysptr = (SBA::System*)vp;
+	//WV: I think this is way too late to lock the mutex. We probably need an explicit ugly gmcflockregc_ call to lock the mutex at the start of the time loop
+//	pthread_mutex_lock(&(sysptr->reg_locks.at(*model_id)));
 	sysptr->regs.at((*model_id)*REGS_PER_THREAD+(*regno))=*word;
-
+	// WV: so maybe it is best to have this in a separate call as well, so that we can do several writes before we unlock
+//	pthread_mutex_unlock(&(sysptr->reg_locks.at(*model_id)));
+//	pthread_cond_broadcast(&(sysptr->reg_conds.at(*model_id)));
 }
-void gmcfreadregc_(int64_t* ivp_sysptr, int* model_id, int* regno, int64_t* word) {
+// WV:  Now this is ugly! I never wanted locks!
+void gmcflockregc_(int64_t* ivp_sysptr, int* model_id) {
+	int64_t ivp = *ivp_sysptr;
+	void* vp=(void*)ivp;
+	SBA::System* sysptr = (SBA::System*)vp;
+	pthread_mutex_lock(&(sysptr->reg_locks.at(*model_id)));
+}
+
+// WV: Now this is ugly! I never wanted locks!
+void gmcfunlockregc_(int64_t* ivp_sysptr, int* model_id) {
+	int64_t ivp = *ivp_sysptr;
+	void* vp=(void*)ivp;
+	SBA::System* sysptr = (SBA::System*)vp;
+	pthread_mutex_unlock(&(sysptr->reg_locks.at(*model_id)));
+	pthread_cond_broadcast(&(sysptr->reg_conds.at(*model_id)));
+}
+
+
+void gmcfreadreg(int64_t* ivp_sysptr, int* model_id, int* regno, int64_t* word) {
 	int64_t ivp = *ivp_sysptr;
 	void* vp=(void*)ivp;
 	SBA::System* sysptr = (SBA::System*)vp;
 	*word = sysptr->regs.at((*model_id)*REGS_PER_THREAD+(*regno));
 }
+
+void gmcfwaitforregsc_(int64_t* ivp_sysptr,int64_t* ivp_tileptr,  int* model_id) {
+	int64_t ivp = *ivp_sysptr;
+	void* vp=(void*)ivp;
+	SBA::System* sysptr = (SBA::System*)vp;
+	int64_t ivp2 = *ivp_tileptr;
+	void* vp2=(void*)ivp2;
+	SBA::Tile* tileptr = (SBA::Tile*)vp2;
+	if(tileptr->incl_set_tbl.size(P_RRDY)>0) { // no need for a while
+		for (auto _iter : tileptr->incl_set_tbl.elts(P_RRDY)) {
+			unsigned int src_model_id = _iter;
+  				if (src_model_id != (unsigned int)(*model_id)) {
+  				// So, this call unlocks the mutex, blocks, unblocks after a broadcast or signal, and locks the mutex
+  				// So if the first one blocks, nothing happens. When it unblocks, we remove it from the inclusion set
+  				// But this means we'll just remove them from the inclusion set in numerical order.
+  					pthread_cond_wait(&(sysptr->reg_conds.at(src_model_id)), &(sysptr->reg_locks.at(src_model_id)));
+  					// So there the mutex is still locked. There's no reason because we only want read access. so unlock it
+  					pthread_mutex_unlock(&(sysptr->reg_locks.at(src_model_id)));
+  					tileptr->incl_set_tbl.remove(P_RRDY,src_model_id);
+  				}
+		} // So when we get here, it means all mutexes are unlocked, no more waiting, and inclusion set is empty.
+	}
+}
+
 
