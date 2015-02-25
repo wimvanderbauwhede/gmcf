@@ -198,7 +198,6 @@ contains
         print *,"FORTRAN API: gmcfWaitFor(",packet_type,npackets,")"
 #endif
         call gmcfwaitforpacketsc(sba_sys, sba_tile(model_id), packet_type,sender, npackets)
-        call gmcfAddToSet(model_id,packet_type,sender,npackets)
         ! After this, packets will be in their respective queues, with the packet_type queue guaranteed containing at least one packet
     end subroutine
     ! This checks if there are any packets of a given type from a given source
@@ -231,7 +230,6 @@ contains
         integer(8) :: data_sz, data_ptr
 
         call gmcfshiftpendingc(sba_sys, sba_tile(model_id), src_model_id, packet_type,source, destination, timestamp, pre_post, data_id, data_sz, data_ptr, fifo_empty)
-        call gmcfRemoveFromSet(model_id,packet_type,src_model_id)
         packet%type=packet_type
         packet%source=source
         packet%destination=destination
@@ -245,7 +243,6 @@ contains
     subroutine gmcfPushPending(model_id, packet)
         integer, intent(In) :: model_id
         type(gmcfPacket), intent(In) :: packet
-        call gmcfAddOneToSet(model_id, packet%data_id, packet%source)
         call gmcfpushpendingc(sba_sys, sba_tile(model_id), packet%type,packet%source, packet%destination, packet%timestamp, packet%pre_post, packet%data_id, packet%data_sz, packet%data_ptr)
     end subroutine gmcfPushPending
 
