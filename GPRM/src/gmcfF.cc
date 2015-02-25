@@ -558,8 +558,12 @@ void gmcfunlockregc_(int64_t* ivp_sysptr, int* model_id) {
 void gmcfreadreg(int64_t* ivp_sysptr, int* model_id, int* regno, int64_t* word) {
 	int64_t ivp = *ivp_sysptr;
 	void* vp=(void*)ivp;
+	int m = *model_id;
 	SBA::System* sysptr = (SBA::System*)vp;
-	*word = sysptr->regs.at((*model_id)*REGS_PER_THREAD+(*regno));
+	*word = sysptr->regs.at((*model_id)*(REGS_PER_THREAD)+(*regno));
+	// TODO: Remove the need for this. Some weird corruption in the above line
+	// makes model_id go to a large number. This restores it.
+    *model_id = m;
 }
 
 void gmcfwaitforregsc_(int64_t* ivp_sysptr,int64_t* ivp_tileptr,  int* model_id) {
@@ -574,10 +578,11 @@ void gmcfwaitforregsc_(int64_t* ivp_sysptr,int64_t* ivp_tileptr,  int* model_id)
 		for (auto _iter : *regreadys) {
 			unsigned int src_model_id = _iter;
             if (src_model_id != (unsigned int)(*model_id)) {
+                // Since we're going to call pthread_cond_wait we need to lock the appropriate mutex.
+                pthread_mutex_lock(&(sysptr->reg_locks.at(src_model_id)));
                 // So, this call unlocks the mutex, blocks, unblocks after a broadcast or signal, and locks the mutex
                 // So if the first one blocks, nothing happens. When it unblocks, we remove it from the inclusion set
                 // But this means we'll just remove them from the inclusion set in numerical order.
-                pthread_mutex_lock(&(sysptr->reg_locks.at(src_model_id)));
                 pthread_cond_wait(&(sysptr->reg_conds.at(src_model_id)), &(sysptr->reg_locks.at(src_model_id)));
                 // So there the mutex is still locked. There's no reason because we only want read access. so unlock it
                 pthread_mutex_unlock(&(sysptr->reg_locks.at(src_model_id)));
