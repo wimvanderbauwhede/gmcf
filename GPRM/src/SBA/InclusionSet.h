@@ -17,7 +17,7 @@ class InclusionSet {
 	unsigned int size();
 	unsigned int count(unsigned int);
 	unsigned int takefirst();
-	const std::vector<unsigned int>& elts();
+	const std::vector<unsigned int>* elts();
 };
 
 }

@@ -570,18 +570,20 @@ void gmcfwaitforregsc_(int64_t* ivp_sysptr,int64_t* ivp_tileptr,  int* model_id)
 	void* vp2=(void*)ivp2;
 	SBA::Tile* tileptr = (SBA::Tile*)vp2;
 	if(tileptr->incl_set_tbl.size(P_RRDY)>0) { // no need for a while
-		for (auto _iter : tileptr->incl_set_tbl.elts(P_RRDY)) {
+	    const std::vector<unsigned int>* regreadys = tileptr->incl_set_tbl.elts(P_RRDY);
+		for (auto _iter : *regreadys) {
 			unsigned int src_model_id = _iter;
-  				if (src_model_id != (unsigned int)(*model_id)) {
-  				// So, this call unlocks the mutex, blocks, unblocks after a broadcast or signal, and locks the mutex
-  				// So if the first one blocks, nothing happens. When it unblocks, we remove it from the inclusion set
-  				// But this means we'll just remove them from the inclusion set in numerical order.
-  					pthread_cond_wait(&(sysptr->reg_conds.at(src_model_id)), &(sysptr->reg_locks.at(src_model_id)));
-  					// So there the mutex is still locked. There's no reason because we only want read access. so unlock it
-  					pthread_mutex_unlock(&(sysptr->reg_locks.at(src_model_id)));
-  					tileptr->incl_set_tbl.remove(P_RRDY,src_model_id);
-  				}
+            if (src_model_id != (unsigned int)(*model_id)) {
+                // So, this call unlocks the mutex, blocks, unblocks after a broadcast or signal, and locks the mutex
+                // So if the first one blocks, nothing happens. When it unblocks, we remove it from the inclusion set
+                // But this means we'll just remove them from the inclusion set in numerical order.
+                pthread_cond_wait(&(sysptr->reg_conds.at(src_model_id)), &(sysptr->reg_locks.at(src_model_id)));
+                // So there the mutex is still locked. There's no reason because we only want read access. so unlock it
+                pthread_mutex_unlock(&(sysptr->reg_locks.at(src_model_id)));
+                tileptr->incl_set_tbl.remove(P_RRDY,src_model_id);
+            }
 		} // So when we get here, it means all mutexes are unlocked, no more waiting, and inclusion set is empty.
+		delete regreadys;
 	}
 }
 

@@ -38,10 +38,10 @@ unsigned int InclusionSet::takefirst() {
     return _set.begin()->first;
 }
 
-const std::vector<unsigned int>& InclusionSet::elts() {
-	std::vector<unsigned int> elts;
+const std::vector<unsigned int>* InclusionSet::elts() {
+	std::vector<unsigned int>* elts = new std::vector<unsigned int>();
 	for (auto _iter : _set) {
-		elts.push_back( _iter.first );
+		elts->push_back( _iter.first );
 	}
 	return elts;
 }
