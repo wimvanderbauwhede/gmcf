@@ -577,6 +577,7 @@ void gmcfwaitforregsc_(int64_t* ivp_sysptr,int64_t* ivp_tileptr,  int* model_id)
                 // So, this call unlocks the mutex, blocks, unblocks after a broadcast or signal, and locks the mutex
                 // So if the first one blocks, nothing happens. When it unblocks, we remove it from the inclusion set
                 // But this means we'll just remove them from the inclusion set in numerical order.
+                pthread_mutex_lock(&(sysptr->reg_locks.at(src_model_id)));
                 pthread_cond_wait(&(sysptr->reg_conds.at(src_model_id)), &(sysptr->reg_locks.at(src_model_id)));
                 // So there the mutex is still locked. There's no reason because we only want read access. so unlock it
                 pthread_mutex_unlock(&(sysptr->reg_locks.at(src_model_id)));
