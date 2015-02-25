@@ -332,7 +332,7 @@ void gmcffloatarrayfromptrc_(int64_t* ptr,float* array1d, int* sz) {
 #endif
 	}
 */
-	 memcpy ( array1d, tmp_array1d, sizeof(float) );
+	 memcpy ( array1d, tmp_array1d, sizeof(float) * (*sz));
 #ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: SANITY:" << sum <<"\n";
   	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: " << tmp_array1d[0] <<"\n";
@@ -371,7 +371,7 @@ void gmcfintegerarrayfromptrc_(int64_t* ptr,int* array1d, int* sz) {
 		sum+=array1d[i];
 	}
 	*/
-	 memcpy ( array1d, tmp_array1d, sizeof(int) );
+	 memcpy ( array1d, tmp_array1d, sizeof(int) * (*sz) );
 #ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcfintegerarrayfromptrc_: SANITY:" << sum <<"\n";
   	std::cout << "FORTRAN API C++ gmcfintegerarrayfromptrc_: " << tmp_array1d[0] <<"\n";
