@@ -57,8 +57,10 @@ class System : public Base::System {
 		// allocate some space for args and regs
 		for (int regno = 0; regno< MAX_REGISTERFILE_SZ; regno++) {
 			regs.push_back((Word)0);
-			pthread_mutex_init(&(reg_locks[regno]), NULL);
-			pthread_cond_init(&(reg_conds[regno]), NULL);
+		}
+		for (unsigned int model=0; model < NSERVICES; model++) {
+			reg_locks.push_back(PTHREAD_MUTEX_INITIALIZER);
+			reg_conds.push_back(PTHREAD_COND_INITIALIZER);
 		}
 		//Services
 		nservicenodes=NSERVICES;
@@ -87,6 +89,10 @@ class System : public Base::System {
 		// allocate some space for args and regs
 		for (int regno = 0; regno< MAX_REGISTERFILE_SZ; regno++) {
 			regs.push_back((Word)0);
+		}
+		for (unsigned int model=0; model < NSERVICES; model++) {
+			reg_locks.push_back(PTHREAD_MUTEX_INITIALIZER);
+			reg_conds.push_back(PTHREAD_COND_INITIALIZER);
 		}
 		//Services
 		nservicenodes=NSERVICES;

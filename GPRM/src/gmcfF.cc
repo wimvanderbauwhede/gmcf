@@ -332,7 +332,7 @@ void gmcffloatarrayfromptrc_(int64_t* ptr,float* array1d, int* sz) {
 #endif
 	}
 */
-	 memcpy ( array1d, tmp_array1d, sizeof(float) );
+	 memcpy ( array1d, tmp_array1d, sizeof(float) * (*sz));
 #ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: SANITY:" << sum <<"\n";
   	std::cout << "FORTRAN API C++ gmcffloatarrayfromptrc_: " << tmp_array1d[0] <<"\n";
@@ -371,7 +371,7 @@ void gmcfintegerarrayfromptrc_(int64_t* ptr,int* array1d, int* sz) {
 		sum+=array1d[i];
 	}
 	*/
-	 memcpy ( array1d, tmp_array1d, sizeof(int) );
+	 memcpy ( array1d, tmp_array1d, sizeof(int) * (*sz) );
 #ifdef GMCF_DEBUG
 	std::cout << "FORTRAN API C++ gmcfintegerarrayfromptrc_: SANITY:" << sum <<"\n";
   	std::cout << "FORTRAN API C++ gmcfintegerarrayfromptrc_: " << tmp_array1d[0] <<"\n";
@@ -483,11 +483,11 @@ void gmcfgettileidc_(int64_t* ivp_tileptr, int* tile_id) {
 	*tile_id = tileptr->address;
 }
 
-void gmcfaddtosetc_(int64_t* ivp_tileptr, int* set_id, int* model_id) {
+void gmcfaddtosetc_(int64_t* ivp_tileptr, int* set_id, int* model_id, int* value_to_add) {
 	int64_t ivp = *ivp_tileptr;
 	void* vp=(void*)ivp;
 	SBA::Tile* tileptr = (SBA::Tile*)vp;
-	tileptr->incl_set_tbl.add(*set_id,*model_id);
+	tileptr->incl_set_tbl.add(*set_id,*model_id,*value_to_add);
 }
 void gmcfremovefromsetc_(int64_t* ivp_tileptr, int* set_id, int* model_id) {
 	int64_t ivp = *ivp_tileptr;
@@ -513,6 +513,13 @@ void gmcfsetsizec_(int64_t* ivp_tileptr, int* set_id, int* set_size)  {
 	void* vp=(void*)ivp;
 	SBA::Tile* tileptr = (SBA::Tile*)vp;
 	*set_size = tileptr->incl_set_tbl.size(*set_id);
+}
+
+void gmcfsettakefirstc_(int64_t* ivp_tileptr, int* set_id, int* model_id) {
+    int64_t ivp = *ivp_tileptr;
+    void* vp=(void*)ivp;
+    SBA::Tile* tileptr = (SBA::Tile*)vp;
+    *model_id = tileptr->incl_set_tbl.takefirst(*set_id);
 }
 
 void gmcfgetpthreadidc_(int64_t*id) {
@@ -564,18 +571,22 @@ void gmcfwaitforregsc_(int64_t* ivp_sysptr,int64_t* ivp_tileptr,  int* model_id)
 	void* vp2=(void*)ivp2;
 	SBA::Tile* tileptr = (SBA::Tile*)vp2;
 	if(tileptr->incl_set_tbl.size(P_RRDY)>0) { // no need for a while
-		for (auto _iter : tileptr->incl_set_tbl.elts(P_RRDY)) {
+	    const std::vector<unsigned int>* regreadys = tileptr->incl_set_tbl.elts(P_RRDY);
+		for (auto _iter : *regreadys) {
 			unsigned int src_model_id = _iter;
-  				if (src_model_id != (unsigned int)(*model_id)) {
-  				// So, this call unlocks the mutex, blocks, unblocks after a broadcast or signal, and locks the mutex
-  				// So if the first one blocks, nothing happens. When it unblocks, we remove it from the inclusion set
-  				// But this means we'll just remove them from the inclusion set in numerical order.
-  					pthread_cond_wait(&(sysptr->reg_conds.at(src_model_id)), &(sysptr->reg_locks.at(src_model_id)));
-  					// So there the mutex is still locked. There's no reason because we only want read access. so unlock it
-  					pthread_mutex_unlock(&(sysptr->reg_locks.at(src_model_id)));
-  					tileptr->incl_set_tbl.remove(P_RRDY,src_model_id);
-  				}
+            if (src_model_id != (unsigned int)(*model_id)) {
+                // Since we're going to call pthread_cond_wait we need to lock the appropriate mutex.
+                pthread_mutex_lock(&(sysptr->reg_locks.at(src_model_id)));
+                // So, this call unlocks the mutex, blocks, unblocks after a broadcast or signal, and locks the mutex
+                // So if the first one blocks, nothing happens. When it unblocks, we remove it from the inclusion set
+                // But this means we'll just remove them from the inclusion set in numerical order.
+                pthread_cond_wait(&(sysptr->reg_conds.at(src_model_id)), &(sysptr->reg_locks.at(src_model_id)));
+                // So there the mutex is still locked. There's no reason because we only want read access. so unlock it
+                pthread_mutex_unlock(&(sysptr->reg_locks.at(src_model_id)));
+                tileptr->incl_set_tbl.remove(P_RRDY,src_model_id);
+            }
 		} // So when we get here, it means all mutexes are unlocked, no more waiting, and inclusion set is empty.
+		delete regreadys;
 	}
 }
 
