@@ -345,7 +345,9 @@ print $GWCC '
 print $GWCC '	std::cout << "\n CASTING System pointer in model '.$i.'\n";'."\n";
 print $GWCC '
 #endif
-
+    // Here we can get the thread id and link the model id to it
+    uint64_t th_id = (uint64_t)pthread_self();
+    sba_sysptr->model_id_from_thread_id[th_id]=model_id;
 	void* sys_vp = reinterpret_cast<void*>(sba_sysptr);
 	int64_t sys_iv = (int64_t)sys_vp;
 	int64_t* sba_sys_ivp = &sys_iv;
@@ -355,6 +357,11 @@ print $GWCC '
 	void* tile_vp = reinterpret_cast<void*>(sba_tileptr);
 	int64_t tile_iv = (int64_t)tile_vp;
     int64_t* sba_tile_ivp = &tile_iv;
+    // We can now also store sba_sys_ivp and sba_tile_ivp in the gmcfAPI module
+    // We could store sba_sys_vp, not ivp
+    // But that would mean *all* Fortran subroutines need type(c_ptr)
+    // gmcfinitsys(sba_sys_ivp)
+    // gmcfinittile(&model,sba_tile_ivp); 
 #ifdef VERBOSE
 	std::cout << "CALLING Fortran program_'.$model.'_" << std::endl;
 #endif

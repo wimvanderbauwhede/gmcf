@@ -1,5 +1,6 @@
 #define MODEL_API
 ! This is the consumer of a producer/consumer coupled model example.
+!WV20150225: we can remove all arguments by issuing a separate call in the GMCF service
 subroutine program_model1(sys, tile, model_id) ! This replaces 'program main'
 
     ! Lines marked with ! gmcf-coupler / ! end gmcf-coupler are additions for coupling
@@ -41,6 +42,7 @@ subroutine program_model1(sys, tile, model_id) ! This replaces 'program main'
     ! gmcf-coupler
     ! Init amongst other things gathers info about the time loops, maybe from a config file, need to work this out in detail:
 #ifdef MODEL_API
+!WV20150225: we can remove all arguments by issuing a separate call in the GMCF service
          call gmcfInitModel1(sys,tile, model_id)
 #else
     call gmcfInitCoupler(sys,tile, model_id)
