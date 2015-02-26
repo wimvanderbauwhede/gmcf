@@ -225,6 +225,15 @@ using namespace SBA;
 			 fin_fifo.push_back(packet);
 		   break;
 		  }
+		  case P_RRDY :
+		  {
+#ifdef VERBOSE
+			 cout << service << " P_RRDY\n";
+#endif // VERBOSE
+             Packet_Fifo& regrdy_fifo = regrdy_fifo_tbl[src];
+			 regrdy_fifo.push_back(packet);
+		   break;
+		  }
            default:
             cerr << "Packet Type <" <<packet_type<< "> not recognised";
             exit(1);

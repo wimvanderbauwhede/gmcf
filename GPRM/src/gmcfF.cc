@@ -138,6 +138,9 @@ is implemented as:
 	case P_DACK:
 	    alreadyReceived = tileptr->service_manager.dack_fifo_tbl[*sender];
 	    break;
+    case P_RRDY:
+        alreadyReceived = tileptr->service_manager.regrdy_fifo_tbl[*sender];
+        break; 
 	}
      
     int packetsReceived = alreadyReceived.size();
@@ -210,6 +213,12 @@ void gmcfshiftpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		*fifo_empty = 1 - tileptr->service_manager.dack_fifo_tbl[*src_model_id].size();
 		}
 		break;
+    case P_RRDY:
+        if (tileptr->service_manager.regrdy_fifo_tbl[*src_model_id].size()>0) {
+		p = tileptr->service_manager.regrdy_fifo_tbl[*src_model_id].shift();
+		*fifo_empty = 1 - tileptr->service_manager.regrdy_fifo_tbl[*src_model_id].size();
+		}
+		break;
 	default:
 		cerr << "Only Data/Time Req/Resp supported\n";
 	};
@@ -266,6 +275,9 @@ void gmcfpushpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		break;
 	case P_DACK:
 		tileptr->service_manager.dack_fifo_tbl[*source].push(p);
+		break;
+	case P_RRDY:
+		tileptr->service_manager.regrdy_fifo_tbl[*source].push(p);
 		break;
 	default:
 		cerr << "Only Data/Time Req/Resp supported\n";
@@ -415,6 +427,11 @@ void gmcfcheckfifoc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr, int* source, int
 			*has_packets=1;
 		}
 		break;
+	case P_RRDY:
+		if (tileptr->service_manager.regrdy_fifo_tbl[*source].size()>0) {
+			*has_packets=1;
+		}
+		break;
 	default:
 		cerr << "Only Data/Time Req/Resp supported\n";
 	};
@@ -432,40 +449,48 @@ void gmcfcheckfifosc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr, int* packet_typ
 	*has_packets=0;
 	switch (*packet_type) {
 	case P_DREQ:
-		for(auto iter = tileptr->service_manager.dreq_fifo_tbl.begin(); iter != tileptr->service_manager.dreq_fifo_tbl.end(); iter++) {
-			if (iter->second.size()>0) {
+		for(auto iter : tileptr->service_manager.dreq_fifo_tbl) {
+			if (iter.second.size()>0) {
 				*has_packets=1;
 				break;
 			}
 		}
 		break;
 	case P_TREQ:
-		for(auto iter = tileptr->service_manager.treq_fifo_tbl.begin(); iter != tileptr->service_manager.treq_fifo_tbl.end(); iter++) {
-			if (iter->second.size()>0) {
+		for(auto iter : tileptr->service_manager.treq_fifo_tbl) {
+			if (iter.second.size()>0) {
 				*has_packets=1;
 				break;
 			}
 		}
 		break;
 	case P_DRESP:
-		for(auto iter = tileptr->service_manager.dresp_fifo_tbl.begin(); iter != tileptr->service_manager.dresp_fifo_tbl.end(); iter++) {
-			if (iter->second.size()>0) {
+		for(auto iter : tileptr->service_manager.dresp_fifo_tbl) {
+			if (iter.second.size()>0) {
 				*has_packets=1;
 				break;
 			}
 		}
 		break;
 	case P_TRESP:
-		for(auto iter = tileptr->service_manager.tresp_fifo_tbl.begin(); iter != tileptr->service_manager.tresp_fifo_tbl.end(); iter++) {
-			if (iter->second.size()>0) {
+		for(auto iter : tileptr->service_manager.tresp_fifo_tbl) {
+			if (iter.second.size()>0) {
 				*has_packets=1;
 				break;
 			}
 		}
 		break;
 	case P_DACK:
-		for(auto iter = tileptr->service_manager.dack_fifo_tbl.begin(); iter != tileptr->service_manager.dack_fifo_tbl.end(); iter++) {
-			if (iter->second.size()>0) {
+		for(auto iter : tileptr->service_manager.dack_fifo_tbl) {
+			if (iter.second.size()>0) {
+				*has_packets=1;
+				break;
+			}
+		}
+		break;
+	case P_RRDY:
+		for(auto iter : tileptr->service_manager.regrdy_fifo_tbl) {
+			if (iter.second.size()>0) {
 				*has_packets=1;
 				break;
 			}
@@ -538,12 +563,11 @@ void gmcfwriteregc_(int64_t* ivp_sysptr, int model_id, int regno, void* word) {
 //	pthread_cond_broadcast(&(sysptr->reg_conds.at(*model_id)));
 }
 
-void gmcfreadregc_(int64_t* ivp_sysptr, int model_id, int regno, void* word) {
+void gmcfreadregc_(int64_t* ivp_sysptr, int model_id, int regno, int64_t* word) {
 	int64_t ivp = *ivp_sysptr;
 	void* vp=(void*)ivp;
 	SBA::System* sysptr = (SBA::System*)vp;
-	uint64_t uword = sysptr->regs.at((model_id)*REGS_PER_THREAD+(regno));
-	word = (void*)uword;
+	*word = sysptr->regs.at((model_id)*REGS_PER_THREAD+(regno));
 }
 
 // WV:  Now this is ugly! I never wanted locks!
