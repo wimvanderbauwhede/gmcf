@@ -530,6 +530,15 @@ void gmcfwriteregc_(int64_t* ivp_sysptr, int model_id, int regno, void* word) {
 //	pthread_mutex_unlock(&(sysptr->reg_locks.at(*model_id)));
 //	pthread_cond_broadcast(&(sysptr->reg_conds.at(*model_id)));
 }
+
+void gmcfreadregc_(int64_t* ivp_sysptr, int model_id, int regno, void* word) {
+	int64_t ivp = *ivp_sysptr;
+	void* vp=(void*)ivp;
+	SBA::System* sysptr = (SBA::System*)vp;
+	uint64_t uword = sysptr->regs.at((model_id)*REGS_PER_THREAD+(regno));
+	word = (void*)uword;
+}
+
 // WV:  Now this is ugly! I never wanted locks!
 void gmcflockregc_(int64_t* ivp_sysptr, int model_id) {
 	int64_t ivp = *ivp_sysptr;
@@ -545,15 +554,6 @@ void gmcfunlockregc_(int64_t* ivp_sysptr, int model_id) {
 	SBA::System* sysptr = (SBA::System*)vp;
 	pthread_mutex_unlock(&(sysptr->reg_locks.at(model_id)));
 	pthread_cond_broadcast(&(sysptr->reg_conds.at(model_id)));
-}
-
-
-void gmcfreadregc_(int64_t* ivp_sysptr, int model_id, int regno, void* word) {
-	int64_t ivp = *ivp_sysptr;
-	void* vp=(void*)ivp;
-	SBA::System* sysptr = (SBA::System*)vp;
-	uint64_t uword = sysptr->regs.at((model_id)*REGS_PER_THREAD+(regno));
-	word = (void*)uword;
 }
 
 void gmcfwaitforregsc_(int64_t* ivp_sysptr,int64_t* ivp_tileptr,  int* model_id) {

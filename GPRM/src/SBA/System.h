@@ -35,9 +35,13 @@ class System : public Base::System {
 	Bytecode     bytecode;
 	vector<void*> args;
 	vector<Word> regs;
+	//WV20150225 additions for GMCF
 	vector<pthread_mutex_t> reg_locks;
 	vector<pthread_cond_t> reg_conds;
+	//WV20150225 additions for GMCF, as yet unused
+	vector<int> register_ready;
 	unordered_map<uint64_t,uint64_t> model_id_from_thread_id;
+
 	void* result;
 	uint io_mech;
 	uint multi_ip;
