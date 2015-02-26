@@ -558,7 +558,6 @@ void gmcfunlockregc_(int64_t* ivp_sysptr, int model_id) {
 void gmcfreadregc_(int64_t* ivp_sysptr, int model_id, int regno, void* word) {
 	int64_t ivp = *ivp_sysptr;
 	void* vp=(void*)ivp;
-	int m = *model_id;
 	SBA::System* sysptr = (SBA::System*)vp;
 	uint64_t uword = sysptr->regs.at((model_id)*REGS_PER_THREAD+(regno));
 	word = (void*)uword;
