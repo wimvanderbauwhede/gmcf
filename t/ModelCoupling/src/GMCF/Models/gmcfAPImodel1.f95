@@ -75,7 +75,7 @@ contains
             ! and then we read them
             call gmcfHasPackets(model1_id,RESPDATA,has_packets)
             do while (has_packets==1)
-                call gmcfShiftPending(model1_id,RESPDATA,DEST_2,packet,fifo_empty)
+                call gmcfShiftPending(model1_id,DEST_2,RESPDATA,packet,fifo_empty)
                 ! read a packet
                 select case (packet%data_id) ! <code for the variable var_name, GMCF-style>
                     case (GMCF_VAR_NAME_1)

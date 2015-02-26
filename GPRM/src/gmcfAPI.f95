@@ -39,7 +39,7 @@ module gmcfAPI
     ! Need to define status. I can think of init, working, finished, error
     integer, dimension(NMODELS) :: gmcfStatus = 0
     integer, dimension(NMODELS) :: sync_counter = NMODELS-1
-    integer, dimension(NMODELS) :: pthread_ids = 0
+    integer(kind=8), dimension(NMODELS) :: pthread_ids = 0
 
     save
 
@@ -231,6 +231,14 @@ contains
         call gmcfcheckfifosc(sba_sys, sba_tile(model_id), packet_type,has_packets);
     end subroutine gmcfHasPackets
 
+    subroutine gmcfShiftPendingFromInclusionSet(model_id, packet_type,packet,fifo_empty)
+        integer, intent(In) :: model_id, packet_type
+        type(gmcfPacket), intent(Out) :: packet
+        integer, intent(Out) :: fifo_empty
+        integer :: src_model_id
+        call gmcfSetTakeFirst(model_id, packet_type, src_model_id)
+        call gmcfShiftPending(model_id, src_model_id, packet_type, packet, fifo_empty)
+    end subroutine gmcfShiftPendingFromInclusionSet
 
     subroutine gmcfShiftPending(model_id, src_model_id, packet_type,packet,fifo_empty)
         integer, intent(In) :: model_id, src_model_id, packet_type
@@ -454,13 +462,14 @@ contains
     end subroutine gmcfGetTileId
 
     subroutine gmcfGetPThreadID(id)
-        integer, intent(out) :: id
+        integer(kind=8), intent(out) :: id
         call gmcfgetpthreadidc(id)
     end subroutine gmcfGetPThreadID
 
     subroutine gmcfGetModelId(id)
         integer, intent(out) :: id
-        integer :: pthread_id, i
+        integer(kind=8) :: pthread_id
+        integer :: i
         call gmcfGetPThreadId(pthread_id)
         do i=1, NMODELS
             if (pthread_ids(i) .eq. pthread_id) then
@@ -483,9 +492,14 @@ contains
         end do
     end subroutine gmcfFinished
 
-    subroutine gmcfAddToSet(model_id,set_id,src_model_id)
+    subroutine gmcfAddOneToSet(model_id,set_id,src_model_id)
         integer, intent(In) :: model_id, set_id, src_model_id
-        call gmcfaddtosetc(sba_tile(model_id), set_id, src_model_id);
+        call gmcfaddtosetc(sba_tile(model_id), set_id, src_model_id,1);
+    end subroutine gmcfAddOneToSet
+
+    subroutine gmcfAddToSet(model_id,set_id,src_model_id,value_to_add)
+        integer, intent(In) :: model_id, set_id, src_model_id, value_to_add
+        call gmcfaddtosetc(sba_tile(model_id), set_id, src_model_id,value_to_add);
     end subroutine gmcfAddToSet
 
     subroutine gmcfRemoveFromSet(model_id,set_id,src_model_id)
@@ -539,5 +553,11 @@ contains
         integer, intent(In) :: model_id
         call gmcfwaitforregsc(sba_sys, sba_tile(model_id),model_id);
     end subroutine gmcfWaitForRegs
+
+    subroutine gmcfSetTakeFirst(model_id, set_id, src_model_id)
+        integer, intent(In) :: model_id, set_id
+        integer, intent(Out) :: src_model_id
+        call gmcfsettakefirstc(sba_tile(model_id), set_id, src_model_id)
+    end subroutine gmcfSetTakeFirst
 
 end module gmcfAPI
