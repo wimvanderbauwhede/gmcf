@@ -526,44 +526,42 @@ void gmcfgetpthreadidc_(int64_t*id) {
     *id = (int64_t)pthread_self();
 }
 
-void gmcfwritereg(int64_t* ivp_sysptr, int* model_id, int* regno, int64_t* word) {
+void gmcfwriteregc_(int64_t* ivp_sysptr, int model_id, int regno, void* word) {
 	int64_t ivp = *ivp_sysptr;
 	void* vp=(void*)ivp;
 	SBA::System* sysptr = (SBA::System*)vp;
 	//WV: I think this is way too late to lock the mutex. We probably need an explicit ugly gmcflockregc_ call to lock the mutex at the start of the time loop
 //	pthread_mutex_lock(&(sysptr->reg_locks.at(*model_id)));
-	sysptr->regs.at((*model_id)*REGS_PER_THREAD+(*regno))=*word;
+	sysptr->regs.at((model_id)*REGS_PER_THREAD+(regno))=*((uint64_t*)word);
 	// WV: so maybe it is best to have this in a separate call as well, so that we can do several writes before we unlock
 //	pthread_mutex_unlock(&(sysptr->reg_locks.at(*model_id)));
 //	pthread_cond_broadcast(&(sysptr->reg_conds.at(*model_id)));
 }
 // WV:  Now this is ugly! I never wanted locks!
-void gmcflockregc_(int64_t* ivp_sysptr, int* model_id) {
+void gmcflockregc_(int64_t* ivp_sysptr, int model_id) {
 	int64_t ivp = *ivp_sysptr;
 	void* vp=(void*)ivp;
 	SBA::System* sysptr = (SBA::System*)vp;
-	pthread_mutex_lock(&(sysptr->reg_locks.at(*model_id)));
+	pthread_mutex_lock(&(sysptr->reg_locks.at(model_id)));
 }
 
 // WV: Now this is ugly! I never wanted locks!
-void gmcfunlockregc_(int64_t* ivp_sysptr, int* model_id) {
+void gmcfunlockregc_(int64_t* ivp_sysptr, int model_id) {
 	int64_t ivp = *ivp_sysptr;
 	void* vp=(void*)ivp;
 	SBA::System* sysptr = (SBA::System*)vp;
-	pthread_mutex_unlock(&(sysptr->reg_locks.at(*model_id)));
-	pthread_cond_broadcast(&(sysptr->reg_conds.at(*model_id)));
+	pthread_mutex_unlock(&(sysptr->reg_locks.at(model_id)));
+	pthread_cond_broadcast(&(sysptr->reg_conds.at(model_id)));
 }
 
 
-void gmcfreadreg(int64_t* ivp_sysptr, int* model_id, int* regno, int64_t* word) {
+void gmcfreadregc_(int64_t* ivp_sysptr, int model_id, int regno, void* word) {
 	int64_t ivp = *ivp_sysptr;
 	void* vp=(void*)ivp;
 	int m = *model_id;
 	SBA::System* sysptr = (SBA::System*)vp;
-	*word = sysptr->regs.at((*model_id)*(REGS_PER_THREAD)+(*regno));
-	// TODO: Remove the need for this. Some weird corruption in the above line
-	// makes model_id go to a large number. This restores it.
-    *model_id = m;
+	uint64_t uword = sysptr->regs.at((model_id)*REGS_PER_THREAD+(regno));
+	word = (void*)uword;
 }
 
 void gmcfwaitforregsc_(int64_t* ivp_sysptr,int64_t* ivp_tileptr,  int* model_id) {

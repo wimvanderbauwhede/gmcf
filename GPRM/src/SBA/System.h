@@ -37,6 +37,7 @@ class System : public Base::System {
 	vector<Word> regs;
 	vector<pthread_mutex_t> reg_locks;
 	vector<pthread_cond_t> reg_conds;
+	unordered_map<uint64_t,uint64_t> model_id_from_thread_id;
 	void* result;
 	uint io_mech;
 	uint multi_ip;

@@ -44,23 +44,41 @@ module gmcfAPI
     save
 
     interface
-        subroutine gmcfWriteReg(sba_sys, model_id, regno, word) bind(C)
+        subroutine gmcfWriteRegC(sba_sys, model_id, regno, word) bind(C,name="gmcfwriteregc_")
             use, intrinsic :: ISO_C_BINDING
             implicit none
-            type(*), intent(In) :: sba_sys
-            type(*), intent(In) :: model_id, regno
+            integer(c_int64_t), intent(In) :: sba_sys
+            integer(c_int), value, intent(In) :: model_id, regno
             type(*), intent(In) :: word
-        end subroutine gmcfWriteReg
+        end subroutine gmcfWriteRegC
     end interface
 
     interface
-        subroutine gmcfReadReg(sba_sys, model_id, regno, word) bind(C)
+        subroutine gmcfReadRegC(sba_sys, model_id, regno, word) bind(C,name="gmcfreadregc_")
             use, intrinsic :: ISO_C_BINDING
             implicit none
-            type(*), intent(In) :: sba_sys
-            type(*), intent(In) :: model_id, regno
+            integer(c_int64_t), intent(In) :: sba_sys
+            integer(c_int), value, intent(In) :: model_id, regno
             type(*), intent(InOut) :: word
-        end subroutine gmcfReadReg
+        end subroutine gmcfReadRegC
+    end interface
+
+    interface
+        subroutine gmcfLockRegC(sba_sys,model_id) bind(C, name="gmcflockregc_")
+            use, intrinsic :: ISO_C_BINDING
+            implicit none
+            integer(c_int64_t), intent(In) :: sba_sys
+            integer(c_int), value, intent(In) :: model_id
+        end subroutine gmcfLockRegC
+    end interface
+
+    interface
+        subroutine gmcfUnlockRegC(sba_sys,model_id) bind(C, name="gmcfunlockregc_")
+            use, intrinsic :: ISO_C_BINDING
+            implicit none
+            integer(c_int64_t), intent(In) :: sba_sys
+            integer(c_int), value, intent(In) :: model_id
+        end subroutine gmcfUnlockRegC
     end interface
 
 contains
@@ -458,6 +476,7 @@ contains
                 id = i
             end if
         end do
+        ! call gmcfgetmodelidc(sba_sys)
     end subroutine gmcfGetModelId
 
     subroutine gmcfFinished(model_id)
@@ -515,14 +534,19 @@ contains
 !        call gmcfreadregc(sba_sys, model_id, regno, word);
 !    end subroutine gmcfReadReg
 
+!    subroutine gmcfLockReg(model_id)
+!        integer, intent(In) :: model_id
+!        call gmcflockregc(sba_sys, model_id);
+!    end subroutine gmcfLockReg
+!
     subroutine gmcfLockReg(model_id)
         integer, intent(In) :: model_id
-        call gmcflockregc(sba_sys, model_id);
+        call gmcfLockRegC(sba_sys, model_id);
     end subroutine gmcfLockReg
 
     subroutine gmcfUnlockReg(model_id)
         integer, intent(In) :: model_id
-        call gmcfunlockregc(sba_sys, model_id);
+        call gmcfUnlockRegC(sba_sys, model_id);
     end subroutine gmcfUnlockReg
 
     subroutine gmcfWaitForRegs(model_id)

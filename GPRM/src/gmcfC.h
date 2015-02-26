@@ -58,11 +58,11 @@ void gmcfsettakefirstc_(int64_t* ivp_tileptr, int* set_id, int* model_id);
 
 void gmcfgetpthreadidc_(int64_t*id);
 
-void gmcfwritereg(int64_t* ivp_sysptr, int* model_id, int* regno, int64_t* word);
-void gmcfreadreg(int64_t* ivp_sysptr, int* model_id, int* regno, int64_t* word);
+void gmcfwriteregc_(int64_t* ivp_sysptr, int model_id, int regno, void* word);
+void gmcfreadregc_(int64_t* ivp_sysptr, int model_id, int regno, void* word);
 
-void gmcflockregc_(int64_t* ivp_sysptr, int* model_id);
-void gmcfunlockregc_(int64_t* ivp_sysptr, int* model_id);
+void gmcflockregc_(int64_t* ivp_sysptr, int model_id);
+void gmcfunlockregc_(int64_t* ivp_sysptr, int model_id);
 
 void gmcfwaitforregsc_(int64_t* ivp_sysptr,int64_t* ivp_tileptr,  int* model_id);
 
