@@ -128,6 +128,33 @@ Packet_Fifo *getPacketFifo(int* packet_type, int* sender, SBA::Tile* tileptr) {
 	return fifo;
 }
 
+Packet_Fifo_Table *getPacketFifoTable(int* packet_type, SBA::Tile* tileptr) {
+    Packet_Fifo_Table *fifo;
+    switch (*packet_type) {
+	case P_DREQ:
+	    fifo = &tileptr->service_manager.dreq_fifo_tbl;
+	    break;
+	case P_TREQ:
+	    fifo = &tileptr->service_manager.treq_fifo_tbl;
+	    break;
+	case P_DRESP:
+	    fifo = &tileptr->service_manager.dresp_fifo_tbl;
+	    break;
+	case P_TRESP:
+	    fifo = &tileptr->service_manager.tresp_fifo_tbl;
+	    break;
+	case P_DACK:
+	    fifo = &tileptr->service_manager.dack_fifo_tbl;
+	    break;
+    case P_RRDY:
+        fifo = &tileptr->service_manager.regrdy_fifo_tbl;
+        break; 
+	default:
+		cerr << "Only Data/Time Req/Resp supported\n";
+	};
+	return fifo;
+}
+
 void gmcfwaitforpacketsc_(
 		int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		int* packet_type, int* sender, int* npackets
@@ -212,7 +239,6 @@ void gmcfshiftpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 
 }
 
-
 void gmcfpushpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		int* packet_type,
 		int* source, int* destination, int* timestamp, int* pre_post, int* data_id, int64_t* data_sz, int64_t* data_ptr
@@ -231,33 +257,9 @@ void gmcfpushpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 
 	SBA::Header_t ph= SBA::mkHeader(*packet_type,*pre_post,0,1,*destination,*source,timestamp_data_id, *data_sz);
     SBA::Packet_t  p = SBA::mkPacket_new(ph,*data_ptr);
-
-	switch (*packet_type) {
-	case P_DREQ:
-		tileptr->service_manager.dreq_fifo_tbl[*source].push(p);
-		break;
-	case P_TREQ:
-		tileptr->service_manager.treq_fifo_tbl[*source].push(p);
-		break;
-	case P_DRESP:
-		tileptr->service_manager.dresp_fifo_tbl[*source].push(p);
-		break;
-	case P_TRESP:
-		tileptr->service_manager.tresp_fifo_tbl[*source].push(p);
-		break;
-	case P_DACK:
-		tileptr->service_manager.dack_fifo_tbl[*source].push(p);
-		break;
-	case P_RRDY:
-		tileptr->service_manager.regrdy_fifo_tbl[*source].push(p);
-		break;
-	default:
-		cerr << "Only Data/Time Req/Resp supported\n";
-	};
-
+    Packet_Fifo* fifo = getPacketFifo(packet_type, source, tileptr);
+    fifo->push(p);
 }
-
-
 
 void gmcfsendarrayc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		int* data_id, int* source, int* destination, int* pre_post, int* time, int64_t* sz1d,
@@ -373,40 +375,10 @@ void gmcfcheckfifoc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr, int* source, int
 	std::cout << "FORTRAN API C++ gmcfcheckfifoc_: Tile address (sanity): <" << tileptr->address <<">\n";
 #endif
 	*has_packets=0;
-	switch (*packet_type) {
-	case P_DREQ:
-		if (tileptr->service_manager.dreq_fifo_tbl[*source].size()>0) {
-			*has_packets=1;
-		}
-		break;
-	case P_TREQ:
-		if (tileptr->service_manager.treq_fifo_tbl[*source].size()>0) {
-			*has_packets=1;
-		}
-		break;
-	case P_DRESP:
-		if (tileptr->service_manager.dresp_fifo_tbl[*source].size()>0) {
-			*has_packets=1;
-		}
-		break;
-	case P_TRESP:
-		if (tileptr->service_manager.tresp_fifo_tbl[*source].size()>0) {
-			*has_packets=1;
-		}
-		break;
-	case P_DACK:
-		if (tileptr->service_manager.dack_fifo_tbl[*source].size()>0) {
-			*has_packets=1;
-		}
-		break;
-	case P_RRDY:
-		if (tileptr->service_manager.regrdy_fifo_tbl[*source].size()>0) {
-			*has_packets=1;
-		}
-		break;
-	default:
-		cerr << "Only Data/Time Req/Resp supported\n";
-	};
+	Packet_Fifo* fifo = getPacketFifo(packet_type, source, tileptr);
+	if (fifo->size() > 0) {
+	    *has_packets = 1;
+	}
 }
 
 
@@ -419,58 +391,13 @@ void gmcfcheckfifosc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr, int* packet_typ
 	std::cout << "FORTRAN API C++ gmcfcheckfifoc_: Tile address (sanity): <" << tileptr->address <<">\n";
 #endif
 	*has_packets=0;
-	switch (*packet_type) {
-	case P_DREQ:
-		for(auto iter : tileptr->service_manager.dreq_fifo_tbl) {
-			if (iter.second.size()>0) {
-				*has_packets=1;
-				break;
-			}
-		}
-		break;
-	case P_TREQ:
-		for(auto iter : tileptr->service_manager.treq_fifo_tbl) {
-			if (iter.second.size()>0) {
-				*has_packets=1;
-				break;
-			}
-		}
-		break;
-	case P_DRESP:
-		for(auto iter : tileptr->service_manager.dresp_fifo_tbl) {
-			if (iter.second.size()>0) {
-				*has_packets=1;
-				break;
-			}
-		}
-		break;
-	case P_TRESP:
-		for(auto iter : tileptr->service_manager.tresp_fifo_tbl) {
-			if (iter.second.size()>0) {
-				*has_packets=1;
-				break;
-			}
-		}
-		break;
-	case P_DACK:
-		for(auto iter : tileptr->service_manager.dack_fifo_tbl) {
-			if (iter.second.size()>0) {
-				*has_packets=1;
-				break;
-			}
-		}
-		break;
-	case P_RRDY:
-		for(auto iter : tileptr->service_manager.regrdy_fifo_tbl) {
-			if (iter.second.size()>0) {
-				*has_packets=1;
-				break;
-			}
-		}
-		break;
-	default:
-		cerr << "Only Data/Time Req/Resp supported\n";
-	};
+	Packet_Fifo_Table* fifo_table = getPacketFifoTable(packet_type, tileptr);
+	for (auto iter : *fifo_table) {
+	    if (iter.second.size() > 0) {
+	        *has_packets = 1;
+	        break;
+	    }
+	}
 }
 
 void gmcfgettileidc_(int64_t* ivp_tileptr, int* tile_id) {
