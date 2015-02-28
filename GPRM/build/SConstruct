@@ -79,6 +79,7 @@ LookupTable.cc
 TaskDescription.cc
 InclusionSet.cc
 InclusionSetTable.cc
+Schedule.cc
 Tile.cc
 ServiceManager.cc
 GatewayTile.cc
