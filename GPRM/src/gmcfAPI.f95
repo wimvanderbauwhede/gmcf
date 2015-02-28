@@ -560,4 +560,14 @@ contains
         call gmcfsettakefirstc(sba_tile(model_id), set_id, src_model_id)
     end subroutine gmcfSetTakeFirst
 
+    subroutine gmcfSendRegReady(model_id, set_id, destination)
+        integer, intent(In) :: model_id, set_id, destination
+        call gmcfsendpacketc(sba_sys, sba_tile(model_id), model_id, destination, REGREADY, set_id, PRE, -1 ,ONE, 0)
+    end subroutine gmcfSendRegReady
+
+    subroutine gmcfSendAck(model_id, set_id, destination)
+        integer, intent(In) :: model_id, set_id, destination
+        call gmcfsendpacketc(sba_sys, sba_tile(model_id), model_id, destination, ACKDATA, set_id, PRE, -1 ,ONE, 0)
+    end subroutine gmcfSendAck
+
 end module gmcfAPI

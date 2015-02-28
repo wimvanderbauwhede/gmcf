@@ -101,6 +101,60 @@ void gmcfsendpacketc_(
 	tileptr->transceiver->run();
 }
 
+Packet_Fifo *getPacketFifo(int* packet_type, int* sender, SBA::Tile* tileptr) {
+    Packet_Fifo *fifo;
+    switch (*packet_type) {
+	case P_DREQ:
+	    fifo = &tileptr->service_manager.dreq_fifo_tbl[*sender];
+	    break;
+	case P_TREQ:
+	    fifo = &tileptr->service_manager.treq_fifo_tbl[*sender];
+	    break;
+	case P_DRESP:
+	    fifo = &tileptr->service_manager.dresp_fifo_tbl[*sender];
+	    break;
+	case P_TRESP:
+	    fifo = &tileptr->service_manager.tresp_fifo_tbl[*sender];
+	    break;
+	case P_DACK:
+	    fifo = &tileptr->service_manager.dack_fifo_tbl[*sender];
+	    break;
+    case P_RRDY:
+        fifo = &tileptr->service_manager.regrdy_fifo_tbl[*sender];
+        break; 
+	default:
+		cerr << "Only Data/Time Req/Resp supported\n";
+	};
+	return fifo;
+}
+
+Packet_Fifo_Table *getPacketFifoTable(int* packet_type, SBA::Tile* tileptr) {
+    Packet_Fifo_Table *fifo;
+    switch (*packet_type) {
+	case P_DREQ:
+	    fifo = &tileptr->service_manager.dreq_fifo_tbl;
+	    break;
+	case P_TREQ:
+	    fifo = &tileptr->service_manager.treq_fifo_tbl;
+	    break;
+	case P_DRESP:
+	    fifo = &tileptr->service_manager.dresp_fifo_tbl;
+	    break;
+	case P_TRESP:
+	    fifo = &tileptr->service_manager.tresp_fifo_tbl;
+	    break;
+	case P_DACK:
+	    fifo = &tileptr->service_manager.dack_fifo_tbl;
+	    break;
+    case P_RRDY:
+        fifo = &tileptr->service_manager.regrdy_fifo_tbl;
+        break; 
+	default:
+		cerr << "Only Data/Time Req/Resp supported\n";
+	};
+	return fifo;
+}
+
 void gmcfwaitforpacketsc_(
 		int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		int* packet_type, int* sender, int* npackets
@@ -121,32 +175,15 @@ is implemented as:
 	std::cout << "FORTRAN API C++ gmcfwaitforpacketsc_: Tile address (sanity): <" << tileptr->address <<">\n";
 #endif
     int pending_packets=*npackets;
-    Packet_Fifo alreadyReceived;
-    switch (*packet_type) {
-	case P_DREQ:
-	    alreadyReceived = tileptr->service_manager.dreq_fifo_tbl[*sender];
-	    break;
-	case P_TREQ:
-	    alreadyReceived = tileptr->service_manager.treq_fifo_tbl[*sender];
-	    break;
-	case P_DRESP:
-	    alreadyReceived = tileptr->service_manager.dresp_fifo_tbl[*sender];
-	    break;
-	case P_TRESP:
-	    alreadyReceived = tileptr->service_manager.tresp_fifo_tbl[*sender];
-	    break;
-	case P_DACK:
-	    alreadyReceived = tileptr->service_manager.dack_fifo_tbl[*sender];
-	    break;
-	}
+    Packet_Fifo *alreadyReceived = getPacketFifo(packet_type, sender, tileptr);
      
-    int packetsReceived = alreadyReceived.size();
+    int packetsReceived = alreadyReceived->size();
     while(packetsReceived > 0 && pending_packets > 0) {
-        SBA::Packet_t p = alreadyReceived.pop_front();
+        SBA::Packet_t p = alreadyReceived->pop_front();
         if (SBA::getPacket_type(p) == *packet_type && SBA::getReturn_to(p) == *sender) {
             --pending_packets;
         }    
-    	alreadyReceived.push_back(p);
+    	alreadyReceived->push_back(p);
         --packetsReceived;
 	}
 	while(pending_packets > 0) {
@@ -179,40 +216,11 @@ void gmcfshiftpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 	// this is defensive, so it's slow. And I don't know what to do if there is not packet ...
 	// TODO: I should add a status in all calls to evaluate success!
 	SBA::Packet_t  p;
-	switch (*packet_type) {
-	case P_DREQ:
-		if (tileptr->service_manager.dreq_fifo_tbl[*src_model_id].size()>0) {
-		p = tileptr->service_manager.dreq_fifo_tbl[*src_model_id].shift();
-		*fifo_empty = 1 - tileptr->service_manager.dreq_fifo_tbl[*src_model_id].size();
-		}
-		break;
-	case P_TREQ:
-		if (tileptr->service_manager.treq_fifo_tbl[*src_model_id].size()>0) {
-		p = tileptr->service_manager.treq_fifo_tbl[*src_model_id].shift();
-		*fifo_empty = 1 - tileptr->service_manager.treq_fifo_tbl[*src_model_id].size();
-		}
-		break;
-	case P_DRESP:
-		if (tileptr->service_manager.dresp_fifo_tbl[*src_model_id].size()>0) {
-		p = tileptr->service_manager.dresp_fifo_tbl[*src_model_id].shift();
-		*fifo_empty = 1 - tileptr->service_manager.dresp_fifo_tbl[*src_model_id].size();
-		}
-		break;
-	case P_TRESP:
-		if (tileptr->service_manager.tresp_fifo_tbl[*src_model_id].size()>0) {
-		p = tileptr->service_manager.tresp_fifo_tbl[*src_model_id].shift();
-		*fifo_empty = 1 - tileptr->service_manager.tresp_fifo_tbl[*src_model_id].size();
-		}
-		break;
-	case P_DACK:
-		if (tileptr->service_manager.dack_fifo_tbl[*src_model_id].size()>0) {
-		p = tileptr->service_manager.dack_fifo_tbl[*src_model_id].shift();
-		*fifo_empty = 1 - tileptr->service_manager.dack_fifo_tbl[*src_model_id].size();
-		}
-		break;
-	default:
-		cerr << "Only Data/Time Req/Resp supported\n";
-	};
+	Packet_Fifo* fifo = getPacketFifo(packet_type, src_model_id, tileptr);
+	if (fifo->size() > 0) {
+	    p = fifo->shift();
+	    *fifo_empty = 1 - fifo->size();
+	}
 	SBA::Header_t ph= SBA::getHeader(p);
 	 *destination = (int)SBA::getTo(ph);
 	 *source = (int)SBA::getReturn_to(ph);
@@ -230,7 +238,6 @@ void gmcfshiftpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 	 *data_ptr = (int64_t)SBA::getPayload_Word(p);
 
 }
-
 
 void gmcfpushpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		int* packet_type,
@@ -250,30 +257,9 @@ void gmcfpushpendingc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 
 	SBA::Header_t ph= SBA::mkHeader(*packet_type,*pre_post,0,1,*destination,*source,timestamp_data_id, *data_sz);
     SBA::Packet_t  p = SBA::mkPacket_new(ph,*data_ptr);
-
-	switch (*packet_type) {
-	case P_DREQ:
-		tileptr->service_manager.dreq_fifo_tbl[*source].push(p);
-		break;
-	case P_TREQ:
-		tileptr->service_manager.treq_fifo_tbl[*source].push(p);
-		break;
-	case P_DRESP:
-		tileptr->service_manager.dresp_fifo_tbl[*source].push(p);
-		break;
-	case P_TRESP:
-		tileptr->service_manager.tresp_fifo_tbl[*source].push(p);
-		break;
-	case P_DACK:
-		tileptr->service_manager.dack_fifo_tbl[*source].push(p);
-		break;
-	default:
-		cerr << "Only Data/Time Req/Resp supported\n";
-	};
-
+    Packet_Fifo* fifo = getPacketFifo(packet_type, source, tileptr);
+    fifo->push(p);
 }
-
-
 
 void gmcfsendarrayc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr,
 		int* data_id, int* source, int* destination, int* pre_post, int* time, int64_t* sz1d,
@@ -389,35 +375,10 @@ void gmcfcheckfifoc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr, int* source, int
 	std::cout << "FORTRAN API C++ gmcfcheckfifoc_: Tile address (sanity): <" << tileptr->address <<">\n";
 #endif
 	*has_packets=0;
-	switch (*packet_type) {
-	case P_DREQ:
-		if (tileptr->service_manager.dreq_fifo_tbl[*source].size()>0) {
-			*has_packets=1;
-		}
-		break;
-	case P_TREQ:
-		if (tileptr->service_manager.treq_fifo_tbl[*source].size()>0) {
-			*has_packets=1;
-		}
-		break;
-	case P_DRESP:
-		if (tileptr->service_manager.dresp_fifo_tbl[*source].size()>0) {
-			*has_packets=1;
-		}
-		break;
-	case P_TRESP:
-		if (tileptr->service_manager.tresp_fifo_tbl[*source].size()>0) {
-			*has_packets=1;
-		}
-		break;
-	case P_DACK:
-		if (tileptr->service_manager.dack_fifo_tbl[*source].size()>0) {
-			*has_packets=1;
-		}
-		break;
-	default:
-		cerr << "Only Data/Time Req/Resp supported\n";
-	};
+	Packet_Fifo* fifo = getPacketFifo(packet_type, source, tileptr);
+	if (fifo->size() > 0) {
+	    *has_packets = 1;
+	}
 }
 
 
@@ -430,50 +391,13 @@ void gmcfcheckfifosc_(int64_t* ivp_sysptr, int64_t* ivp_tileptr, int* packet_typ
 	std::cout << "FORTRAN API C++ gmcfcheckfifoc_: Tile address (sanity): <" << tileptr->address <<">\n";
 #endif
 	*has_packets=0;
-	switch (*packet_type) {
-	case P_DREQ:
-		for(auto iter = tileptr->service_manager.dreq_fifo_tbl.begin(); iter != tileptr->service_manager.dreq_fifo_tbl.end(); iter++) {
-			if (iter->second.size()>0) {
-				*has_packets=1;
-				break;
-			}
-		}
-		break;
-	case P_TREQ:
-		for(auto iter = tileptr->service_manager.treq_fifo_tbl.begin(); iter != tileptr->service_manager.treq_fifo_tbl.end(); iter++) {
-			if (iter->second.size()>0) {
-				*has_packets=1;
-				break;
-			}
-		}
-		break;
-	case P_DRESP:
-		for(auto iter = tileptr->service_manager.dresp_fifo_tbl.begin(); iter != tileptr->service_manager.dresp_fifo_tbl.end(); iter++) {
-			if (iter->second.size()>0) {
-				*has_packets=1;
-				break;
-			}
-		}
-		break;
-	case P_TRESP:
-		for(auto iter = tileptr->service_manager.tresp_fifo_tbl.begin(); iter != tileptr->service_manager.tresp_fifo_tbl.end(); iter++) {
-			if (iter->second.size()>0) {
-				*has_packets=1;
-				break;
-			}
-		}
-		break;
-	case P_DACK:
-		for(auto iter = tileptr->service_manager.dack_fifo_tbl.begin(); iter != tileptr->service_manager.dack_fifo_tbl.end(); iter++) {
-			if (iter->second.size()>0) {
-				*has_packets=1;
-				break;
-			}
-		}
-		break;
-	default:
-		cerr << "Only Data/Time Req/Resp supported\n";
-	};
+	Packet_Fifo_Table* fifo_table = getPacketFifoTable(packet_type, tileptr);
+	for (auto iter : *fifo_table) {
+	    if (iter.second.size() > 0) {
+	        *has_packets = 1;
+	        break;
+	    }
+	}
 }
 
 void gmcfgettileidc_(int64_t* ivp_tileptr, int* tile_id) {
@@ -538,12 +462,11 @@ void gmcfwriteregc_(int64_t* ivp_sysptr, int model_id, int regno, void* word) {
 //	pthread_cond_broadcast(&(sysptr->reg_conds.at(*model_id)));
 }
 
-void gmcfreadregc_(int64_t* ivp_sysptr, int model_id, int regno, void* word) {
+void gmcfreadregc_(int64_t* ivp_sysptr, int model_id, int regno, int64_t* word) {
 	int64_t ivp = *ivp_sysptr;
 	void* vp=(void*)ivp;
 	SBA::System* sysptr = (SBA::System*)vp;
-	uint64_t uword = sysptr->regs.at((model_id)*REGS_PER_THREAD+(regno));
-	word = (void*)uword;
+	*word = sysptr->regs.at((model_id)*REGS_PER_THREAD+(regno));
 }
 
 // WV:  Now this is ugly! I never wanted locks!
