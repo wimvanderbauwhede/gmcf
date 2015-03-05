@@ -3,8 +3,11 @@
 #include "SBA/System.h"
 #include "SBA/Tile.h"
 #include "SBA/Packet.h"
+#include "SBA/SpinLock.h"
 #include <cstring>
 #include <pthread.h>
+
+pthread_spinlock_t globalOpSpinLock;
 
 //#define GMCF_DEBUG
 /*
@@ -513,4 +516,14 @@ void gmcfwaitforregsc_(int64_t* ivp_sysptr,int64_t* ivp_tileptr,  int* model_id)
 	}
 }
 
+void gmcfinitglobalopspinlockc_() {
+    pthread_spin_init(&globalOpSpinLock, PTHREAD_PROCESS_SHARED);
+}
 
+void gmcflockglobalopspinlockc_() {
+    pthread_spin_lock(&globalOpSpinLock);
+}
+
+void gmcfunlockglobalopspinlockc_() {
+    pthread_spin_unlock(&globalOpSpinLock);
+}

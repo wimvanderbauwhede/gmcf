@@ -66,4 +66,8 @@ void gmcfunlockregc_(int64_t* ivp_sysptr, int model_id);
 
 void gmcfwaitforregsc_(int64_t* ivp_sysptr,int64_t* ivp_tileptr,  int* model_id);
 
+void gmcfinitglobalopspinlockc_();
+void gmcflockglobalopspinlockc_();
+void gmcfunlockglobalopspinlockc_();
+
 #endif // _GMCF_C_H_

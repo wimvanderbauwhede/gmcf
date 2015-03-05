@@ -570,4 +570,16 @@ contains
         call gmcfsendpacketc(sba_sys, sba_tile(model_id), model_id, destination, ACKDATA, set_id, PRE, -1 ,ONE, 0)
     end subroutine gmcfSendAck
 
+    subroutine gmcfInitGlobalOpSpinLock()
+        call gmcfinitglobalopspinlockc()
+    end subroutine    
+
+    subroutine gmcfLockGlobalOpSpinLock()
+        call gmcflockglobalopspinlockc()
+    end subroutine
+
+    subroutine gmcfUnlockGlobalOpSpinLock()
+        call gmcfunlockglobalopspinlockc()
+    end subroutine
+
 end module gmcfAPI
