@@ -1,8 +1,8 @@
-#include "../../../launcher.h" //multiple definition of `chip_array' if places in Schedule.h
+#include <cstdio>
+#include <pthread.h>
 #include "Schedule.h"
 #ifndef DARWIN
 #define _GNU_SOURCE
-#include <sched.h> // thread mapping
 #endif
 #define RESET_COLOR "\e[m"
 #define MAKE_PURPLE "\e[35m"
@@ -34,7 +34,7 @@ int appid = 0;
 
 	CPU_SET(target_core, &mask);
 	if (sched_setaffinity(0, sizeof(mask), &mask) !=0)
-		perror("sched_setaffinity");
+		fprintf(stderr, "sched_setaffinity\n");
 	return target_core;
  }
 
