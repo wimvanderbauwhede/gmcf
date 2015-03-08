@@ -780,16 +780,13 @@ class RX_Packet_Fifo {
 	private:
     	deque<Packet_t> packets;
     	pthread_mutex_t _RXlock;
-    	pthread_cond_t  _RXcond;
  	bool _status;
 	public:
  		RX_Packet_Fifo () :  _status(0) {
  			pthread_mutex_init(&_RXlock, NULL);
- 			pthread_cond_init(&_RXcond, NULL); // was 0
  		};
  		~RX_Packet_Fifo() {
  			pthread_mutex_destroy(&_RXlock);
- 			pthread_cond_destroy(&_RXcond);
  		}
  	bool status() {
  		//FIXME: make this blocking? Ashkan added lock & unlock
@@ -816,13 +813,11 @@ class RX_Packet_Fifo {
     void wait_for_packets() {
     // we want to block until the status is true
       // so status() will block until it can return true
-        pthread_mutex_lock(&_RXlock);
         while(packets.empty())
         {
-            pthread_cond_wait(&_RXcond, &_RXlock);
+            __asm__ __volatile__ ("" ::: "memory");
         }
         _status=1;
-        pthread_mutex_unlock(&_RXlock);
 #ifdef VERBOSE
     cout << "RX_Packet_Fifo: UNBLOCK on wait_for_packets()\n";
 #endif
@@ -875,12 +870,9 @@ class RX_Packet_Fifo {
 */
     void push_back(Packet_t const& data) {
         pthread_mutex_lock(&_RXlock);
-        const bool was_empty = (_status==0);
         packets.push_back(data);
         _status=1;
         pthread_mutex_unlock(&_RXlock);
-        if (was_empty)
-          pthread_cond_signal(&_RXcond); // only 1 thread should be waiting
       }
 
 /*    Packet_t front() {
@@ -894,15 +886,14 @@ class RX_Packet_Fifo {
     } Ashkan changed the pop_front to return a value.
 */
     Packet_t pop_front() {
-    	pthread_mutex_lock(&_RXlock);
 #ifdef VERBOSE
         cout << "RX_Packet_Fifo: pop_front()\n";
 #endif
         while(packets.empty()) { // this is for double check, it should not happen
         	cout << "RX_Packet_Fifo: Thread Blocked For Some Strange Reason!" << endl;
-        	pthread_cond_wait(&_RXcond, &_RXlock);
+        	__asm__ __volatile__ ("" ::: "memory");
         }
-
+        pthread_mutex_lock(&_RXlock);
         Packet_t t_elt=packets.front();
         packets.pop_front();
         if (packets.size() == 0) _status=0;
