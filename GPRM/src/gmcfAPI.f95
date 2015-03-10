@@ -581,5 +581,11 @@ contains
     subroutine gmcfUnlockGlobalOpSpinLock()
         call gmcfunlockglobalopspinlockc()
     end subroutine
+    
+    subroutine gmcfDoOp(model_id, value, tag, instances)
+        integer, intent(in) :: model_id, tag, instances
+        real(kind=4), intent(inout) :: value
+        call gmcfdoopc(model_id, value, tag, instances)
+    end subroutine
 
 end module gmcfAPI

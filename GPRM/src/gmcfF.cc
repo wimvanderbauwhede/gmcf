@@ -7,8 +7,6 @@
 #include <cstring>
 #include <pthread.h>
 
-pthread_spinlock_t globalOpSpinLock;
-
 //#define GMCF_DEBUG
 /*
 Source == Return_to 16
@@ -516,6 +514,12 @@ void gmcfwaitforregsc_(int64_t* ivp_sysptr,int64_t* ivp_tileptr,  int* model_id)
 	}
 }
 
+pthread_spinlock_t globalOpSpinLock;
+int stillToWrite = 0;
+int stillToRead = 0;
+float opResult = 0.0;
+int globalSumTag = 15, globalMaxTag = 16, globalMinTag = 17;
+
 void gmcfinitglobalopspinlockc_() {
     pthread_spin_init(&globalOpSpinLock, PTHREAD_PROCESS_SHARED);
 }
@@ -527,3 +531,51 @@ void gmcflockglobalopspinlockc_() {
 void gmcfunlockglobalopspinlockc_() {
     pthread_spin_unlock(&globalOpSpinLock);
 }
+
+void reduce(float *value, int *tag) {
+    pthread_spin_lock(&globalOpSpinLock);
+    if (*tag == globalSumTag) {
+        opResult += *value;
+    } else if (*tag == globalMaxTag) {
+        if (*value > opResult) {
+            opResult = *value;
+        }
+    } else if (*tag == globalMinTag) {
+        if (*value < opResult) {
+            opResult = *value;
+        }
+    }
+    stillToWrite--;
+    pthread_spin_unlock(&globalOpSpinLock);
+    while (stillToWrite != 0) {
+        __asm__ __volatile__ ("" ::: "memory");
+    }
+    *value = opResult;
+}
+
+void opAsMaster(float *value, int *tag, int *size) {
+    while (stillToRead != 0) {
+        __asm__ __volatile__ ("" ::: "memory");
+    }
+    pthread_spin_lock(&globalOpSpinLock);
+    stillToWrite = *size;
+    stillToRead = *size;
+    opResult = 0;
+    pthread_spin_unlock(&globalOpSpinLock);
+    reduce(value, tag);
+}
+
+void opAsNonMaster(float *value, int *tag) {
+    while (stillToWrite == 0) {
+        __asm__ __volatile__ ("" ::: "memory");
+    }
+    reduce(value, tag);
+}
+
+void gmcfdoopc_(int *id, float *value, int *tag, int *size) {
+    (*id == 1) ? opAsMaster(value, tag, size) : opAsNonMaster(value, tag);
+    pthread_spin_lock(&globalOpSpinLock);
+    stillToRead--;
+    pthread_spin_unlock(&globalOpSpinLock);
+}
+

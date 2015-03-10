@@ -70,4 +70,6 @@ void gmcfinitglobalopspinlockc_();
 void gmcflockglobalopspinlockc_();
 void gmcfunlockglobalopspinlockc_();
 
+void gmcfdoopc_(int *id, float *value, int *tag, int *size);
+
 #endif // _GMCF_C_H_
