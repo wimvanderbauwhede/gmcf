@@ -70,21 +70,25 @@ void Tile::run() {
 #ifdef VERBOSE
     cout << "Starting Tile " << service << "\n";
 #endif // VERBOSE
-    	thread_mapping(address);
+//    	thread_mapping(address);
+        cpu_set_t cpuset;
+        CPU_ZERO(&cpuset);
+        CPU_SET(service - 1, &cpuset);
         pthread_attr_init(&attr);
+        pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpuset);
         pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
         pthread_create(&tid, &attr, SBA::run_tile_loop, (void*)this);
         //cout << "Thread ID: " << pthread_self() << endl;
 #if 0
 // WV: Thread pinning, untested and unused, using Ashkan's approach instead
 #ifndef DARWIN
-		cpu_set_t cpuset;
-		CPU_ZERO(&cpuset);
-		CPU_SET(service, &cpuset);
-		int st = pthread_setaffinity_np(tid, sizeof(cpu_set_t), &cpuset);
-		if (st != 0) {
-		  std::cerr <<"Could not set affinity on thread " << tid << "\n";
-		}
+//		cpu_set_t cpuset;
+//		CPU_ZERO(&cpuset);
+//		CPU_SET(service, &cpuset);
+//		int st = pthread_setaffinity_np(tid, sizeof(cpu_set_t), &cpuset);
+//		if (st != 0) {
+//		  std::cerr <<"Could not set affinity on thread " << tid << "\n";
+//		}
 #endif
 #endif
         //printf("Thread ID:   %ld  Created on the Tile Adress: %d \n", tid, address);

@@ -27,6 +27,7 @@
 
 #if USE_THREADS==1
 #include <pthread.h>
+#include "SpinLock.h"
 #endif
 
 #include <iostream> // for cerr & cout!!
@@ -779,23 +780,20 @@ public:
 class RX_Packet_Fifo {
 	private:
     	deque<Packet_t> packets;
-    	pthread_mutex_t _RXlock;
-    	pthread_cond_t  _RXcond;
+    	pthread_spinlock_t _RXlock;
  	bool _status;
 	public:
  		RX_Packet_Fifo () :  _status(0) {
- 			pthread_mutex_init(&_RXlock, NULL);
- 			pthread_cond_init(&_RXcond, NULL); // was 0
+ 			pthread_spin_init(&_RXlock, PTHREAD_PROCESS_SHARED);
  		};
  		~RX_Packet_Fifo() {
- 			pthread_mutex_destroy(&_RXlock);
- 			pthread_cond_destroy(&_RXcond);
+ 			pthread_spin_destroy(&_RXlock);
  		}
  	bool status() {
  		//FIXME: make this blocking? Ashkan added lock & unlock
- 		pthread_mutex_lock(&_RXlock);
+ 		pthread_spin_lock(&_RXlock);
  		bool stat = _status;
- 		pthread_mutex_unlock(&_RXlock);
+ 		pthread_spin_unlock(&_RXlock);
      	return stat;
  	}
 
@@ -807,22 +805,20 @@ class RX_Packet_Fifo {
     bool has_packets() {
 // we want to block until the status is true
 // so status() will block until it can return true
- 	  pthread_mutex_lock(&_RXlock);
+ 	  pthread_spin_lock(&_RXlock);
  	 bool has = (_status==1);
- 	  pthread_mutex_unlock(&_RXlock);
+ 	  pthread_spin_unlock(&_RXlock);
  	  return(has);
     }
 
     void wait_for_packets() {
     // we want to block until the status is true
       // so status() will block until it can return true
-        pthread_mutex_lock(&_RXlock);
         while(packets.empty())
         {
-            pthread_cond_wait(&_RXcond, &_RXlock);
+            __asm__ __volatile__ ("" ::: "memory");
         }
         _status=1;
-        pthread_mutex_unlock(&_RXlock);
 #ifdef VERBOSE
     cout << "RX_Packet_Fifo: UNBLOCK on wait_for_packets()\n";
 #endif
@@ -874,13 +870,10 @@ class RX_Packet_Fifo {
     }
 */
     void push_back(Packet_t const& data) {
-        pthread_mutex_lock(&_RXlock);
-        const bool was_empty = (_status==0);
+        pthread_spin_lock(&_RXlock);
         packets.push_back(data);
         _status=1;
-        pthread_mutex_unlock(&_RXlock);
-        if (was_empty)
-          pthread_cond_signal(&_RXcond); // only 1 thread should be waiting
+        pthread_spin_unlock(&_RXlock);
       }
 
 /*    Packet_t front() {
@@ -894,19 +887,18 @@ class RX_Packet_Fifo {
     } Ashkan changed the pop_front to return a value.
 */
     Packet_t pop_front() {
-    	pthread_mutex_lock(&_RXlock);
 #ifdef VERBOSE
         cout << "RX_Packet_Fifo: pop_front()\n";
 #endif
         while(packets.empty()) { // this is for double check, it should not happen
         	cout << "RX_Packet_Fifo: Thread Blocked For Some Strange Reason!" << endl;
-        	pthread_cond_wait(&_RXcond, &_RXlock);
+        	__asm__ __volatile__ ("" ::: "memory");
         }
-
+        pthread_spin_lock(&_RXlock);
         Packet_t t_elt=packets.front();
         packets.pop_front();
         if (packets.size() == 0) _status=0;
-        pthread_mutex_unlock(&_RXlock);
+        pthread_spin_unlock(&_RXlock);
 
 #ifdef VERBOSE
         cout << "RX_Packet_Fifo: DONE pop_front() \n";
