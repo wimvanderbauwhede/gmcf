@@ -1,0 +1,27 @@
+# This file could be generated, or the list of model libraries could be a command line flag. Let's start with the latter.
+import os
+
+# g++-mp-4.9 -std=c++11 -o gmcfCoupler -Wall -DWORDSZ=64 -DUSE_THREADS=1 -I$PWD/gensrc -I$GMCF_DIR/GPRM/src -I$GMCF_DIR/GPRM/src/SBA  -L$PWD/lib -L$PWD/src/GMCF/Models $GMCF_DIR/GPRM/src/gmcfCoupler.cc -lgmcf -lgmcfAPI -lgfortran -lmodel1 -lmodel2 
+models=ARGUMENTS.get('programs','')
+xlibs=ARGUMENTS.get('extralibs','')
+modellibs=models.split(',')
+if modellibs == ['']:
+    print "Please specify the program name(s) with the 'programs=' flag "
+    exit()
+extralibs=xlibs.split(',')
+
+CXX=os.environ['CXX']
+GMCF_DIR=os.environ['GMCF_DIR']
+wd= os.environ['PWD']
+
+gmcfsources=[ GMCF_DIR+'/GPRM/src/gmcfCoupler.cc']
+LDFLAGS=['-pthread']
+FFLAGS=['-std=c++11','-Wall', '-DUSE_THREADS=1']
+CXXFLAGS=[ '-Wall',  '-std=c++11' ,  '-DWORDSZ=64', '-DUSE_THREADS=1']
+INCPATHS=[ GMCF_DIR+'/GPRM/src', GMCF_DIR+'/GPRM/src/SBA',  wd+'/gensrc']
+LIBPATHS=[wd+'/lib', wd+'/src/GMCF/Models']
+LIBS=[ 'gmcf']+modellibs+extralibs+['gmcfAPI', 'gmcf', 'gfortran']
+env=Environment(LINK=CXX,LINKFLAGS=LDFLAGS,CXX=CXX,CXXFLAGS=CXXFLAGS,CPPPATH=INCPATHS,LIBPATH=LIBPATHS)
+env.Program('gmcfCoupler',gmcfsources,LIBS=LIBS) 
+
+
