@@ -36,8 +36,8 @@ def build(wd,sources,flibs):
     boost=0
 
     # MACROS
-    wordsz=32
-    WORDSZ='WORDSZ='+str(wordsz)
+# wordsz=32
+    WORDSZ='WORDSZ=64' # +str(wordsz)
     GL='GANNET_LANGUAGE'
     NEW=''
     VERBOSE='' #V='VERBOSE'

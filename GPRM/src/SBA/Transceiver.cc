@@ -120,11 +120,9 @@ using namespace SBA;
                  }
  #else // DISTR
      format="C";
- #if WORDSZ==32
-         format="L";
- #else // WORDSZ==64
+
          format="Q";
- #endif // WORDSZ
+
      uint payload_length=getLength_p(packet);
                  packet_buf=packet.pack(format*(3+payload_length));
                   uint32_t host=calcDestIP(dest); // assumes base_ip

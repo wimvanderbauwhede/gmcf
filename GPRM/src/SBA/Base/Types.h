@@ -34,18 +34,13 @@ namespace SBA {
 		typedef int64_t Sint64;
         typedef int32_t Sint32;
         typedef unsigned long int MWord; // machine word size, needed for void* manipulation
-	#if WORDSZ==64
+
 		typedef Uint64 Word;
 		typedef Uint64 Label;
 		//typedef Sint64 Int; Ashkan changed it for Tilera
 		typedef Sint32 Int;
 		typedef double Float;
-	#elif WORDSZ==32
-		typedef Uint32 Word;
-		typedef Uint32 Label;
-		typedef Sint32 Int;
-		typedef float Float;
-	#endif
+
 		typedef Word Uint;
 } // SBA
 #endif // _BASE_TYPES_

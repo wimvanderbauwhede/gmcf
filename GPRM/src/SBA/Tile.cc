@@ -71,11 +71,15 @@ void Tile::run() {
     cout << "Starting Tile " << service << "\n";
 #endif // VERBOSE
 //    	thread_mapping(address);
+#ifndef DARWIN
         cpu_set_t cpuset;
         CPU_ZERO(&cpuset);
         CPU_SET(service - 1, &cpuset);
+#endif
         pthread_attr_init(&attr);
+#ifndef DARWIN
         pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpuset);
+#endif
         pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
         pthread_create(&tid, &attr, SBA::run_tile_loop, (void*)this);
         //cout << "Thread ID: " << pthread_self() << endl;

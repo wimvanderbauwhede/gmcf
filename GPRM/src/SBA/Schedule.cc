@@ -12,8 +12,10 @@
 int appid = 0;
 
  int thread_mapping(int address) {
+#ifndef DARWIN
 	cpu_set_t  mask;
 	CPU_ZERO(&mask);
+#endif
 	int target_core = address;
 /*
 	if(address==0) target_core=239;//address;
@@ -31,10 +33,11 @@ int appid = 0;
         else if(address<182) target_core=((address-2)*4+3)%240;
         else target_core=((address-2)*4+4)%240;
 */
-
+#ifndef DARWIN
 	CPU_SET(target_core, &mask);
 	if (sched_setaffinity(0, sizeof(mask), &mask) !=0)
 		fprintf(stderr, "sched_setaffinity\n");
+#endif
 	return target_core;
  }
 
