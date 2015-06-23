@@ -1,0 +1,319 @@
+#!/usr/bin/perl
+use v5.12;
+# gmcf-as: the GMCF Assembler
+
+use warnings; 
+use strict;
+use bytes;
+
+use Data::Dumper;
+
+use Getopt::Std;
+@ARGV or die "Please provide the input file name (.gas)\n";
+
+my %opts = ();
+getopts( 'vh', \%opts );
+
+if ( $opts{'h'} ) {
+	die "
+Gannet Assembler - generates Gannet bytecode for a GMCF program MODEL_NAME with NTH threads  
+$0 MODEL_NAME NTH
+\n";
+}
+
+my $v      = $opts{'v'} ? 1              : 0;
+my $b      =0;
+my $F      =  0;
+
+my $nbytes = 8;
+my $all1s =  18446744073709551616 ;
+my @bytes = ( 56, 48, 40, 32, 24, 16, 8, 0 ) ;
+
+my $NTH = $ARGV[1];
+my $model_name     = $ARGV[0];
+my $tdc_filename = $model_name;
+$tdc_filename =~ s/\.\w+//;
+$tdc_filename .= '.tdc64';
+
+my $yml_path = './src/GMCF/Task/'.$model_name.'.yml';
+open( OUT, ">$tdc_filename" );
+
+my $NPackets       = $NTH+2; # NTH threads code packets, a BEGIN code packet and a reference packet
+
+&write_npackets($NPackets);
+# BEGIN code packet
+my $dest=$NTH+1;
+my $hi = ($dest >> 8) & 0xFF;
+my $lo =  $dest & 0xFF;
+# HW1
+&write_bytes(0x02,0,0,$NPackets,$hi,$lo,0,0);
+# HW2  
+&write_bytes(0x02,0,0,0,0,0,0,0);
+# HW3
+my $snid = $NTH+1;
+&write_bytes(0x40, 0x01, 0x00, 0x01, $snid, 0x02, 0x01, 0x01); # lib id = 2, class id = 1, opcode = 1
+
+# Service symbol
+my $nargs = $NTH;
+&write_bytes(0x00, 0x01,0x00,$nargs,$snid,0x02,0x01,0x01); # -- service 2 / 3.2.1.1 # This is the "begin" service, with $NTH arguments
+
+# Here come the $nargs 
+for my $i (1 .. $nargs) {
+    my $refid = $i+1;
+ &write_bytes(0x40, 0x01, 0x00,$refid, $i, 0x01, 0x20, $i); # -- reference !2! / 1.1.32.1 # This is model 1
+ }
+
+# A packet per thread
+ 
+for my $j (1 .. $NTH) {
+my $dest=$j;
+my $hi = ($dest >> 8) & 0xFF;
+my $lo =  $dest & 0xFF;    
+# HW1
+&write_bytes(0x02,0,0,$NPackets,$hi,$lo,0,0);
+# HW2  
+&write_bytes(0x02,0,0,0,0,0,0,0);
+# HW3
+my $ref = $j+1;
+&write_bytes(0x40, 0x01, 0x00, $ref, $j, 0x01, 0x20,$j); # lib id = 2, class id = 1, opcode = 1
+# Service symbol
+&write_bytes(0x00, 0x01,0x00,0x01,$j,0x01,0x20,$j); # -- service 2 / 3.2.1.1 # This is the "begin" service, with $NTH arguments
+# A number
+&write_bytes(0x62, 0x41, 0x00, 0x00, 0x00, 0x00, 0x00, $j); #-- constant $j;    
+}
+
+
+# This is the packet sent to BEGIN to start everything
+ &write_bytes(0x03, 0x00, 0x00, 0x01, $hi, $lo, 0x00, 0x00 ); #-- pt3 1 word to 3 ret 0
+ &write_bytes(0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 );
+ &write_bytes(0x40, 0x01, 0x00, 0x01, $snid, 0x02, 0x01, 0x01 ); # -- reference  !1! / 3.2.1.1
+#----
+ &write_bytes(0x40, 0x01, 0x00, 0x01, $snid, 0x02, 0x01, 0x01); # -- reference !1! / 3.2.1.1
+
+&write_str($yml_path);
+
+close OUT;
+
+
+sub write_npackets {
+	my $npackets = shift;
+	print "$npackets\n" if $v;
+	my $npl   = ( $npackets % 256 );
+	my $nph   = ( $npackets - $npl ) / 256;
+	my @bytes = ();
+
+    @bytes = ( $nph, $npl, 0, 0, 0, 0, 0, 0 );
+
+	&write_bytes(@bytes);
+}
+
+
+sub write_num {
+	my $num = shift;
+	print "$num\n" if $v;	
+	my	@bytes = &int_to_bytes($num);
+	&write_bytes(@bytes);
+}
+
+sub write_str {
+	my $str = shift;
+	print "$str\n" if $v;
+
+	# we assume pure ASCII 8-bit, so a character is a byte
+	# however, I wonder about the \0 byte, I don't want it
+	my @bytes = &str_to_bytes($str);
+
+	my @bytes8 = ();
+	for my $b (@bytes) {
+	    push @bytes8, $b;
+	    if (@bytes8 == 8) {
+	       &write_bytes(@bytes8);
+	       @bytes8=();
+	    }
+	}
+}
+
+
+sub write_bytes {
+	my @numbytes = @_;
+	print join( ':', @numbytes ), "\n" if $b;
+	print OUT pack( "CCCCCCCC", @numbytes );
+
+	#for my $nb (@numbytes) {
+	#    syswrite( OUT, chr($nb),1);
+	#}
+}
+
+# -----------------------------------------------------------------------------
+# Take a number, pack as IEEE double-precision floating point, unpack as 64-bit unsigned int
+sub float_to_byteword {
+	my $num = $_[0];
+	my $flt = 0;
+	
+		my @fltl = unpack( 'Q', pack( "D", ($num) ) );
+		$flt = shift @fltl;
+	
+	return $flt;
+}
+
+
+############################################################################
+
+
+sub int_to_bytes {
+	my $n        = $_[0];
+	my @numbytes = ();
+	if ( $n > 0 ) {
+		@numbytes = map( { ( $n & ( 255 << $_ ) ) >> $_ } @bytes );
+	}
+	elsif ( $n == 0 ) {
+		@numbytes = ( 0, 0, 0, 0 );
+	}
+	else {
+		@numbytes = map { ( ( $all1s + $n ) & ( 255 << $_ ) ) >> $_ } @bytes;
+	}
+	return @numbytes;
+}
+
+sub flt_to_bytes {
+	my $x    = $_[0];
+	my $fltw = &float_to_byteword($x);
+	return reverse( int_to_bytes($fltw) );    # WHY reverse?
+}
+
+sub str_to_bytes {
+	my $str    = $_[0];
+	my @bytes  = map { ord($_) } split('',$str);
+	
+	my $nnulls = 8 - (scalar @bytes) % 8;
+
+	if ( $nnulls > 0 ) {
+		return ( @bytes, split( '', 0 x $nnulls ) );
+	}
+	else {
+		return @bytes;
+	}
+}
+
+
+
+
+=head1 NAME
+
+GMCF Assembler
+
+=head1 SYNOPSYS
+
+The Gannet Assembler reads in a text file with the following structure:
+
+	NPackets: an integer
+	packet1: Packet Header, Packet Payload
+	packet2
+	...
+
+=head2 Comments and blank lines
+
+Any line starting with =,# or -- is a comment.
+Blank lines are skipped
+Block comments are in Haskell style: {- -} or Ruby style: =begin =end
+
+=head2 Packet Header
+
+The Packet Header consists of 3 words
+
+=head3 Header Word 1
+
+    # Header Word1: 8 | 5|3 | 16 | 16 | 16
+
+    HW1 ::=    Type:Prio:Redir:Length:To:Return_to
+    
+    Type ::= subtask|code
+    Prio ::= 0..31
+    Redir ::= 0..7
+    Length ::= uint16
+    To ::= Address | Name
+    Return_to ::= Address | Name
+    
+    Address ::= uint16
+    Name ::= string
+    
+=head3 Header Word 2
+
+    HW2 ::=  Redir==1 ? Sent_to : Length==0? ExtLength: 0
+    
+    Sent_to ::= Symbol
+    ExtLength ::= uint32
+    
+=head3 Header Word 3
+
+    HW3 ::= Return_as
+    
+    Return_as ::= Symbol
+    
+=head2 Packet Payload
+
+As we're only dealing with code or subtask packets, the structure is always:
+
+    Service Symbol (opcode)
+    Symbol1 (operands)
+    Symbol2
+    ...
+    
+=head3 Symbols
+
+# Symbol: 3|1|1|1|2 | 16 | 8
+
+    Symbol ::= Kind:Datatype:Ext:Quoted:Task:Subtask:Name
+    
+=head3 Extended Symbol
+
+If Ext==1, the Subtask field indicates the number of Extended Symbols
+
+    Extended Symbol ::= uint32
+            
+=head1 EXAMPLE
+
+    NPackets: 3
+    ========
+    subtask:0:0:4:alu:gateway
+    0:8:0:0:0:0:0
+    R:1:0:0:1:1:alu
+    ------------
+    S:4:0:0:1:1:/
+    R:1:0:0:1:2:alu
+    B:1:1:0:1:1:0
+    -3.2
+    
+    ========
+    code:0:0:4:alu:gateway
+    0:8:0:0:0:0:0
+    R:1:0:0:1:2:alu
+    ------------
+    S:4:0:0:1:2:*
+    B:0:1:0:1:1:0
+    2
+    R:1:0:0:1:3:alu
+    
+    ========
+    code:0:0:7:alu:gateway
+    0:8:0:0:0:0:0
+    R:1:0:0:1:3:alu
+    ------------
+    S:4:0:0:1:3:+
+    B:1:1:0:1:1:0
+    -4.2
+    B:0:1:0:1:1:0
+    -2
+    B:0:1:0:1:1:0
+    3
+    
+=head1 LIMITATIONS
+
+We parse top-down, memoryless.
+The line matching C</^\s*NPackets:(\d+)/> provides NPackets
+Lines without C<:> are considered extended symbols, so either numbers or strings
+Other lines are either Symbols or the first Header Word. The latter is distinguished by the keywords C<code> or C<Subtask>
+The assembler does not do any checks on the "meaning" of the code, so it's up to the programmer to make sure that the packet and symbols structure makes sense.
+
+=cut
+
