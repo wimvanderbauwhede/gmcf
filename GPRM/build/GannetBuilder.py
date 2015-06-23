@@ -229,14 +229,14 @@ def build(wd,sources,flibs):
         if switch != '':
             SWITCHES+='-D'+switch+' '
 
-    GANNET_DIR=os.environ["GANNET_DIR"]
-    print "GANNET_DIR:"+GANNET_DIR
+    GMCF_DIR=os.environ["GMCF_DIR"]
+    print "GMCF_DIR:"+GMCF_DIR
  			
     bin='gmcfCoupler'
     if LIB:
-       sources.append(GANNET_DIR+'/GPRM/src/gmcf.cc')
+       sources.append(GMCF_DIR+'/GPRM/src/gmcf.cc')
     else:
-       sources.append(GANNET_DIR+'/GPRM/src/gmcfCoupler.cc')
+       sources.append(GMCF_DIR+'/GPRM/src/gmcfCoupler.cc')
     #------------------------------------------------------------------------------
     CXX = os.environ['CXX']
     gcc_version = os.popen(CXX+' -dumpversion').read().rstrip("\n\r")
@@ -255,7 +255,7 @@ def build(wd,sources,flibs):
         cxx='i686-pc-linux-gnu-g++'
 
     env = Environment(variables = opts, CXX = cxx, CXXFLAGS = FLAGS+SWITCHES)
-#    env.VariantDir(wd+'build/',GANNET_DIR+'/GPRM/build/', duplicate=0)    	
+#    env.VariantDir(wd+'build/',GMCF_DIR+'/GPRM/build/', duplicate=0)    	
 #   Help(opts.GenerateHelpText(env))
     if H==1:
         print(opts.GenerateHelpText(env))
@@ -279,7 +279,7 @@ def build(wd,sources,flibs):
         libs+=['pthread']
 
 
-    INCpaths=[wd+'/gensrc/',wd+'/gensrc/GMCF/Models/',wd+'/src/','.','../',GANNET_DIR+'/GPRM/src/SBA/',GANNET_DIR+'/GPRM/src/']
+    INCpaths=[wd+'/gensrc/',wd+'/gensrc/GMCF/Models/',wd+'/src/','.','../',GMCF_DIR+'/GPRM/src/SBA/',GMCF_DIR+'/GPRM/src/']
     LIBpaths=[wd+'/gensrc/GMCF/Models/']
 
     if OSX==1:

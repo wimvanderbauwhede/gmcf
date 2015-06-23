@@ -164,7 +164,10 @@ main =do
                     do
                     let
                         packets = packetize symboltree ctxt numeric
-                        padding = take (c_WORDSZ - ((length ymlfile) `mod` c_WORDSZ)) (repeat '\0')                   
+--                        padding = take (c_WORDSZ - ((length ymlfile) `mod` c_WORDSZ)) (repeat '\0')
+                        -- 64 - (len % 64), but is should be 8 
+                        padding = take ((c_WORDSZ `div` 8) - ((length ymlfile) `mod` (c_WORDSZ `div` 8))) (repeat '\0') 
+                    let
                         path_padding :: String
                         path_padding = (ymlfile ++ padding)
                     BSC8.writeFile outfile (BSC8.append (gplToWords packets numeric) (BSC8.pack path_padding) )

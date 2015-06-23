@@ -3,7 +3,7 @@ import os
 import platform
 
 CXX=os.environ['CXX']
-GANNET_DIR=os.environ['GANNET_DIR']
+GMCF_DIR=os.environ['GMCF_DIR']
 wd= os.environ['PWD']
 os = platform.uname()[0]
 
@@ -16,7 +16,7 @@ LDFLAGS=LDFLAGS+['-pthread'] # ['-fconvert=big-endian','-frecord-marker=4',]
 
 FFLAGS= [] # ['-fconvert=big-endian','-frecord-marker=4']
 CXXFLAGS=[ '-Wall',  '-std=c++11' ,  '-DWORDSZ=64', '-DUSE_THREADS=1']
-INCPATHS=[ GANNET_DIR+'/GPRM/src', GANNET_DIR+'/GPRM/src/SBA',  wd+'/gensrc']
+INCPATHS=[ GMCF_DIR+'/GPRM/src', GMCF_DIR+'/GPRM/src/SBA',  wd+'/gensrc']
 
 wrf_libs=Split("""
 wrflib

@@ -29,10 +29,10 @@ TO_YAML=0
 VERBOSE=1
 USE_THREADS=0
 
-if ENV.has_key?('GANNET_DIR')
-    $LOAD_PATH.push("#{ENV['GANNET_DIR']}/Garnet/")
+if ENV.has_key?('GMCF_DIR')
+    $LOAD_PATH.push("#{ENV['GMCF_DIR']}/Garnet/")
 else    
-    raise "Please set the GANNET_DIR environment variable: declare -x GANNET_DIR=your_gannet_dir"
+    raise "Please set the GMCF_DIR environment variable: declare -x GMCF_DIR=your_gannet_dir"
 end
 
 help= <<EOH

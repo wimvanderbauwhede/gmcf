@@ -30,6 +30,8 @@ my $all1s =  18446744073709551616 ;
 my @bytes = ( 56, 48, 40, 32, 24, 16, 8, 0 ) ;
 
 my $NTH = $ARGV[1];
+if ($NTH > 255) {die "Sorry, max. 255 threads supported at the moment\n";}
+
 my $model_name     = $ARGV[0];
 my $tdc_filename = $model_name;
 $tdc_filename =~ s/\.\w+//;
@@ -38,46 +40,47 @@ $tdc_filename .= '.tdc64';
 my $yml_path = './src/GMCF/Task/'.$model_name.'.yml';
 open( OUT, ">$tdc_filename" );
 
+# Number of packets
 my $NPackets       = $NTH+2; # NTH threads code packets, a BEGIN code packet and a reference packet
-
 &write_npackets($NPackets);
-# BEGIN code packet
+
+## BEGIN code packet
 my $dest=$NTH+1;
 my $hi = ($dest >> 8) & 0xFF;
 my $lo =  $dest & 0xFF;
 # HW1
-&write_bytes(0x02,0,0,$NPackets,$hi,$lo,0,0);
+&write_bytes(0x02,0,0,$NTH+1,$hi,$lo,0,0);
 # HW2  
 &write_bytes(0x02,0,0,0,0,0,0,0);
 # HW3
 my $snid = $NTH+1;
 &write_bytes(0x40, 0x01, 0x00, 0x01, $snid, 0x02, 0x01, 0x01); # lib id = 2, class id = 1, opcode = 1
-
+# --
 # Service symbol
 my $nargs = $NTH;
 &write_bytes(0x00, 0x01,0x00,$nargs,$snid,0x02,0x01,0x01); # -- service 2 / 3.2.1.1 # This is the "begin" service, with $NTH arguments
 
-# Here come the $nargs 
+# Here come the $nargs symboles
 for my $i (1 .. $nargs) {
     my $refid = $i+1;
- &write_bytes(0x40, 0x01, 0x00,$refid, $i, 0x01, 0x20, $i); # -- reference !2! / 1.1.32.1 # This is model 1
+ &write_bytes(0x40, 0x01, 0x00,$refid, $i, 0x01, 0x20, 0x01); # -- reference !2! / 1.1.32.1 # This is model 1
  }
-
-# A packet per thread
+# ----
+## A packet per thread, each of these is e.g. (model1 '1), so 2 symbols
  
 for my $j (1 .. $NTH) {
 my $dest=$j;
 my $hi = ($dest >> 8) & 0xFF;
 my $lo =  $dest & 0xFF;    
 # HW1
-&write_bytes(0x02,0,0,$NPackets,$hi,$lo,0,0);
+&write_bytes(0x02,0,0,0x02,$hi,$lo,0,0);
 # HW2  
 &write_bytes(0x02,0,0,0,0,0,0,0);
 # HW3
 my $ref = $j+1;
-&write_bytes(0x40, 0x01, 0x00, $ref, $j, 0x01, 0x20,$j); # lib id = 2, class id = 1, opcode = 1
+&write_bytes(0x40, 0x01, 0x00, $ref, $j, 0x01, 0x20,0x01); # lib id = 2, class id = 1, opcode = 1
 # Service symbol
-&write_bytes(0x00, 0x01,0x00,0x01,$j,0x01,0x20,$j); # -- service 2 / 3.2.1.1 # This is the "begin" service, with $NTH arguments
+&write_bytes(0x00, 0x01,0x00,0x01,$j,0x01,0x20,0x01); # -- service 2 / 3.2.1.1 # This is the "begin" service, with $NTH arguments
 # A number
 &write_bytes(0x62, 0x41, 0x00, 0x00, 0x00, 0x00, 0x00, $j); #-- constant $j;    
 }

@@ -1,4 +1,4 @@
-Assuming ghci is started in $GANNET_DIR/t/GannetVMTests
+Assuming ghci is started in $GMCF_DIR/t/GannetVMTests
 
 :cd ../../Compiler
 :set -cpp -optP-DWORDSZ=64

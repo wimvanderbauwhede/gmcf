@@ -399,7 +399,7 @@ const Word FS_Return_to=0;
 const Word FS_Send_to[4]={0ULL,16ULL,32ULL,48ULL};
 
 // For ACC/BUFFER/CACHE
-const Word F_NArgs=0xFF ;// 8 BITS;
+const Word F_NArgs=0x3FF ;// 10 BITS;
 const Word FW_NArgs = F_NArgs;
 
 const Word FW_Reg=0xF ;// 4 BITS;

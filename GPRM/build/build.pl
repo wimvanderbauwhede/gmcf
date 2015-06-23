@@ -10,7 +10,7 @@ use YAML::Syck;
 use Data::Dumper;
 use WrapperGenerator;
 
-my $gannet_dir = $ENV{GANNET_DIR};
+my $gannet_dir = $ENV{GMCF_DIR};
 my $sba_dir=cwd();
 my $platform = 'macosx';
 my $os=`uname`;

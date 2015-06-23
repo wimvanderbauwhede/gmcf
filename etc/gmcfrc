@@ -1,0 +1,58 @@
+#GMCF_DIR=`pwd`
+OS=`uname -s`
+# SystemC paths, required for the hardware model
+SYSTEMC="/opt/systemc-2.2"
+SYSTEMC_INC="$SYSTEMC/include"
+SYSTEMC_TLM="$SYSTEMC_INC/tlm"
+if [ $OS == 'Linux' ]; then
+    SYSTEMC_LIB="$SYSTEMC/lib-linux"
+elif [ $OS == 'Darwin' ]; then
+    SYSTEMC_LIB="$SYSTEMC/lib-macosx"
+else
+    echo "Sorry, SystemC is not supported on $OS."
+fi    
+# Cross-compilation for VM (Linux)
+# Only required to deploy the VM on a Virtex FPGA
+if [ $OS == 'Linux' ]; then
+    GANNET_XC_PATH="$HOME/opt/crosstool/gcc-3.4.4-glibc-2.3.3/powerpc-405-linux-gnu/bin"
+#else
+#    echo "Sorry, cross-compilation for PPC is not supported on $OS."
+fi        
+# LLVM (Linux)
+# Not required, simply an alternative to gcc
+if [ $OS == 'Linux' ]; then
+    GANNET_LLVM_PATH="/home/wim/ARCHS/llvm-gcc/install/bin"
+elif [ $OS == 'Darwin' ]; then    
+    GANNET_LLVM_PATH="/home/wim/ARCHS/llvm-gcc/install/bin"
+else
+    echo "Sorry, no LLVM support on $OS."
+fi
+# C++ Boost Libraries (Linux)
+# Currently, Gannet does not use boost, but the option is there in case
+BOOST_INC="/usr/include/boost"
+BOOST_LIB="boost_program_options"
+
+# Gambit Scheme (required only for the Scheme backend Skua)
+if [ $OS == 'Linux' ]; then
+    GAMBIT_PATH="/usr/local/Gambit-C/current"
+elif [ $OS == 'Darwin' ]; then  
+    GAMBIT_PATH="/Library/Gambit-C/current"
+else
+    echo "Sorry, no Gambit-C on $OS."
+fi
+# Pugs  (required only for the Perl6 backend Puffin)
+if [ $OS == 'Linux' ]; then
+    PUGS_PATH="$HOME/bin"
+elif [ $OS == 'Darwin' ]; then  
+    PUGS_PATH="$HOME/bin"
+else
+    echo "Sorry, no Pugs on $OS."
+fi
+
+PATH="$PATH:$GMCF_DIR/bin:$GMCF_DIR/GPRM/build:$PUGS_PATH"
+PYTHONPATH="$PYTHONPATH:$GMCF_DIR/GPRM/build/"
+PERL5LIB="$PERL5LIB:$GMCF_DIR/GPRM/build"
+
+export SYSTEMC SYSTEMC_INC SYSTEMC_TLM SYSTEMC_LIB GANNET_XC_PATH GANNET_LLVM_PATH BOOST_INC BOOST_LIB GAMBIT_PATH PATH PYTHON_PATH PERL5LIB
+
+

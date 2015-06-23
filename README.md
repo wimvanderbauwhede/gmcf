@@ -44,14 +44,14 @@ The Fortran API is just a wrapper around the C++ API. This API is not really int
 
 ## Installation
 
-- You need to set the environment variable `$GANNET_DIR` to the path of the gmcf folder, e.g. `$HOME/gmcf`.
+- You need to set the environment variable `$GMCF_DIR` to the path of the gmcf folder, e.g. `$HOME/gmcf`.
 - In the gmcf folder, you need to source the etc/gannetrc file: `. etc/gannetrc` (or put it in your `.bashrc` or equivalent)
 - You need to set the $CC, $FC and $CXX environment variables for the C, Fortran and C++ compilers.
 - If you use OpenCL, you need to install (my OclWrapper library)[https://github.com/wimvanderbauwhede/OpenCLIntegration].
 
 - To build the model1/model2 producer-consumer coupling example:
 
-  $ cd $GANNET_DIR/t/ModelCoupling
+  $ cd $GMCF_DIR/t/ModelCoupling
   $ ./build_gmcf
 
 - And to clean:
@@ -60,19 +60,19 @@ The Fortran API is just a wrapper around the C++ API. This API is not really int
 
 **NOTE: The WRF/LES sources are not included, and need to be patched.**
 
-- Get WRFV3.4 from http://www2.mmm.ucar.edu/wrf/users/wrfv3.4/updates-3.4.html. Put it anywhere but _not_ in `$GANNET_DIR/t/ModelCoupling/src/WRFV3.4_gmcf`.
-- Replace the original files with the modified ones from the GMCF repository, and move the folder to `$GANNET_DIR/t/ModelCoupling/src/WRFV3.4_gmcf`.
-- Do the same for LES: get it from https://github.com/wimvanderbauwhede/LES, replace the original files with the modified ones from the GMCF repository and put it under `$GANNET_DIR/t/ModelCoupling/src/LES_F95` or  `$GANNET_DIR/t/ModelCoupling/src/LES_OCL` for the OpenCL version.
+- Get WRFV3.4 from http://www2.mmm.ucar.edu/wrf/users/wrfv3.4/updates-3.4.html. Put it anywhere but _not_ in `$GMCF_DIR/t/ModelCoupling/src/WRFV3.4_gmcf`.
+- Replace the original files with the modified ones from the GMCF repository, and move the folder to `$GMCF_DIR/t/ModelCoupling/src/WRFV3.4_gmcf`.
+- Do the same for LES: get it from https://github.com/wimvanderbauwhede/LES, replace the original files with the modified ones from the GMCF repository and put it under `$GMCF_DIR/t/ModelCoupling/src/LES_F95` or  `$GMCF_DIR/t/ModelCoupling/src/LES_OCL` for the OpenCL version.
 - For the OpenCL version you also need to install my [OpenCL wrapper library](https://github.com/wimvanderbauwhede/OpenCLIntegration), and you need to symlink the `OpenCL` folder in `LES_OCL` into `ModelCoupling`:
 
     $ pwd
-    $GANNET_DIR/t/ModelCoupling
+    $GMCF_DIR/t/ModelCoupling
 
     $ ln -s src/LES_OCL/OpenCL .
 
 - To build the WRF/LES producer-consumer coupling example:
 
-    $ cd $GANNET_DIR/t/ModelCoupling
+    $ cd $GMCF_DIR/t/ModelCoupling
     $ ./build_gmcf_wrf_les
 
 - And to clean:
@@ -97,7 +97,7 @@ I will write this out more in full, but in short:
 - Change your toplevel program into a subroutine, have a look at `t/ModelCoupling/src/GMCF/Models/model1.f95` as an example. NOTE: at the moment you  _must_ call the subroutine `program_`_your_name_, and _your_name_ will be the name of your model.
 - Create the API module for your model, again have a look at `t/ModelCoupling/src/GMCF/Models/gmcfAPImodel1.f95`.
 - Use the API in your model.
-- Change your build script so that, instead of building a program, it builds a static library containing the toplevel subroutine, and installs it in `$GANNET_DIR/t/ModelCoupling/src/GMCF/Models`.
+- Change your build script so that, instead of building a program, it builds a static library containing the toplevel subroutine, and installs it in `$GMCF_DIR/t/ModelCoupling/src/GMCF/Models`.
 - Change `t/ModelCoupling/Sconstruct` for your models, mainly adding the libraries required by your models.
 - Finally, copy the file `t/ModelCoupling/src/GMCF/Task/GMCF.yml or just edit it: under 'Models:', change the name to the name of your model (_your_name_).
 

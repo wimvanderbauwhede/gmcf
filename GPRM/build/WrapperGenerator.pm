@@ -6,7 +6,7 @@ use strict;
 our $V=1;
 our $gen_src_path='gensrc';
 our $src_path='src/GMCF/Models';
-our $templ_path=$ENV{GANNET_DIR}.'/GPRM/build';
+our $templ_path=$ENV{GMCF_DIR}.'/GPRM/build';
 
 our $libname;
 our $nclasses;

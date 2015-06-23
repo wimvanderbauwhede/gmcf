@@ -49,7 +49,7 @@ open( OUT, ">$tdc_filename" );
 use YAML::Syck;
 
 my $path =
-  ( exists $ENV{'GANNET_DIR'} ) ? $ENV{'GANNET_DIR'} : '.';
+  ( exists $ENV{'GMCF_DIR'} ) ? $ENV{'GMCF_DIR'} : '.';
 if (not -d "$path/Assembler/") {
 	mkdir "$path/Assembler/";
 }
@@ -311,7 +311,7 @@ sub write_str {
 	print "$str\n" if $v;
 
 	# we assume pure ASCII 8-bit, so a character is a byte
-	# however, I wonder about the \0 byte, I don't want it
+	#ï¿½however, I wonder about the \0 byte, I don't want it
 	my @bytes = &str_to_bytes($str);
 	&write_bytes(@bytes);
 }

@@ -88,13 +88,13 @@ module Gannet.SBA.ConfigReader (
 import Data.Yaml.Syck
 import Data.Char (toLower)
 import System.IO.Unsafe
--- for $GANNET_DIR
+-- for $GMCF_DIR
 import System.Environment
 import System.Directory
 {-
 First we read the Libraries field. 
 Based on the Library names we need to find the corresponding config files,
-so we somehow need to access $GANNET_DIR
+so we somehow need to access $GMCF_DIR
 
 
  
@@ -158,7 +158,7 @@ readSBAConfigLib libname localpath =
 
 -- This version stays in the IO monad rather than using unsafePerformIO
 findLibConfigPath libname localpath = do
-    evGANNET_DIR <- getEnv "GANNET_DIR"
+    evGMCF_DIR <- getEnv "GMCF_DIR"
     isLocal <- doesFileExist $ localpath++"/Gannet/"++libname++".yml"
     isLocalNew <- doesFileExist $ "./src/GPRM/Kernel/"++libname++".yml"
     isLocalNewGen <- doesFileExist $ "./gensrc/"++libname++".yml"
@@ -171,21 +171,21 @@ findLibConfigPath libname localpath = do
             else if isLocalNewGen
                 then return $ "./gensrc/"++libname++".yml" 
                 else do
-                    isGlobal <- doesFileExist $ evGANNET_DIR++"/GPRM/src/SBA/Base/"++libname++".yml"
+                    isGlobal <- doesFileExist $ evGMCF_DIR++"/GPRM/src/SBA/Base/"++libname++".yml"
                     if isGlobal
-                        then return $ evGANNET_DIR++"/GPRM/src/SBA/Base/"++libname++".yml"
+                        then return $ evGMCF_DIR++"/GPRM/src/SBA/Base/"++libname++".yml"
                         else error $ "findLibConfigPath: Can't find Library Config file "++libname++".yml, looked in:\n"++(unlines
-                                [localpath++"/Gannet/","./src/GPRM/Kernel/","./gensrc/",evGANNET_DIR++"/GPRM/src/SBA/Base/"])
+                                [localpath++"/Gannet/","./src/GPRM/Kernel/","./gensrc/",evGMCF_DIR++"/GPRM/src/SBA/Base/"])
                     
 --findLibConfigPath libname  =
 --    let
---        evGANNET_DIR = unsafePerformIO $ getEnv "GANNET_DIR"
+--        evGMCF_DIR = unsafePerformIO $ getEnv "GMCF_DIR"
 --    in
 --        if unsafePerformIO $ doesFileExist $ "./Gannet/"++libname++".yml" 
 --            then "./Gannet/"++libname++".yml" 
 --            else
---                if unsafePerformIO $ doesFileExist $ evGANNET_DIR++"/SystemConfigurations/"++libname++".yml"
---                    then evGANNET_DIR++"/SystemConfigurations/"++libname++".yml"
+--                if unsafePerformIO $ doesFileExist $ evGMCF_DIR++"/SystemConfigurations/"++libname++".yml"
+--                    then evGMCF_DIR++"/SystemConfigurations/"++libname++".yml"
 --                    else error $ "findLibConfigPath: Can't find Library Config file "++libname++".yml\n"
     
 readSBAConfigNew_OLD cfgfile =

@@ -10,7 +10,7 @@
 import os
 from GannetBuilder import build
 
-GANNET_DIR=os.environ["GANNET_DIR"]
+GMCF_DIR=os.environ["GMCF_DIR"]
 wd=ARGUMENTS.get('wd','.')
 
 def isLocal(libname):
@@ -48,7 +48,7 @@ Runtime.cc
 Timings.cc
 """)
 
-sbasources = [GANNET_DIR+'/GannetVM/src/SBA/'+s for s in sbasources]
+sbasources = [GMCF_DIR+'/GannetVM/src/SBA/'+s for s in sbasources]
 
 build(wd,(sclibs+sbasources))
 

@@ -13,7 +13,7 @@ use Getopt::Std;
 #-e: export to text format BROKEN
 
 # -----------------------------------------------------------------------------
-use lib '.', '..', $ENV{'GANNET_DIR'};
+use lib '.', '..', $ENV{'GMCF_DIR'};
 use GannetPP::Config qw( $verbose $basedir );
 use GannetPP::Expander qw( gen_expander );
 main();

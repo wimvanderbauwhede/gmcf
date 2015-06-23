@@ -1,3 +1,3 @@
-g++-mp-4.9 -Wall -c -std=c++11 -I$GANNET_DIR/GPRM/src -I$GANNET_DIR/GPRM/src/SBA  -I../../../gensrc  -DWORDSZ=64 -DUSE_THREADS=1 gmcfF.cc
+g++-mp-4.9 -Wall -c -std=c++11 -I$GMCF_DIR/GPRM/src -I$GMCF_DIR/GPRM/src/SBA  -I../../../gensrc  -DWORDSZ=64 -DUSE_THREADS=1 gmcfF.cc
 gfortran-mp-4.9 -cpp -ffree-form -ffree-line-length-0  -Wall -DNMODELS=2 -c gmcfAPI.f95
 gfortran-mp-4.9  -Wall gmcfAPI.o gmcfF.o  

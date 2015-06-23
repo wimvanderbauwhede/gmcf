@@ -18,10 +18,10 @@ FS_SCId = 8
 
 require 'yaml'
 
-if ENV.has_key?('GANNET_DIR')
-    $LOAD_PATH.push("#{ENV['GANNET_DIR']}/Garnet/") # OBSOLETE!
+if ENV.has_key?('GMCF_DIR')
+    $LOAD_PATH.push("#{ENV['GMCF_DIR']}/Garnet/") # OBSOLETE!
 else    
-    raise "Please define GANNET_DIR"
+    raise "Please define GMCF_DIR"
 end
 
 help= <<EOH
@@ -62,8 +62,8 @@ def loadLibraryConfig(lib)
         libcfg=  YAML.load(File.open("#{SBA_WD}/gensrc/GMCF/Models/#{lib}.yml"))
     elsif File.exists?("#{SBA_WD}/gensrc/#{lib}.yml")
         libcfg=  YAML.load(File.open("#{SBA_WD}/gensrc/#{lib}.yml"))
-    elsif File.exists?("#{ENV['GANNET_DIR']}/GPRM/src/SBA/Base/#{lib}.yml")
-        libcfg=  YAML.load(File.open("#{ENV['GANNET_DIR']}/GPRM/src/SBA/Base/#{lib}.yml"))
+    elsif File.exists?("#{ENV['GMCF_DIR']}/GPRM/src/SBA/Base/#{lib}.yml")
+        libcfg=  YAML.load(File.open("#{ENV['GMCF_DIR']}/GPRM/src/SBA/Base/#{lib}.yml"))
 # FIXME: need to find a place for CoreServices.yml
     else
         raise "Can't find Library Config File #{lib}.yml"
@@ -73,7 +73,7 @@ end
 
 =begin
   We need to read the Application config file from . (and only from .)
-  Then we lookup up the Library config files in ./Gannet and $GANNET_DIR/SystemConfigurations
+  Then we lookup up the Library config files in ./Gannet and $GMCF_DIR/SystemConfigurations
   Application config has ServiceNodes and Aliases
   Library config has Services and ServiceClasses
 =end
@@ -93,9 +93,9 @@ end
                 
         if File.exists?("#{SBA_WD}/gensrc/GMCF/Models/#{lib}.h")
             sclibs[i]='#include "'+SBA_WD+'/gensrc/GMCF/Models/'+lib+'.h"'
-        elsif File.exists?("#{ENV['GANNET_DIR']}/GPRM/src/SBA/Base/#{lib}.h") 
+        elsif File.exists?("#{ENV['GMCF_DIR']}/GPRM/src/SBA/Base/#{lib}.h") 
 # WV: seems this is never used? 
-			sclibs[i]='#include "'+ENV['GANNET_DIR']+'/GPRM/src/SBA/Base/'+lib+'.h' 
+			sclibs[i]='#include "'+ENV['GMCF_DIR']+'/GPRM/src/SBA/Base/'+lib+'.h' 
         else
             puts "WARNING: Can't find Library File #{lib}.h"
         end                            

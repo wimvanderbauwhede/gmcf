@@ -7,13 +7,13 @@ nmodels=ARGUMENTS.get('nmodels','2')
 NMODELS_FLAG = '-DNMODELS='+nmodels
 FC=os.environ["FC"]
 CXX=os.environ["CXX"]
-GANNET_DIR=os.environ["GANNET_DIR"]
+GMCF_DIR=os.environ["GMCF_DIR"]
 
 gmcflibsources=['./gmcfAPI.f95','./gmcfF.cc']
 LDFLAGS=[]
 FFLAGS=['-Wall','-cpp','-ffree-form','-ffree-line-length-0',NMODELS_FLAG]
 CXXFLAGS=[ '-Wall',  '-std=c++11' ,  '-DWORDSZ=64', '-DUSE_THREADS=1']
-INCPATH=[ GANNET_DIR+'/GPRM/src', GANNET_DIR+'/GPRM/src/SBA',  '../../../gensrc']
+INCPATH=[ GMCF_DIR+'/GPRM/src', GMCF_DIR+'/GPRM/src/SBA',  '../../../gensrc']
 envF=Environment(F95=FC,LINK=FC,LINKFLAGS=LDFLAGS,F95FLAGS=FFLAGS,F95PATH=['.'],CXX=CXX,CXXFLAGS=CXXFLAGS,CPPPATH=INCPATH)
 envF.Library('gmcfAPI',gmcflibsources) 
 
