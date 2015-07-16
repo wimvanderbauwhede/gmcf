@@ -104,7 +104,7 @@ ServiceManager(Base::System* sba_s_, Base::Tile* sba_t_, Service& s_,ServiceAddr
  void run();
  void demux_packets_by_type(Packet_t&);
  void receive_packets();
- void activate_subtask_helper(CodeAddress,Name_t,Word_List&,bool);
+ void activate_subtask_helper(CodeAddress,Name_t,Packet_t&,bool);
  void store_subtask_code();
  void activate_subtask();
  void store_data();

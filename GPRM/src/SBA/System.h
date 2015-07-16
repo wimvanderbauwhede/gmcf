@@ -52,8 +52,7 @@ class System : public Base::System {
 	System(TaskDescList& tds_) : gw_address(0),
 	finished(false), task_descriptions(tds_)
 	,io_mech(1)
-	,gw_instance(this,0,0,tds_)
-    {
+	,gw_instance(this,0,0,tds_){
 		// allocate some space for args and regs
 		for (int regno = 0; regno< MAX_REGISTERFILE_SZ; regno++) {
 			regs.push_back((Word)0);

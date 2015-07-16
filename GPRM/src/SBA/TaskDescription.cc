@@ -80,7 +80,7 @@ using namespace SBA;
     	cout << "NPackets: " <<npackets<< ""<<endl;
 #endif // VERBOSE
     	Packets.clear();
-        Word_List subtask_packet;
+        Packet_t subtask_packet;
         for(uint np=0;np<=npackets-1 ;np++) {
     		 Header_t header_words;    	
         	for(uint phw=0;phw<=2 ;phw++) {
@@ -94,7 +94,7 @@ using namespace SBA;
             cout << "Length: " <<length<< ""<<endl;
 #endif // VERBOSE
     
-            Word_List  payload;
+            Payload_t payload;
             for(uint j=0;j<=length-1 ;j++) {
                  Word plw=tdc_wl.front();tdc_wl.pop_front();
                 payload.push_back(plw);

@@ -261,7 +261,7 @@ using namespace SBA;
     } // of receive_packets
 
 
- void ServiceManager::activate_subtask_helper(CodeAddress code_address,Name_t tservice_id,Word_List& packet,bool is_subtask_packet) {
+ void ServiceManager::activate_subtask_helper(CodeAddress code_address,Name_t tservice_id,Packet_t& packet,bool is_subtask_packet) {
 #ifdef VERBOSE
         if (debug_all or service==debug_service){
         if ((service!=tservice_id)){
@@ -334,7 +334,7 @@ using namespace SBA;
             }
 #endif // VERBOSE
 
-            Word_List subtask_code=getPayload(subtask_code_packet);
+            Payload_t subtask_code=getPayload(subtask_code_packet);
 /*
 Now, what we can do as a temporary measure:
 - we introduce a constants store
@@ -433,7 +433,7 @@ The simplest way seems to be that we malloc some space and return that pointer.
             cout << "Service: " <<service<< " : REF PACKET: \n";
             cout << ppPacket(subtask_ref_packet)<<endl;
 #endif // VERBOSE
-            Word_List ref_label_symbol_l=getPayload(subtask_ref_packet);
+            Payload_t ref_label_symbol_l=getPayload(subtask_ref_packet);
             Word ref_label_symbol=ref_label_symbol_l[0];
 
 #ifdef VERBOSE
@@ -986,7 +986,7 @@ The simplest way seems to be that we malloc some space and return that pointer.
                     // But currently SNId is used to know where to send the reference packet
                     // If we change it to 0 in the compiler, we would no longer support that model
                     // OTOH, we don't need the SCLId etc fields, so I could use those
-                     Word_List requestpacket_payload; requestpacket_payload.push_back(elt);//setSCLId(elt,0)); // FIXME!
+                    Payload_t requestpacket_payload; requestpacket_payload.push_back(elt);//setSCLId(elt,0)); // FIXME!
                     Packet_t request_packet = mkPacket(requestpacket_header,requestpacket_payload);
                     
 					// FIXME!

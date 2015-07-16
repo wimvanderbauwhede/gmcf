@@ -24,6 +24,7 @@
 
 #include <unordered_map> 
 #include <deque> 
+#include <vector> 
 
 #if USE_THREADS==1
 #include <pthread.h>
@@ -748,15 +749,15 @@ public:
         typedef deque<StringPair> TaskDescList; // WV27-82008: TODO: get rid of this
 
 #ifndef STATIC_ALLOC
-	typedef Word_List Packet_t;
-	typedef Word_List Header_t;
+	typedef std::vector<Word> Packet_t;
+	typedef std::vector<Word> Header_t;
 	typedef List<Packet_t> Packet_List;
 #else
 	typedef Static_Word_List<MAX_PACKET_SZ> Packet_t;
 	typedef Static_Word_List<HEADER_SZ> Header_t;
 	typedef List<Packet_t,PACKET_FIFO_SZ> Packet_List;
 #endif // STATIC_ALLOC
-	typedef Word_List Payload_t;
+	typedef std::vector<Word> Payload_t;
 	typedef Word Payload_t_Word;
 
 	//typedef Fifo<Packet_t,PACKET_FIFO_SZ> Packet_Fifo;

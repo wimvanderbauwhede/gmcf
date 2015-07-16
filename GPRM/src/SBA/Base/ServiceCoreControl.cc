@@ -454,11 +454,11 @@ void Base::ServiceCoreControl::resultWord(Word w) {
  #endif
  	Ctrl_t prio=0;
  	Redir_t redir=0;
- 	Word_List reslist;
+ 	Payload_t reslist;
  	reslist.push_back(ref_symbol);
  	Length_t payload_length=1;
  	Header_t ref_packet_header = mkHeader(packet_type,prio,redir,payload_length,to,return_to,subtask_argpos,return_as);
- 	Word_List  ref_packet_payload=reslist;
+ 	Payload_t ref_packet_payload=reslist;
  	Packet_t ref_packet = mkPacket(ref_packet_header,ref_packet_payload);
  #if VERBOSE	== 1
  	std::cout << "Base::ServiceCoreControl::dispatch(): DISPATCHING packet to "<< to <<"\n" << ppPacket(ref_packet) <<"\n";

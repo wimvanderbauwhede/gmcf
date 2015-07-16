@@ -73,7 +73,7 @@ using namespace SBA;
                 cout << ppPacket(subtask_code_packet)<<endl;
 #endif // VERBOSE
 
-            Word_List subtask_code=getPayload(subtask_code_packet);
+            Payload_t subtask_code=getPayload(subtask_code_packet);
 /*
 Now, what we can do as a temporary measure:
 - we introduce a constants store
@@ -182,7 +182,7 @@ The simplest way seems to be that we malloc some space and return that pointer.
 #ifdef VERBOSE
             	cout << ppPacket(data_packet);
 #endif
-                Word_List result=getPayload(data_packet);
+                Payload_t result=getPayload(data_packet);
 				cout <<endl;
 				if (result.size()==0){
                      cout << "Return value: []"<<endl;

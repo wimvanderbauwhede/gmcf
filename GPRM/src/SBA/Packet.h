@@ -95,20 +95,19 @@ NSymbols_t getNSymbols(Word);
 Word setNSymbols(Word,Word);
 uint getNPadBytes(Word);
 
-//Int getInt(Word_List);
 Int getInt(Word);
-Int getInt(Word_List&);
+Int getInt(Payload_t&);
 
 Word getUInt(Word);
-Word getUInt(Word_List);
+Word getUInt(Payload_t);
 
-Word getWord(Word_List);
+Word getWord(Payload_t);
 double getFloat(Word);
-double getFloat(Word_List);
+double getFloat(Payload_t);
 
-char getChar(Word_List);
+char getChar(Payload_t);
 
-string getString(Word_List);
+string getString(Payload_t);
 
 
 uint getOpcode(Word);
@@ -186,18 +185,18 @@ Word getSubtaskArgpos_p(const Packet_t&);
 
 
 
- Packet_t mkPacket(Header_t&,Word_List&);
+ Packet_t mkPacket(Header_t&,Payload_t&);
  Packet_t mkPacket_new(Header_t&,Word);
 
  Header_t getHeader(Packet_t&);
 
- Word_List setHeader(Packet_t&,Header_t&);
+ Packet_t setHeader(Packet_t&,Header_t&);
 
- Word_List getPayload(Word_List);
- Word getPayload_Word(Word_List);
+ Payload_t getPayload(Packet_t);
+ Word getPayload_Word(Packet_t);
 
  Word_List getField(Word_List,uint,uint);
-Word mkBool(uint);
+ Word mkBool(uint);
 
 Symbol_t mkIntSymbol(Word val) ;
 Symbol_t mkPointerSymbol(void*) ;
@@ -208,9 +207,9 @@ deque<Int> to_signed_int_list( Word_List);
 
  string ppHeader(Header_t);
 
- string ppPayload(Word_List);
+ string ppPayload(Payload_t);
 
- string ppPacket(Word_List);
+ string ppPacket(Packet_t);
  } // Namespace SBA
 
 

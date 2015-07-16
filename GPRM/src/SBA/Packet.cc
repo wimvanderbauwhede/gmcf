@@ -150,7 +150,7 @@ uint SBA::getNPadBytes(Word word) {
 }
 
 
-Int SBA::getInt(Word_List& words) {
+Int SBA::getInt(Payload_t& words) {
      Int int_result; Word result;
     if (getExt(words[0])==1){
         result=words[1];
@@ -173,7 +173,7 @@ Int SBA::getInt(Word word) {
 }
 
 
-Word SBA::getUInt(Word_List words) {
+Word SBA::getUInt(Payload_t words) {
      Word result;
     if (getExt(words[0])==1){
         result=words[1];
@@ -190,7 +190,7 @@ Word SBA::getUInt(Word word) {
 }
 
 
-Word SBA::getWord(Word_List words) {
+Word SBA::getWord(Payload_t words) {
      Word result;
     if (getExt(words[0])==1){
         result=words[1];
@@ -217,7 +217,7 @@ double SBA::getFloat(Word word) {
 
 }
 
-double SBA::getFloat(Word_List words) {
+double SBA::getFloat(Payload_t words) {
      double result;
     if (getExt(words[0])==1){
         Word word=words[1];
@@ -235,15 +235,15 @@ double SBA::getFloat(Word_List words) {
 }
 
 
-char SBA::getChar(Word_List words) {
+char SBA::getChar(Payload_t words) {
     uint val = getInt(words);
      char ch=(char)(val & 0xFF);
     return ch;
 }
 
 
-string SBA::getString(Word_List words) {
-    Word  header =  words.front(); words.pop_front();
+string SBA::getString(Payload_t words) {
+    Word  header =  words.at(0);//front(); words.pop_front();
     uint     nwords=getNSymbols(header);
     uint padding=getNPadBytes(header);
 
@@ -251,14 +251,12 @@ string SBA::getString(Word_List words) {
     str.reserve(nwords*NBYTES-padding);
     for(uint i=0;i<nwords;i++) {
         uint npad=(i==nwords-1)?padding:0;
-        Word strword=words.shift();
+        Word strword=words.at(i+1);
         for (uint j=0;j<NBYTES-npad;j++) {
             char byte=(char)((strword>>8*(NBYTES-j-1))&255);
             str+=byte;
         }
     }
-
-
     return str;
 }
 
@@ -569,8 +567,8 @@ Word SBA::getSubtaskArgpos(const Header_t& header) {
 
 
 
- Packet_t SBA::mkPacket(Header_t& header,Word_List& payload) {
-         Word_List packet;
+ Packet_t SBA::mkPacket(Header_t& header,Payload_t& payload) {
+        Packet_t packet;
         for(uint i=0;i<=HEADER_SZ-1 ;i++) {
             packet.push_back(header[i]);
         }
@@ -582,7 +580,7 @@ Word SBA::getSubtaskArgpos(const Header_t& header) {
     }
 
  Packet_t SBA::mkPacket_new(Header_t& header,Word payload) {
-          Word_List packet;
+          Packet_t packet;
          for(uint i=0;i<=HEADER_SZ-1 ;i++) {
              packet.push_back(header[i]);
          }
@@ -600,13 +598,13 @@ Word SBA::getSubtaskArgpos(const Header_t& header) {
     }
 
 
- Word_List SBA::setHeader(Packet_t& packet,Header_t& header) {
-         Word_List npacket;
+ Packet_t SBA::setHeader(Packet_t& packet,Header_t& header) {
+         Packet_t npacket;
         for(auto iter_=header.begin();iter_!=header.end();iter_++) {
         	Word w=*iter_;
             npacket.push_back(w);
         }
-        Word_List payload=getPayload(packet);
+        Payload_t payload=getPayload(packet);
         for(auto iter_=payload.begin();iter_!=payload.end();iter_++) {
         	Word w=*iter_;
             npacket.push_back(w);
@@ -615,8 +613,8 @@ Word SBA::getSubtaskArgpos(const Header_t& header) {
     }
 
 
- Word_List SBA::getPayload(Word_List packet) {
-         Word_List pl;
+ Payload_t SBA::getPayload(Packet_t packet) {
+        Payload_t pl;
         uint i=0;
         for(auto iter_=packet.begin();iter_!=packet.end();iter_++) {
         	Word w=*iter_;
@@ -626,7 +624,7 @@ Word SBA::getSubtaskArgpos(const Header_t& header) {
         return pl;
     }
 
-Word SBA::getPayload_Word(Word_List packet) {
+Word SBA::getPayload_Word(Packet_t packet) {
          Word pl = NIHIL;
          uint i=0;
          for(auto iter_=packet.begin();iter_!=packet.end();iter_++) {
@@ -786,7 +784,7 @@ Symbol_t SBA::mkIntSymbol(Word val) {
     }
 
 
- string SBA::ppPayload(Word_List wl) {
+ string SBA::ppPayload(Payload_t wl) {
              ostringstream outs;
             uint maxnwords=4;
             if (wl.size()<maxnwords){
@@ -810,7 +808,7 @@ Symbol_t SBA::mkIntSymbol(Word val) {
     }
 
 
- string SBA::ppPacket(Word_List wl) {
+ string SBA::ppPacket(Packet_t wl) {
 	ostringstream outs;
 
 	outs << ppHeader(getHeader(wl)) <<"\n------------\n"<< ppPayload(getPayload(wl))<<"\n";
