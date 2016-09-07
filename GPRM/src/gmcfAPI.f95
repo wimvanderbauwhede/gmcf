@@ -157,6 +157,13 @@ contains
                     ! Just put these data packets in the data fifo
                     call gmcfPushPending(model_id, packet)
                     ! Then update the current values after the sync
+                case (ACKDATA)
+#ifdef GMCF_DEBUG
+                    print *, "FORTRAN API SYNC: GOT A ACKDATA PACKET ",   packet%type ," from ", packet%source, " to", packet%destination, ' timestamp=',packet%timestamp
+#endif
+                    ! What to do? ACKDATA means the data was received by the other party.
+                    ! Maybe push this on the ACK fifo, if it exists ...
+
                 case (FIN)
 #ifdef GMCF_DEBUG
                     print *, "FORTRAN API SYNC: GOT A FIN PACKET:",   packet%type ," from ", packet%source, " to", packet%destination

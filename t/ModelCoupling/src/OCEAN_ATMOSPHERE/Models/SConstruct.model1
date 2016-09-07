@@ -1,0 +1,11 @@
+import os
+FC=os.environ.get('FC')
+
+fsources = ['./model1.f95','./gmcfAPImodel1.f95']
+
+LDFLAGS= [] # '-fopenmp'] # ['-Wl,-stack_size,0x40000000']
+FFLAGS  = ['-Wall','-cpp','-ffree-form','-ffree-line-length-0']
+
+envF=Environment(F95=FC,LINK=FC,LINKFLAGS=LDFLAGS,F95FLAGS=FFLAGS,F95PATH=['.','../../../lib','/opt/local/include','/usr/local/include'])
+
+envF.Library('model1',fsources,LIBS=['gmcfAPI','m'],LIBPATH=['../../../lib','/opt/local/lib','/usr/local/lib'])

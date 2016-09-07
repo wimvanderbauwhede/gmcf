@@ -1,0 +1,44 @@
+
+--- # Core Services Configuration
+System:
+  Version: 3.0
+  Libraries: [GMCF, CoreServices]
+  NServiceNodes: 3 # excluding gateway; this is actually the number of threads
+  ServiceNodes:
+    mn1: [ 1, [GMCF.GMCF] ] 
+    mn2: [ 2, [GMCF.GMCF] ] 
+    ctrl: [ 3, [CoreServices.BEGIN] ]
+
+  Aliases:
+  # Alias Name (case sensitive): FQN
+    begin: ctrl.CoreServices.BEGIN.begin
+    ocean_gmcf: mn1.GMCF.GMCF.ocean_gmcf
+    atmosphere_gmcf: mn2.GMCF.GMCF.atmosphere_gmcf
+
+  ModelSources: OCEAN_ATMOSPHERE # subdir of ModelCoupling/src    
+#  ModelLibPaths: ['libmodel1.a', 'libmodel2.a'] # if just a filename, should be in Models, else must be a full path
+
+# I need a simple configuration
+# We must describe the model in terms of what it requires, what it provides, and the time frequency.
+# In principle each model could provide/required each variable with a different time step and offset
+# 
+#       Provides: [To: 3, [Var: 'real(4) u(128,128,128)', Step: 2, Offset: 2], [Var: 'real(4) v(128,128,128)'], [Var: 'real(4) v(128,128,128)'] ]
+# and of course then the Requires must match up
+# Also, the variables don't have in general the same names, so we must have something like ' model1 requires vx from model2 as u
+# As the idea is to generate all of this anyway, maybe  'real(4) u(-1:129,0:127,1:128)' could become real/double/int/long, name, dim as array
+# Yet another complication is that we often will require a part of an array, so we need a way to describe exactly what we want.
+# This seems to lead us back to set comprehensions and even SAC, which is nice.  
+  Models:    
+    ocean_gmcf:        
+        ModelId: 1
+        SyncTimeStep: 1
+        Provides: [2, ['real(kind=4), dimension(100,200) :: sst'] ]
+        Requires: [2, ['real(kind=4), dimension(300,300) :: u,v'] ]
+    atmosphere_gmcf:        
+        ModelId: 2
+        SyncTimeStep: 1
+        Requires: [1, ['real(kind=4), dimension(100,200) :: sst'] ]
+        Provides: [1, ['real(kind=4), dimension(300,300) :: u,v'] ]
+       
+  
+

@@ -26,7 +26,7 @@ from SCons.Environment import Environment
 #from cxxtestgenlib import createRunner
 
 
-def build(wd,sources,flibs):
+def build(wd,model_source_dir,sources,flibs):
 
     destdir='../SBA/'
     global opts
@@ -279,11 +279,11 @@ def build(wd,sources,flibs):
         libs+=['pthread']
 
 
-    INCpaths=[wd+'/gensrc/',wd+'/gensrc/GMCF/Models/',wd+'/src/','.','../',GMCF_DIR+'/GPRM/src/SBA/',GMCF_DIR+'/GPRM/src/']
-    LIBpaths=[wd+'/gensrc/GMCF/Models/']
+    INCpaths=[wd+'/gensrc/',wd+'/gensrc/'+model_source_dir+'/Models/',wd+'/src/','.','../',GMCF_DIR+'/GPRM/src/SBA/',GMCF_DIR+'/GPRM/src/']
+    LIBpaths=[wd+'/gensrc/'+model_source_dir+'/Models/']
 
     if OSX==1:
-        LIBpaths=[wd+'/gensrc/GMCF/Models/','/opt/local/lib/gcc49/','/opt/local/lib/','/usr/local/lib/']
+        LIBpaths=[wd+'/gensrc/'+model_source_dir+'/Models/','/opt/local/lib/gcc49/','/opt/local/lib/','/usr/local/lib/']
 
     #WV: to have multiple targets, we just need to set bin : bin is short for
     #env.Program(target=bin,...)

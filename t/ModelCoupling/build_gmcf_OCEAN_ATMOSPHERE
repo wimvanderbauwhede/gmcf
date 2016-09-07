@@ -1,0 +1,7 @@
+. $GMCF_DIR/etc/gmcfrc
+build.pl -Y src/OCEAN_ATMOSPHERE/Task/GMCF_OCEAN_ATMOSPHERE.yml  -L 
+cd src/OCEAN_ATMOSPHERE/Models
+scons -f SConstruct.model1 
+scons -f SConstruct.model2 
+cd ../../..
+scons models=model1,model2 -f SConstruct.OCEAN_ATMOSPHERE

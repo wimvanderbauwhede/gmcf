@@ -9,18 +9,19 @@ use bytes;
 use Data::Dumper;
 
 use Getopt::Std;
-@ARGV or die "Please provide the input file name (.gas)\n";
 
 my %opts = ();
-getopts( 'vh', \%opts );
+getopts( 'vhP', \%opts );
 
-if ( $opts{'h'} ) {
+if ( !@ARGV or $opts{'h'} ) {
 	die "
 Gannet Assembler - generates Gannet bytecode for a GMCF program MODEL_NAME with NTH threads  
-$0 MODEL_NAME NTH
+$0 -P MODEL_NAME NTH
 \n";
+# Or for coupled models  $0 MODEL_NAME
 }
 
+my $par     = $opts{'P'} ? 1              : 0;
 my $v      = $opts{'v'} ? 1              : 0;
 my $b      =0;
 my $F      =  0;
@@ -37,7 +38,8 @@ my $tdc_filename = $model_name;
 $tdc_filename =~ s/\.\w+//;
 $tdc_filename .= '.tdc64';
 
-my $yml_path = './src/GMCF/Task/'.$model_name.'.yml';
+my $yml_path = $par ? './src/GMCF/Task/'.$model_name.'.yml' : './src/'.$model_name.'/Task/GMCF_'.$model_name.'.yml';
+
 open( OUT, ">$tdc_filename" );
 
 # Number of packets

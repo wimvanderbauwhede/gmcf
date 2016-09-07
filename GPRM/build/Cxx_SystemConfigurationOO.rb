@@ -56,9 +56,9 @@ SBA_WD=$sba_dir
 require 'yaml'
 #require "SBA/ServiceConfiguration.rb"
 
-def loadLibraryConfig(lib)
+def loadLibraryConfig(lib,model_source_dir)
     puts "WD:#{SBA_WD}"
-    if File.exists?("#{SBA_WD}/gensrc/GMCF/Models/#{lib}.yml")
+    if File.exists?("#{SBA_WD}/gensrc/#{model_source_dir}/Models/#{lib}.yml")
         libcfg=  YAML.load(File.open("#{SBA_WD}/gensrc/GMCF/Models/#{lib}.yml"))
     elsif File.exists?("#{SBA_WD}/gensrc/#{lib}.yml")
         libcfg=  YAML.load(File.open("#{SBA_WD}/gensrc/#{lib}.yml"))
@@ -81,6 +81,7 @@ end
     puts "GENERATING SystemConfiguration"
     appcfg =  YAML.load( File.open("#{$sba_yml}") )
     libs = appcfg['System']['Libraries']
+    model_source_dir = appcfg['System']['ModelSources']
     n_cfg=appcfg['System']['NServiceNodes'].to_i
     n_actual=appcfg['System']['ServiceNodes'].keys.length
     NServiceNodes= (n_actual < n_cfg)?n_cfg : n_actual
@@ -89,10 +90,10 @@ end
     sclibs=[]
     libcfgs=[]
     for lib in libs
-        libcfgs[i] =  loadLibraryConfig(lib)
+        libcfgs[i] =  loadLibraryConfig(lib,model_source_dir)
                 
-        if File.exists?("#{SBA_WD}/gensrc/GMCF/Models/#{lib}.h")
-            sclibs[i]='#include "'+SBA_WD+'/gensrc/GMCF/Models/'+lib+'.h"'
+        if File.exists?("#{SBA_WD}/gensrc/#{model_source_dir}/Models/#{lib}.h")
+            sclibs[i]='#include "'+SBA_WD+'/gensrc/#{model_source_dir}/Models/'+lib+'.h"'
         elsif File.exists?("#{ENV['GMCF_DIR']}/GPRM/src/SBA/Base/#{lib}.h") 
 # WV: seems this is never used? 
 			sclibs[i]='#include "'+ENV['GMCF_DIR']+'/GPRM/src/SBA/Base/'+lib+'.h' 

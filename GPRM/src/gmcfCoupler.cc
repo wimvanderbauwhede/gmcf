@@ -8,8 +8,8 @@
 #include <string>
 #include "gmcf.h"
 
-using namespace std;
-using namespace SBA;
+//using namespace std;
+//using namespace SBA;
 
 int main(int argc, char* argv[]) {
 	//std::string tdc_file(argv[1]);

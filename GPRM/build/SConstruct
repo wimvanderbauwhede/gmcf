@@ -17,12 +17,13 @@ GMCF_DIR=os.environ["GMCF_DIR"]
 
 wd=ARGUMENTS.get('wd','.')
 dbg=ARGUMENTS.get('dbg','0')
+model_source_dir = ARGUMENTS.get('modelsrcdir','GMCF')
 
 def isLocal(libname):
-    return os.path.exists(wd+'/gensrc/GMCF/Models/'+libname+'.cc')
+    return os.path.exists(wd+'/gensrc/'+model_source_dir+'/Models/'+libname+'.cc')
 
 def isLocalFLib(libname):
-    return os.path.exists(wd+'/src/GMCF/Models/'+libname)    
+    return os.path.exists(wd+'/src/'+model_source_dir+'/Models/'+libname)    
 
 libnames=ARGUMENTS.get('sclib','')
 sclibnames=libnames.split(',')
@@ -31,7 +32,7 @@ for libname in sclibnames:
     libsrc=''
     if isLocal(libname):     
         if libname!= 'CoreServices':
-            libsrc=wd+'/gensrc/GMCF/Models/'+libname+'.cc'
+            libsrc=wd+'/gensrc/'+model_source_dir+'/Models/'+libname+'.cc'
         wrappersrc=wd+'/gensrc/Services.cc'
         selectsrc=wd+'/gensrc/SelectWrapper.cc'
 #       print libsrc
@@ -45,7 +46,7 @@ flibs=[]
 for libname in flibsnames:
     libsrc=''
     if isLocal(libname):     
-        libsrc=wd+'/src/GMCF/Models/'+libname
+        libsrc=wd+'/src/'+model_source_dir+'/Models/'+libname
     else:
         libsrc=libname
     flibs.append(libsrc)
@@ -59,7 +60,7 @@ if dbg == '1':
 FC=os.environ["FC"]
 CXX=os.environ["CXX"]
 
-gmcflibsources=[GMCF_DIR+'/GPRM/src/gmcfAPI.f95',wd+'/gensrc/GMCF/Models/gmcfConfiguration.f95',GMCF_DIR+'/GPRM/src/gmcfF.cc']
+gmcflibsources=[GMCF_DIR+'/GPRM/src/gmcfAPI.f95',wd+'/gensrc/'+model_source_dir+'/Models/gmcfConfiguration.f95',GMCF_DIR+'/GPRM/src/gmcfF.cc']
 LDFLAGS=[]
 FFLAGS=['-Wall','-cpp','-ffree-form','-ffree-line-length-0',NMODELS_FLAG]
 CXXFLAGS=[ '-Wall',  '-std=c++11' ,  '-DWORDSZ=64', '-DUSE_THREADS=1']
@@ -89,9 +90,10 @@ Transceiver.cc
 System.cc
 Runtime.cc
 Timings.cc
+Spinlock.cc
 """)
 
 sbasources = [GMCF_DIR+'/GPRM/src/SBA/'+s for s in sbasources]
 
-build(wd,sclibs+sbasources,flibs)
+build(wd,model_source_dir,sclibs+sbasources,flibs)
 
