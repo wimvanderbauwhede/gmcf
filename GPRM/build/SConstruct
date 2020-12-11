@@ -51,7 +51,7 @@ for libname in flibsnames:
         libsrc=libname
     flibs.append(libsrc)
 
-print "WD:"+wd
+print( "WD:"+wd)
 nmodels=ARGUMENTS.get('nmodels','')
 NMODELS_FLAG = '-DNMODELS='+nmodels
 DEBUG_FLAG=''
@@ -90,7 +90,7 @@ Transceiver.cc
 System.cc
 Runtime.cc
 Timings.cc
-Spinlock.cc
+SpinLock.cc
 """)
 
 sbasources = [GMCF_DIR+'/GPRM/src/SBA/'+s for s in sbasources]

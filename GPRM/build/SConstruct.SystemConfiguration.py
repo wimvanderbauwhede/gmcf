@@ -7,7 +7,7 @@
 
 import os
 import re
-import commands
+# import subprocess
 import sys
 #sys.path+=['/usr/lib/scons/']
 
@@ -25,7 +25,7 @@ src_file=ymlpath # HACK!
 env = Environment()
 
 cmd='GMCF_DIR='+os.environ['GMCF_DIR'] +' ruby '+script+' '+flags+' -Y '+ymlpath+' -D '+lib_path+' --cwd='+sba_dir
-print cmd
+print( cmd )
 gen=env.Command(target_file, src_file, cmd)
 env.Alias('gen',target_file)
 env.Depends(gen,script)

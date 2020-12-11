@@ -15,7 +15,7 @@
 
 import os
 import re
-import commands
+import subprocess
 import sys
 #sys.path+=['/usr/lib/scons/']
 
@@ -133,20 +133,20 @@ def build(wd,model_source_dir,sources,flibs):
             yaml_config=os.environ["GANNET_YML_CONFIG"]
 
     for option in opts.options:
-        if option.key == 'v' and opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
+        if option.key == 'v' and option.key in opts.args and opts.args[option.key]!=option.default:
             VERBOSE='VERBOSE'
-        if option.key == 'w' and opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
+        if option.key == 'w' and option.key in opts.args and opts.args[option.key]!=option.default:
             WARN='-Wall '
-        if option.key == 'new' and opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
+        if option.key == 'new' and option.key in opts.args and opts.args[option.key]!=option.default:
             NEW='NEW=1'
-        if option.key == 'xc' and opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
+        if option.key == 'xc' and option.key in opts.args and opts.args[option.key]!=option.default:
             XC=1
             # B ashkan
             use_tilera=True
             USE_TILERA='USE_TILERA'
             # E ashkan
             OPT=OPTSPEED
-        if option.key == 'llvm' and opts.args.has_key(option.key): # and opts.args[option.key]!=option.default:
+        if option.key == 'llvm' and option.key in opts.args: # and opts.args[option.key]!=option.default:
             if opts.args[option.key]=='1':
                 LLVM=1
             elif opts.args[option.key]=='2':
@@ -154,56 +154,56 @@ def build(wd,model_source_dir,sources,flibs):
             else:
                 LLVM=0
             OPT=OPTSPEED
-        if option.key == 'win' and opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
+        if option.key == 'win' and option.key in opts.args and opts.args[option.key]!=option.default:
             CYGWIN=1
-        if option.key == 'vm' and opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
+        if option.key == 'vm' and option.key in opts.args and opts.args[option.key]!=option.default:
             VM='VM=1'
-        if option.key == 'svm' and opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
+        if option.key == 'svm' and option.key in opts.args and opts.args[option.key]!=option.default:
             VM='VM=1'
             SEQVM='SEQVM=1'
 # doesn't work if the path has dots or slashes!
-#        if option.key == 'yml' and opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
+#        if option.key == 'yml' and option.key in opts.args and opts.args[option.key]!=option.default:
 #            print "YAML!"
 #            yaml_config=opts.args[option.key]
-        if option.key == 'sock' and opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
+        if option.key == 'sock' and option.key in opts.args and opts.args[option.key]!=option.default:
             NO_SOCKET='NO_SOCKET'
             sockpatt=re.compile('^\.\.\/GannetSocket')
             nsources=filter(lambda s: not(sockpatt.search(s)),sources)
-            sources=nsources
-        if option.key == 'wordsz' and opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
+            sources=list(nsources)
+        if option.key == 'wordsz' and option.key in opts.args and opts.args[option.key]!=option.default:
             wordsz=opts.args[option.key]
             WORDSZ='WORDSZ='+str(wordsz)
-        if option.key == 'lib' and opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
+        if option.key == 'lib' and option.key in opts.args and opts.args[option.key]!=option.default:
             LIB=True
-        if option.key == 'pthreads' and opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
+        if option.key == 'pthreads' and option.key in opts.args and opts.args[option.key]!=option.default:
             USE_THREADS='USE_THREADS=1'
             use_pthreads=True
             OPT=OPTTHREADS
-        if option.key == 'ptcore' and opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
+        if option.key == 'ptcore' and option.key in opts.args and opts.args[option.key]!=option.default:
             THREADED_CORE='THREADED_CORE=1'
             threaded_core=True
             OPT=OPTTHREADS
-        if option.key == 'distr' and opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
+        if option.key == 'distr' and option.key in opts.args and opts.args[option.key]!=option.default:
             DISTR='DISTR=1'
             OPT=OPTSPEED
-        if option.key == 'cycles' and opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
+        if option.key == 'cycles' and option.key in opts.args and opts.args[option.key]!=option.default:
             CYCLES='CYCLES'
-        if option.key == 'timings' and opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
+        if option.key == 'timings' and option.key in opts.args and opts.args[option.key]!=option.default:
             TIMINGS='TIMINGS'
-        if option.key == 'dyn' and opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
+        if option.key == 'dyn' and option.key in opts.args and opts.args[option.key]!=option.default:
             STATIC_ALLOC=''
-        if option.key == 'dbg' and opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
+        if option.key == 'dbg' and option.key in opts.args and opts.args[option.key]!=option.default:
             DEBUG='-g -O0 -DGMCF_DEBUG ' #'-g -fno-exceptions -fno-rtti '
             OPT=''
-        if option.key == 'opt' and opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
+        if option.key == 'opt' and option.key in opts.args and opts.args[option.key]!=option.default:
             OPT=OPTSPEED
-        if option.key == 'D' and  opts.args.has_key(option.key) and opts.args[option.key]!=option.default:
+        if option.key == 'D' and  option.key in opts.args and opts.args[option.key]!=option.default:
             macrostr=re.sub('\s*:\s*','=',opts.args[option.key])
             MACROS=macrostr.split(' ')
-        if option.key == 'h' and opts.args.has_key(option.key):
+        if option.key == 'h' and option.key in opts.args:
             H=1
 
-    if commands.getoutput("uname") == "Darwin":
+    if subprocess.check_output(['uname',''], shell=True).strip()  == "Darwin":
         OSX=1
         switches+=['DARWIN']
         if SC==1:
@@ -230,7 +230,7 @@ def build(wd,model_source_dir,sources,flibs):
             SWITCHES+='-D'+switch+' '
 
     GMCF_DIR=os.environ["GMCF_DIR"]
-    print "GMCF_DIR:"+GMCF_DIR
+    print( "GMCF_DIR:"+GMCF_DIR)
  			
     bin='gmcfCoupler'
     if LIB:
@@ -242,7 +242,7 @@ def build(wd,model_source_dir,sources,flibs):
     gcc_version = os.popen(CXX+' -dumpversion').read().rstrip("\n\r")
     gcc_version_tuple = [int(x) for x in gcc_version.split('.')]
 # WV: HACK! TOO SPECIFIC!
-    if (gcc_version_tuple[1]<6):
+    if (len(gcc_version_tuple)>1 and gcc_version_tuple[1]<6):
         raise Exception('You need at least g++ 4.6 for this!')
     else:
         cxx=CXX
@@ -264,11 +264,11 @@ def build(wd,model_source_dir,sources,flibs):
     if XC==1:
         HOME=os.environ['HOME']
         env['ENV']['PATH']=os.environ["GANNET_XC_PATH"]+":"+env['ENV']['PATH']
-        print env['ENV']['PATH']
+        print( env['ENV']['PATH'])
 
     if LLVM==1:
         env['ENV']['PATH']=os.environ["GANNET_LLVM_PATH"]+":"+env['ENV']['PATH']
-        print env['ENV']['PATH']
+        print( env['ENV']['PATH'] )
  
 #FIXME: dl only needed for dynamic loading!
 #libs=['m','dl'] 

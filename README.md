@@ -44,8 +44,8 @@ The Fortran API is just a wrapper around the C++ API. This API is not really int
 
 ## Installation
 
-- You need to set the environment variable `$GMCF_DIR` to the path of the gmcf folder, e.g. `$HOME/gmcf`.
-- In the gmcf folder, you need to source the etc/gannetrc file: `. etc/gannetrc` (or put it in your `.bashrc` or equivalent)
+- You need to set the environment variable `$GMCF_DIR` to the path of the gmcf folder, e.g. `$HOME/gmcf`. 
+- In the gmcf folder, you need to source the etc/gmcfrc file: `. etc/gmcfrc` (or put it in your `.bashrc` or equivalent)
 - You need to set the $CC, $FC and $CXX environment variables for the C, Fortran and C++ compilers.
 - If you use OpenCL, you need to install (my OclWrapper library)[https://github.com/wimvanderbauwhede/OpenCLIntegration].
 
