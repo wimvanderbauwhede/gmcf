@@ -28,7 +28,9 @@
 
 #if USE_THREADS==1
 #include <pthread.h>
+#ifdef USE_SPINLOCK
 #include "SpinLock.h"
+#endif
 #endif
 
 #include <iostream> // for cerr & cout!!
@@ -772,6 +774,7 @@ public:
 #else // USE_THREADS==1
 
 //template <typename Packet_t, Word depth>
+#ifdef USE_SPINLOCK		
 class RX_Packet_Fifo {
 	private:
     	deque<Packet_t> packets;
@@ -905,6 +908,152 @@ class RX_Packet_Fifo {
 		packets.clear();
 	}*/
 }; // RX_Packet_Fifo
+#else
+
+//template <typename Packet_t, Word depth>
+class RX_Packet_Fifo {
+	private:
+    	deque<Packet_t> packets;
+    	pthread_mutex_t _RXlock;
+    	pthread_cond_t  _RXcond;
+ 	bool _status;
+	public:
+ 		RX_Packet_Fifo () :  _status(0) {
+ 			pthread_mutex_init(&_RXlock, NULL);
+ 			pthread_cond_init(&_RXcond, NULL); // was 0
+ 		};
+ 		~RX_Packet_Fifo() {
+ 			pthread_mutex_destroy(&_RXlock);
+ 			pthread_cond_destroy(&_RXcond);
+ 		}
+ 	bool status() {
+ 		//FIXME: make this blocking? Ashkan added lock & unlock
+ 		pthread_mutex_lock(&_RXlock);
+ 		bool stat = _status;
+ 		pthread_mutex_unlock(&_RXlock);
+     	return stat;
+ 	}
+
+/* Ashkan commented this. Using has_packets() without locking is dangerous.
+    bool has_packets() {
+    	return (packets.size()>0);
+    }
+*/
+    bool has_packets() {
+// we want to block until the status is true
+// so status() will block until it can return true
+ 	  pthread_mutex_lock(&_RXlock);
+ 	 bool has = (_status==1);
+ 	  pthread_mutex_unlock(&_RXlock);
+ 	  return(has);
+    }
+
+    void wait_for_packets() {
+    // we want to block until the status is true
+      // so status() will block until it can return true
+        pthread_mutex_lock(&_RXlock);
+        while(packets.empty())
+        {
+            pthread_cond_wait(&_RXcond, &_RXlock);
+        }
+        _status=1;
+        pthread_mutex_unlock(&_RXlock);
+#ifdef VERBOSE
+    cout << "RX_Packet_Fifo: UNBLOCK on wait_for_packets()\n";
+#endif
+	}
+
+/*    void push(Packet_t const& data)
+    {
+        pthread_mutex_lock(&_RXlock);
+        packets.push_back(data);
+        _status=1;
+        pthread_mutex_unlock(&_RXlock);
+        pthread_cond_signal(&_RXcond); // only 1 thread should be waiting
+    }
+
+    bool empty() {
+        pthread_mutex_lock(&_RXlock);
+//        boost::mutex::scoped_lock lock(_RXlock);
+        return packets.empty();
+        pthread_mutex_unlock(&_RXlock);
+    }
+
+    unsigned int length() { // do we need to lock before checking the length?
+
+        return packets.size();
+
+    }
+
+    unsigned int size() { // do we need to lock before checking the length?
+
+        return packets.size();
+    }
+
+   We don't really want to block on shift()
+ So I have to check when the fifo has 1 elt, then
+ set status to 0 and shift that elt. As we check status we won't come back there
+ then we use the blocking call simply to set the status back to 1
+
+    Packet_t shift() {
+        pthread_mutex_lock(&_RXlock);
+
+        if (packets.size()==1) {
+        	_status=0;
+        }
+        Packet_t t_elt=packets.front();
+        packets.pop_front();
+        pthread_mutex_unlock(&_RXlock);
+
+		return t_elt;
+    }
+*/
+    void push_back(Packet_t const& data) {
+        pthread_mutex_lock(&_RXlock);
+        const bool was_empty = (_status==0);
+        packets.push_back(data);
+        _status=1;
+        pthread_mutex_unlock(&_RXlock);
+        if (was_empty)
+          pthread_cond_signal(&_RXcond); // only 1 thread should be waiting
+      }
+
+/*    Packet_t front() {
+#ifdef VERBOSE
+        cout << "front()\n";
+#endif
+//        pthread_mutex_lock(&_RXlock);
+        Packet_t t_elt=packets.front();
+//        pthread_mutex_unlock(&_RXlock);
+		return t_elt;
+    } Ashkan changed the pop_front to return a value.
+*/
+    Packet_t pop_front() {
+    	pthread_mutex_lock(&_RXlock);
+#ifdef VERBOSE
+        cout << "RX_Packet_Fifo: pop_front()\n";
+#endif
+        while(packets.empty()) { // this is for double check, it should not happen
+        	cout << "RX_Packet_Fifo: Thread Blocked For Some Strange Reason!" << endl;
+        	pthread_cond_wait(&_RXcond, &_RXlock);
+        }
+
+        Packet_t t_elt=packets.front();
+        packets.pop_front();
+        if (packets.size() == 0) _status=0;
+        pthread_mutex_unlock(&_RXlock);
+
+#ifdef VERBOSE
+        cout << "RX_Packet_Fifo: DONE pop_front() \n";
+#endif
+        return t_elt;
+    }
+
+/*	void clear() {
+		packets.clear();
+	}*/
+}; // RX_Packet_Fifo
+#endif		
 
 #endif // USE_THREADS
 

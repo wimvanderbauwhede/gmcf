@@ -4,6 +4,7 @@
 #include "SBA/Tile.h"
 #include "SBA/Packet.h"
 #include "SBA/SpinLock.h"
+#include "SBA/InclusionSetTable.h"
 #include <cstring>
 #include <pthread.h>
 
