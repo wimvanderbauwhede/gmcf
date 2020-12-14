@@ -205,9 +205,9 @@ deque<Int> to_signed_int_list( Word_List);
 
  string ppSymbol(Word);
 
- string ppHeader(Header_t);
+ string ppHeader(Header_t);//
 
- string ppPayload(Payload_t);
+ string ppPayload(Payload_t);// was 
 
  string ppPacket(Packet_t);
  } // Namespace SBA

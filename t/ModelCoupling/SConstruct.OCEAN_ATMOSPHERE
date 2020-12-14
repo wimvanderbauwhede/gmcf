@@ -17,7 +17,7 @@ FFLAGS=['-std=c++11','-Wall', '-DWORDSZ=64', '-DUSE_THREADS=1']
 CXXFLAGS=[ '-Wall',  '-std=c++11' ,  '-DWORDSZ=64', '-DUSE_THREADS=1']
 INCPATHS=[ GMCF_DIR+'/GPRM/src', GMCF_DIR+'/GPRM/src/SBA',  wd+'/gensrc']
 LIBPATHS=[wd+'/lib', wd+'/src/OCEAN_ATMOSPHERE/Models']
-LIBS=[ 'gmcf']+modellibs+extralibs+['gmcfAPI',  'gfortran']
+LIBS=[ 'gmcf']+modellibs+extralibs+['gmcfAPI', 'gmcf', 'gfortran']
 env=Environment(LINK=CXX,LINKFLAGS=LDFLAGS,CXX=CXX,CXXFLAGS=CXXFLAGS,CPPPATH=INCPATHS,LIBPATH=LIBPATHS)
 env.Program('gmcfCoupler',gmcfsources,LIBS=LIBS) 
 

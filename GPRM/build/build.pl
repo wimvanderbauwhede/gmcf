@@ -32,7 +32,7 @@ if ( $opts{'h'} or ((scalar( keys %opts)==0)&&(scalar @ARGV==0))) {
     -n: Don't generate C++ sources from Ruby code -- OBSOLETE
     -s: static allocation --OBSOLETE
     -H: model HW (default is VM) -- OBSOLETE
-    -S: use POSIX sockets (no longer supported) 
+    -S: use spinlocks 
     -T: DO NOT use POSIX threads
     -P: use communicating processes -- almost certainly BROKEN
     -X: cross-compile for Linux on PPC -- OBSOLETE
@@ -66,7 +66,7 @@ my $scons_dyn=$opts{'s'}?'':'dyn=1';
 my $scons_vm=$opts{'H'}?'':'vm=1';
 
 my $scons_svm='';
-my $scons_sock=$opts{'S'}?'sock=1':'sock=0';
+my $scons_spinlock=$opts{'S'}?'spinlock=1':'spinlock=0';
 my $scons_pthreads=$opts{'T'}?'':'pthreads=1';
 #my $scons_pthreads='pthreads=1';
 my $scons_distr=$opts{'P'}?'distr=1':'';
@@ -127,7 +127,7 @@ my $cxx_gen_source_path="$wd/gensrc";
 my $cxx_build_path="$wd";
 my $gprm_lib_path="$wd/lib";
 
-my $run_scons_str="GANNET_YML_CONFIG=$ymlpath scons $scons_c $scons_new $scons_sclib $scons_v $scons_w $scons_d $scons_cycles $scons_dyn $scons_vm $scons_sock $scons_pthreads $scons_wordsz $scons_nogen $scons_wd $scons_md $scons_lib $scons_flibs $scons_nmodels -f $gmfc_dir/GPRM/build/SConstruct$scons_ext";
+my $run_scons_str="GANNET_YML_CONFIG=$ymlpath scons $scons_c $scons_new $scons_sclib $scons_v $scons_w $scons_d $scons_cycles $scons_dyn $scons_vm $scons_spinlock $scons_pthreads $scons_wordsz $scons_nogen $scons_wd $scons_md $scons_lib $scons_flibs $scons_nmodels -f $gmfc_dir/GPRM/build/SConstruct$scons_ext";
 $run_scons_str=~s/\s+/ /g;
 
 $wd="$gmfc_dir/GPRM/build";

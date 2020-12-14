@@ -743,7 +743,7 @@ Symbol_t SBA::mkIntSymbol(Word val) {
     }
 
 
- string SBA::ppHeader(Header_t wl) {
+ string SBA::ppHeader(Header_t wl) {//
         Word w2=wl[1];
         Word w3=wl[2];
 
@@ -784,7 +784,7 @@ Symbol_t SBA::mkIntSymbol(Word val) {
     }
 
 
- string SBA::ppPayload(Payload_t wl) {
+ string SBA::ppPayload(Payload_t wl) {// was 
              ostringstream outs;
             uint maxnwords=4;
             if (wl.size()<maxnwords){

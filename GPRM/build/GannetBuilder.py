@@ -72,7 +72,7 @@ def build(wd,model_source_dir,sources,flibs):
     OPTTHREADS = '-O3 '
     DEBUG = ''
     ARCH=''
-    NO_SOCKET=''
+    USE_SPINLOCK=''
     OPT = '-O3 '
     CYGWIN=0
     PIC = '' #'-fPIC '
@@ -99,7 +99,7 @@ def build(wd,model_source_dir,sources,flibs):
     opts.Add('llvm', 'Use LLVM',0)
     opts.Add('win','CygWin',0)
     opts.Add('vm', 'Virtual Machine',0)
-    opts.Add('sock', 'Use POSIX socket interface',1)
+    opts.Add('spinlock', 'Use spinlocks','0')
     opts.Add('svm', 'Sequential Virtual Machine',0)
 # options can't take . or / in the strings!!
 #    opts.Add('yml','YAML configuration file','') #'../../SBA.yml')
@@ -165,10 +165,10 @@ def build(wd,model_source_dir,sources,flibs):
 #        if option.key == 'yml' and option.key in opts.args and opts.args[option.key]!=option.default:
 #            print "YAML!"
 #            yaml_config=opts.args[option.key]
-        if option.key == 'sock' and option.key in opts.args and opts.args[option.key]!=option.default:
-            NO_SOCKET='NO_SOCKET'
-            sockpatt=re.compile('^\.\.\/GannetSocket')
-            nsources=filter(lambda s: not(sockpatt.search(s)),sources)
+        if option.key == 'spinlock' and option.key in opts.args and opts.args[option.key]!=option.default:
+            USE_SPINLOCK='USE_SPINLOCK'
+            spinlockpatt=re.compile('^\.\.\/SpinLock')
+            nsources=filter(lambda s: not(spinlockpatt.search(s)),sources)
             sources=list(nsources)
         if option.key == 'wordsz' and option.key in opts.args and opts.args[option.key]!=option.default:
             wordsz=opts.args[option.key]
@@ -217,7 +217,7 @@ def build(wd,model_source_dir,sources,flibs):
     SWITCHES=''
     flags+=[CXX11,WARN,DEBUG,ARCH,PIC,OPT]
     # Ashkan added USE_TILERA
-    switches+=[SYSC,SC_IDP,SYSC_FIXME,VERBOSE,NEW,VM,SEQVM,WORDSZ,CYCLES,TIMINGS,STATIC_ALLOC,NO_SOCKET,USE_THREADS,THREADED_CORE,DISTR, USE_TILERA]+MACROS
+    switches+=[SYSC,SC_IDP,SYSC_FIXME,VERBOSE,NEW,VM,SEQVM,WORDSZ,CYCLES,TIMINGS,STATIC_ALLOC,USE_SPINLOCK,USE_THREADS,THREADED_CORE,DISTR, USE_TILERA]+MACROS
     for flag in flags:
         if flag !='':
             FLAGS+=flag+' '
